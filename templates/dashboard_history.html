@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vaccination History — CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+</head>
+<body class="dash-body">
+
+<aside class="dash-sidebar">
+  <div class="dash-logo"><a href="/" class="nav-logo">💉 Care<span>Mate</span></a></div>
+  <nav class="dash-nav">
+    <a href="/dashboard" class="dash-nav-item">🏠 Overview</a>
+    <a href="/dashboard/history" class="dash-nav-item active">💉 Vaccination History</a>
+    <a href="/dashboard/reminders" class="dash-nav-item">🔔 Reminders</a>
+    <a href="/clinics" class="dash-nav-item">📍 Book a Clinic</a>
+    <a href="/#assessment" class="dash-nav-item">📋 New Assessment</a>
+  </nav>
+  <div class="dash-sidebar-footer">
+    <div class="dash-user-pill">
+      <div class="dash-avatar">{{ current_user.name[0].upper() if current_user.name else 'U' }}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ current_user.name or 'User' }}</div>
+        <div style="font-size:11px;color:var(--text-muted)">{{ current_user.email }}</div>
+      </div>
+    </div>
+    <a href="/logout" class="dash-logout-btn">Sign Out</a>
+  </div>
+</aside>
+
+<main class="dash-main">
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-title">💉 Vaccination History</h1>
+      <p class="dash-sub">All vaccines you've recorded on CareMate.</p>
+    </div>
+    <button class="btn-primary" style="padding:10px 20px;font-size:13px" onclick="openLogModal()">+ Log Vaccine</button>
+  </div>
+
+  <div class="dash-card">
+    {% if records %}
+    <div class="vaccine-timeline">
+      {% for rec in records %}
+      <div class="vt-item">
+        <div class="vt-dot"></div>
+        <div class="vt-content">
+          <div class="vt-name">{{ rec.vaccine_name }}</div>
+          <div class="vt-meta">
+            Dose {{ rec.dose_number }}
+            · {{ rec.date_given.strftime('%d %B %Y') }}
+            {% if rec.clinic_name %} · {{ rec.clinic_name }}{% endif %}
+            {% if rec.batch_number %} · Lot {{ rec.batch_number }}{% endif %}
+          </div>
+          {% if rec.next_dose_date and rec.next_dose_date >= today %}
+          <div class="vt-next">Next dose: {{ rec.next_dose_date.strftime('%d %B %Y') }}</div>
+          {% endif %}
+          {% if rec.notes %}<div style="font-size:12px;color:var(--text-muted);margin-top:3px">{{ rec.notes }}</div>{% endif %}
+        </div>
+        <div class="vt-badge">✓ Done</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="dash-empty">
+      <div style="font-size:48px;margin-bottom:12px">💉</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px">No vaccines recorded yet</div>
+      <div style="font-size:13px;color:var(--text-muted)">Start logging your vaccination history below.</div>
+      <button class="dash-action-btn" style="margin-top:16px" onclick="openLogModal()">+ Log Your First Vaccine</button>
+    </div>
+    {% endif %}
+  </div>
+</main>
+
+<!-- LOG VACCINE MODAL (same as dashboard) -->
+<div class="modal-overlay hidden" id="logModal">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header">
+      <div style="font-size:18px;font-weight:800">Log a Vaccine</div>
+      <button onclick="closeLogModal()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted)">×</button>
+    </div>
+    <form method="POST" action="/dashboard/log-vaccine" style="padding:0 24px 24px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-row">
+        <label>Vaccine</label>
+        <select name="vaccine_key" id="logVaccineKey" onchange="updateVaccineName(this)" required>
+          <option value="">Select vaccine...</option>
+        </select>
+        <input type="hidden" name="vaccine_name" id="logVaccineName" />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-row" style="margin-bottom:0">
+          <label>Date Given</label>
+          <input type="date" name="date_given" max="{{ today.isoformat() }}" required />
+        </div>
+        <div class="form-row" style="margin-bottom:0">
+          <label>Dose #</label>
+          <select name="dose_number">
+            <option value="1">Dose 1</option>
+            <option value="2">Dose 2</option>
+            <option value="3">Dose 3</option>
+            <option value="4">Booster</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:14px">
+        <label>Clinic / Location (optional)</label>
+        <input type="text" name="clinic_name" placeholder="e.g. Prodia Sudirman" />
+      </div>
+      <div class="form-row">
+        <label>Next Dose Date (if applicable)</label>
+        <input type="date" name="next_dose_date" />
+      </div>
+      <div class="form-row">
+        <label>Set Reminder for Next Dose?</label>
+        <select name="set_reminder">
+          <option value="yes">Yes — remind me</option>
+          <option value="no">No thanks</option>
+        </select>
+      </div>
+      <button type="submit" class="auth-btn" style="margin-top:8px">Save Record</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function openLogModal()  { document.getElementById('logModal').classList.remove('hidden'); }
+function closeLogModal() { document.getElementById('logModal').classList.add('hidden'); }
+function updateVaccineName(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('logVaccineName').value = opt.dataset.name || '';
+}
+document.getElementById('logModal').addEventListener('click', function(e) {
+  if (e.target === this) closeLogModal();
+});
+</script>
+</body>
+</html>

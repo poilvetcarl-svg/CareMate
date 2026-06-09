@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+</head>
+<body class="dash-body">
+
+<aside class="dash-sidebar">
+  <div class="dash-logo"><a href="/" class="nav-logo">💉 Care<span>Mate</span></a></div>
+  <nav class="dash-nav">
+    <a href="/dashboard" class="dash-nav-item">🏠 Overview</a>
+    <a href="/dashboard/history" class="dash-nav-item">💉 Vaccination History</a>
+    <a href="/dashboard/reminders" class="dash-nav-item">🔔 Reminders</a>
+    <a href="/clinics" class="dash-nav-item">📍 Book a Clinic</a>
+    <a href="/#assessment" class="dash-nav-item">📋 New Assessment</a>
+  </nav>
+  <div class="dash-sidebar-footer">
+    <div class="dash-user-pill">
+      <div class="dash-avatar">{{ current_user.name[0].upper() if current_user.name else 'U' }}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ current_user.name or 'User' }}</div>
+        <div style="font-size:11px;color:var(--text-muted)">{{ current_user.email }}</div>
+      </div>
+    </div>
+    <a href="/logout" class="dash-logout-btn">Sign Out</a>
+  </div>
+</aside>
+
+<main class="dash-main">
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-title">⚙️ Settings</h1>
+      <p class="dash-sub">Manage your profile and notification preferences.</p>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}<div class="flash-{{ cat }}" style="margin-bottom:16px">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+
+  <div class="dash-card" style="max-width:520px">
+    <div class="dash-card-title" style="margin-bottom:20px">Profile & Notifications</div>
+    <form method="POST" action="/dashboard/settings">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-row">
+        <label>Full Name</label>
+        <input type="text" name="name" value="{{ current_user.name or '' }}" placeholder="Your name" />
+      </div>
+
+      <div class="form-row">
+        <label>Email</label>
+        <input type="email" value="{{ current_user.email }}" disabled
+               style="background:var(--bg-secondary);cursor:not-allowed;opacity:0.7" />
+      </div>
+
+      <div class="form-row">
+        <label>WhatsApp Number</label>
+        <input type="tel" name="phone" value="{{ current_user.phone or '' }}" placeholder="+62812345678" />
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Include country code. We only use this for vaccination reminders.</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding:14px;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.15);border-radius:10px">
+        <input type="checkbox" name="whatsapp_opt_in" id="waOptIn"
+               {% if current_user.whatsapp_opt_in %}checked{% endif %}
+               style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer" />
+        <label for="waOptIn" style="font-size:13px;color:var(--text-secondary);cursor:pointer;line-height:1.4">
+          <strong style="color:var(--text-primary)">Enable WhatsApp reminders</strong><br>
+          Receive vaccine reminders 7 days, 1 day, and on the day of your appointments.
+        </label>
+      </div>
+
+      <button type="submit" class="auth-btn">Save Settings</button>
+    </form>
+  </div>
+
+  <div class="dash-card" style="max-width:520px;margin-top:20px">
+    <div class="dash-card-title" style="margin-bottom:16px">Account</div>
+    <div style="font-size:13px;color:var(--text-muted)">Member since {{ current_user.created_at.strftime('%d %B %Y') }}</div>
+    <div style="margin-top:16px">
+      <a href="/logout" style="font-size:13px;color:#ef4444;font-weight:700;text-decoration:none">Sign out of all devices →</a>
+    </div>
+  </div>
+</main>
+</body>
+</html>

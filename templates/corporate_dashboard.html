@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Corporate Dashboard — CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+</head>
+<body class="dash-body">
+
+<!-- ── SIDEBAR ── -->
+<aside class="dash-sidebar">
+  <div class="dash-logo">
+    <a href="/" class="nav-logo">💉 Care<span>Mate</span></a>
+  </div>
+  <nav class="dash-nav">
+    <a href="/corporate/dashboard" class="dash-nav-item active">🏠 Overview</a>
+    <a href="/corporate/dashboard/employees" class="dash-nav-item">👥 Employees</a>
+    <a href="/corporate/dashboard/coverage" class="dash-nav-item">💉 Coverage</a>
+    <a href="/corporate/dashboard/reminders" class="dash-nav-item">🔔 Bulk Reminders</a>
+    <a href="/clinics" class="dash-nav-item">📍 Book for Employee</a>
+  </nav>
+  <div class="dash-sidebar-footer">
+    <div class="dash-user-pill">
+      <div class="dash-avatar">{{ company.name[0].upper() }}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ company.name }}</div>
+        <div style="font-size:11px;color:var(--text-muted)">{{ company.contact_email }}</div>
+      </div>
+    </div>
+    <a href="/corporate/logout" class="dash-logout-btn">Sign Out</a>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="dash-main">
+
+  <!-- Header -->
+  <div class="corp-header">
+    <div>
+      <h1 class="dash-title">{{ company.name }} 🏢</h1>
+      <p class="dash-sub">Employee vaccination compliance dashboard</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="corp-plan-badge">{{ company.plan | upper }} Plan</span>
+      <a href="/corporate/dashboard/invite" class="btn-primary" style="padding:10px 20px;font-size:13px">+ Invite Employee</a>
+    </div>
+  </div>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="flash-{{ cat }}" style="margin-bottom:16px">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Stat cards -->
+  <div class="dash-stats">
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(2,132,199,0.1);color:#0284c7">👥</div>
+      <div>
+        <div class="dash-stat-value">{{ employees|length }}</div>
+        <div class="dash-stat-label">Total Employees</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(5,150,105,0.1);color:var(--accent)">✅</div>
+      <div>
+        <div class="dash-stat-value">
+          {% if employees %}
+            {{ ((employees | selectattr('vaccination_records') | list | length) / employees|length * 100) | int }}%
+          {% else %}
+            0%
+          {% endif %}
+        </div>
+        <div class="dash-stat-label">Have ≥1 Vaccine Recorded</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(245,158,11,0.1);color:#d97706">🔔</div>
+      <div>
+        <div class="dash-stat-value">{{ total_pending_reminders }}</div>
+        <div class="dash-stat-label">Pending Reminders</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(124,58,237,0.1);color:#7c3aed">📋</div>
+      <div>
+        <div class="dash-stat-value">{{ total_assessments }}</div>
+        <div class="dash-stat-label">Assessments Done</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-cols">
+
+    <!-- Left: Coverage breakdown -->
+    <div class="dash-col-main">
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">💉 Vaccine Coverage</div>
+          <span style="font-size:12px;color:var(--text-muted)">% employees with vaccine recorded</span>
+        </div>
+
+        {% if coverage %}
+        {% for vkey, pct in coverage.items() | sort(attribute=1, reverse=True) %}
+        <div class="coverage-row">
+          <div class="coverage-label">{{ vaccines.get(vkey, {}).get('name', vkey) if vaccines.get(vkey) else vkey }}</div>
+          <div class="coverage-bar-wrap">
+            <div class="coverage-bar" style="width:{{ pct }}%"></div>
+          </div>
+          <div class="coverage-pct">{{ pct }}%</div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="dash-empty">
+          <div style="font-size:36px;margin-bottom:8px">💉</div>
+          <div>No vaccination data yet.</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Employees will appear here once they log vaccines.</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Employee List -->
+      <div class="dash-card" style="margin-top:20px">
+        <div class="dash-card-header">
+          <div class="dash-card-title">👥 Employee List</div>
+          <a href="/corporate/dashboard/invite" class="dash-action-btn">+ Invite</a>
+        </div>
+
+        {% if employees %}
+        <div style="overflow-x:auto">
+          <table class="employee-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Vaccines Logged</th>
+                <th>Last Assessment</th>
+                <th>Reminders</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for emp in employees %}
+              <tr>
+                <td style="font-weight:700">{{ emp.name or '—' }}</td>
+                <td style="color:var(--text-muted)">{{ emp.email }}</td>
+                <td>
+                  {% for rec in emp.vaccination_records[:4] %}
+                  <span class="vacc-chip">{{ rec.vaccine_name[:12] }}{% if rec.vaccine_name|length > 12 %}…{% endif %}</span>
+                  {% endfor %}
+                  {% if not emp.vaccination_records %}
+                  <span style="font-size:12px;color:var(--text-muted)">None yet</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% set la = emp.latest_assessment() %}
+                  {% if la %}
+                  <span style="font-size:13px;font-weight:700;color:var(--accent)">{{ la.risk_score | int }}%</span>
+                  <span style="font-size:11px;color:var(--text-muted)"> risk</span>
+                  {% else %}
+                  <span style="font-size:12px;color:var(--text-muted)">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% set pr = emp.pending_reminders() %}
+                  {% if pr %}
+                  <span style="font-size:13px;font-weight:700;color:#d97706">{{ pr|length }}</span>
+                  {% else %}
+                  <span style="font-size:12px;color:var(--text-muted)">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="dash-empty">
+          <div style="font-size:36px;margin-bottom:8px">👥</div>
+          <div>No employees linked yet.</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Invite employees to link their CareMate accounts to your company.</div>
+          <a href="/corporate/dashboard/invite" class="dash-action-btn" style="margin-top:16px;display:inline-block">+ Invite Employees</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right: Actions + Stats -->
+    <div class="dash-col-side">
+
+      <!-- Quick actions -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">⚡ Quick Actions</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <a href="/corporate/dashboard/reminders/send-all" class="dash-action-btn" style="justify-content:center;padding:12px">
+            🔔 Send Reminder to All Employees
+          </a>
+          <a href="/clinics" class="dash-action-btn" style="justify-content:center;padding:12px;background:rgba(5,150,105,0.1);color:var(--accent)">
+            📍 Book Corporate Clinic Session
+          </a>
+          <a href="/corporate/dashboard/export" class="dash-action-btn" style="justify-content:center;padding:12px;background:rgba(2,132,199,0.1);color:#0284c7">
+            📊 Export Compliance Report
+          </a>
+        </div>
+      </div>
+
+      <!-- Unvaccinated alerts -->
+      <div class="dash-card" style="margin-top:16px">
+        <div class="dash-card-header">
+          <div class="dash-card-title">⚠️ Priority Gaps</div>
+          <span style="font-size:12px;color:var(--text-muted)">Employees needing key vaccines</span>
+        </div>
+        {% set priority_vax = ['influenza', 'pneumococcal', 'covid19'] %}
+        {% for vkey in priority_vax %}
+        {% set needing = company.employees_needing(vkey) %}
+        {% if needing %}
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:4px">
+            {{ vaccines.get(vkey, {}).get('name', vkey) if vaccines.get(vkey) else vkey }}
+          </div>
+          <div style="font-size:12px;color:var(--text-muted)">{{ needing|length }} employee{{ 's' if needing|length != 1 }} not yet vaccinated</div>
+          <a href="/corporate/dashboard/remind/{{ vkey }}" style="font-size:12px;color:var(--accent);font-weight:700;text-decoration:none">
+            Send reminder →
+          </a>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        {% set has_gaps = false %}
+        {% for vkey in priority_vax %}
+        {% if company.employees_needing(vkey) %}
+        {% set has_gaps = true %}
+        {% endif %}
+        {% endfor %}
+        {% if not has_gaps %}
+        <div class="dash-empty" style="padding:16px 0">
+          <div style="font-size:24px;margin-bottom:6px">🎉</div>
+          <div style="font-size:13px">All employees are up to date on priority vaccines!</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Company info -->
+      <div class="dash-card" style="margin-top:16px">
+        <div class="dash-card-header">
+          <div class="dash-card-title">🏢 Company Info</div>
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);display:flex;flex-direction:column;gap:8px">
+          <div><strong style="color:var(--text-primary)">Industry:</strong> {{ company.industry or '—' }}</div>
+          <div><strong style="color:var(--text-primary)">Size:</strong> {{ company.employee_size or '—' }} employees</div>
+          <div><strong style="color:var(--text-primary)">Plan:</strong> {{ company.plan | capitalize }}</div>
+          <div><strong style="color:var(--text-primary)">Contact:</strong> {{ company.contact_name or '—' }}</div>
+          <div><strong style="color:var(--text-primary)">Member since:</strong> {{ company.created_at.strftime('%B %Y') }}</div>
+        </div>
+        <a href="/corporate/dashboard/settings" style="font-size:12px;color:var(--accent);font-weight:700;text-decoration:none;display:block;margin-top:12px">Edit company profile →</a>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

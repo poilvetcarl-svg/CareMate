@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Dashboard — CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+</head>
+<body class="dash-body">
+
+<!-- ── SIDEBAR ── -->
+<aside class="dash-sidebar">
+  <div class="dash-logo">
+    <a href="/" class="nav-logo">💉 Care<span>Mate</span></a>
+  </div>
+  <nav class="dash-nav">
+    <a href="/dashboard" class="dash-nav-item active">🏠 Overview</a>
+    <a href="/dashboard/history" class="dash-nav-item">💉 Vaccination History</a>
+    <a href="/dashboard/reminders" class="dash-nav-item">🔔 Reminders</a>
+    <a href="/clinics" class="dash-nav-item">📍 Book a Clinic</a>
+    <a href="/#assessment" class="dash-nav-item">📋 New Assessment</a>
+  </nav>
+  <div class="dash-sidebar-footer">
+    <div class="dash-user-pill">
+      <div class="dash-avatar">{{ current_user.name[0].upper() if current_user.name else 'U' }}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ current_user.name or 'User' }}</div>
+        <div style="font-size:11px;color:var(--text-muted)">{{ current_user.email }}</div>
+      </div>
+    </div>
+    <a href="/logout" class="dash-logout-btn">Sign Out</a>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="dash-main">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-title">Hello, {{ current_user.name.split()[0] if current_user.name else 'there' }} 👋</h1>
+      <p class="dash-sub">Here's your vaccination health overview.</p>
+    </div>
+    <div style="display:flex;gap:10px">
+      <a href="/clinics" class="btn-primary" style="padding:10px 20px;font-size:13px">📍 Book Vaccine</a>
+      <a href="/#assessment" class="btn-outline" style="padding:10px 20px;font-size:13px">📋 New Assessment</a>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="dash-stats">
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(5,150,105,0.1);color:var(--accent)">💉</div>
+      <div>
+        <div class="dash-stat-value">{{ vaccination_records|length }}</div>
+        <div class="dash-stat-label">Vaccines Recorded</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(245,158,11,0.1);color:#d97706">🔔</div>
+      <div>
+        <div class="dash-stat-value">{{ pending_reminders|length }}</div>
+        <div class="dash-stat-label">Upcoming Reminders</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(2,132,199,0.1);color:#0284c7">📋</div>
+      <div>
+        <div class="dash-stat-value">{{ assessments|length }}</div>
+        <div class="dash-stat-label">Assessments Done</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(124,58,237,0.1);color:#7c3aed">📍</div>
+      <div>
+        <div class="dash-stat-value">{{ bookings|length }}</div>
+        <div class="dash-stat-label">Clinic Bookings</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-cols">
+
+    <!-- Left: Vaccination timeline -->
+    <div class="dash-col-main">
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">💉 Vaccination History</div>
+          <button class="dash-action-btn" onclick="openLogModal()">+ Log Vaccine</button>
+        </div>
+
+        {% if vaccination_records %}
+        <div class="vaccine-timeline">
+          {% for rec in vaccination_records|sort(attribute='date_given', reverse=True) %}
+          <div class="vt-item">
+            <div class="vt-dot"></div>
+            <div class="vt-content">
+              <div class="vt-name">{{ rec.vaccine_name }}</div>
+              <div class="vt-meta">
+                Dose {{ rec.dose_number }} · {{ rec.date_given.strftime('%d %b %Y') }}
+                {% if rec.clinic_name %} · {{ rec.clinic_name }}{% endif %}
+              </div>
+              {% if rec.next_dose_date and rec.next_dose_date >= today %}
+              <div class="vt-next">Next dose: {{ rec.next_dose_date.strftime('%d %b %Y') }}</div>
+              {% endif %}
+            </div>
+            <div class="vt-badge">✓ Done</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="dash-empty">
+          <div style="font-size:40px;margin-bottom:12px">💉</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px">No vaccines recorded yet</div>
+          <div style="font-size:13px;color:var(--text-muted)">Log vaccines you've already received, or book a new one below.</div>
+          <button class="dash-action-btn" style="margin-top:16px" onclick="openLogModal()">+ Log Your First Vaccine</button>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Last assessment -->
+      {% if last_assessment %}
+      <div class="dash-card" style="margin-top:20px">
+        <div class="dash-card-header">
+          <div class="dash-card-title">📋 Last Assessment</div>
+          <span style="font-size:12px;color:var(--text-muted)">{{ last_assessment.created_at.strftime('%d %b %Y') }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:20px;padding:4px 0 16px">
+          <div style="text-align:center">
+            <div style="font-size:32px;font-weight:900;color:var(--accent)">{{ last_assessment.risk_score|int }}%</div>
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Risk Score</div>
+          </div>
+          <div style="flex:1">
+            {% set vlist = last_assessment.vaccines_recommended | from_json %}
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">
+              <strong>{{ vlist|length }}</strong> vaccines recommended for your profile.
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px">
+              {% for vk in vlist[:6] %}
+              <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(5,150,105,0.08);color:var(--accent);border:1px solid rgba(5,150,105,0.2)">{{ vk }}</span>
+              {% endfor %}
+              {% if vlist|length > 6 %}<span style="font-size:11px;color:var(--text-muted)">+{{ vlist|length - 6 }} more</span>{% endif %}
+            </div>
+          </div>
+        </div>
+        <a href="/#assessment" class="dash-action-btn" style="display:inline-block">Run New Assessment →</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right: Reminders + Bookings -->
+    <div class="dash-col-side">
+
+      <!-- Upcoming reminders -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">🔔 Upcoming Reminders</div>
+          <a href="/dashboard/reminders" style="font-size:12px;color:var(--accent);font-weight:700;text-decoration:none">View all</a>
+        </div>
+        {% if pending_reminders %}
+        <div class="reminder-list">
+          {% for r in pending_reminders[:4] %}
+          <div class="reminder-item">
+            <div class="reminder-dot {% if r.reminder_date == today %}dot-today{% elif (r.reminder_date - today).days <= 3 %}dot-soon{% else %}dot-future{% endif %}"></div>
+            <div>
+              <div class="reminder-name">{{ r.vaccine_name }}</div>
+              <div class="reminder-date">
+                {% set diff = (r.reminder_date - today).days %}
+                {% if diff == 0 %}Today{% elif diff == 1 %}Tomorrow{% else %}{{ r.reminder_date.strftime('%d %b') }} ({{ diff }} days){% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% if not current_user.phone or not current_user.whatsapp_opt_in %}
+        <div class="dash-wa-prompt">
+          <span style="font-size:18px">📱</span>
+          <div>
+            <div style="font-size:13px;font-weight:700">Enable WhatsApp reminders</div>
+            <a href="/dashboard/settings" style="font-size:12px;color:var(--accent);font-weight:600;text-decoration:none">Add your number →</a>
+          </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="dash-empty" style="padding:20px 0">
+          <div>No reminders set yet.</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Book a vaccine to automatically set reminders.</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Recent bookings -->
+      <div class="dash-card" style="margin-top:16px">
+        <div class="dash-card-header">
+          <div class="dash-card-title">📍 Recent Bookings</div>
+          <a href="/clinics" style="font-size:12px;color:var(--accent);font-weight:700;text-decoration:none">Book new</a>
+        </div>
+        {% if bookings %}
+        {% for b in bookings[:3] %}
+        <div class="booking-item">
+          <div class="booking-status status-{{ b.status }}">{{ b.status }}</div>
+          <div>
+            <div class="booking-name">{{ b.vaccine_name }}</div>
+            <div class="booking-meta">{{ b.clinic.name }} · {{ b.appointment_date.strftime('%d %b %Y, %H:%M') }}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Booking #{{ b.confirmation_code }}</div>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="dash-empty" style="padding:20px 0">
+          <div>No bookings yet.</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px"><a href="/clinics" style="color:var(--accent);font-weight:600;text-decoration:none">Find a clinic near you →</a></div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ── LOG VACCINE MODAL ── -->
+<div class="modal-overlay hidden" id="logModal">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header">
+      <div style="font-size:18px;font-weight:800">Log a Vaccine</div>
+      <button onclick="closeLogModal()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted)">×</button>
+    </div>
+    <form method="POST" action="/dashboard/log-vaccine" style="padding:0 24px 24px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-row">
+        <label>Vaccine</label>
+        <select name="vaccine_key" id="logVaccineKey" onchange="updateVaccineName(this)" required>
+          <option value="">Select vaccine...</option>
+          {% for key, vac in vaccines.items() %}
+          <option value="{{ key }}" data-name="{{ vac.name }}">{{ vac.name }}</option>
+          {% endfor %}
+        </select>
+        <input type="hidden" name="vaccine_name" id="logVaccineName" />
+      </div>
+      <div class="form-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-row" style="margin-bottom:0">
+          <label>Date Given</label>
+          <input type="date" name="date_given" max="{{ today.isoformat() }}" required />
+        </div>
+        <div class="form-row" style="margin-bottom:0">
+          <label>Dose #</label>
+          <select name="dose_number">
+            <option value="1">Dose 1</option>
+            <option value="2">Dose 2</option>
+            <option value="3">Dose 3</option>
+            <option value="4">Booster</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:14px">
+        <label>Clinic / Location (optional)</label>
+        <input type="text" name="clinic_name" placeholder="e.g. Prodia Sudirman" />
+      </div>
+      <div class="form-row">
+        <label>Next Dose Date (if applicable)</label>
+        <input type="date" name="next_dose_date" />
+      </div>
+      <div class="form-row">
+        <label>Set WhatsApp Reminder for Next Dose?</label>
+        <select name="set_reminder">
+          <option value="yes">Yes — remind me</option>
+          <option value="no">No thanks</option>
+        </select>
+      </div>
+      <button type="submit" class="auth-btn" style="margin-top:8px">Save Record</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function openLogModal() { document.getElementById('logModal').classList.remove('hidden'); }
+function closeLogModal() { document.getElementById('logModal').classList.add('hidden'); }
+function updateVaccineName(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('logVaccineName').value = opt.dataset.name || '';
+}
+document.getElementById('logModal').addEventListener('click', function(e) {
+  if (e.target === this) closeLogModal();
+});
+</script>
+</body>
+</html>

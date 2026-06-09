@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find a Clinic — CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+</head>
+<body class="clinics-body">
+
+<!-- ── NAV ── -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">💉 Care<span>Mate</span></a>
+    <div class="nav-links">
+      <a href="/#assessment" class="nav-link">Assessment</a>
+      <a href="/clinics" class="nav-link" style="color:var(--accent)">Clinics</a>
+      <a href="/teleconsultation" class="nav-link">Doctors</a>
+      {% if current_user.is_authenticated %}
+      <a href="/dashboard" class="btn-primary" style="padding:8px 18px;font-size:13px">Dashboard</a>
+      {% else %}
+      <a href="/login" class="btn-outline" style="padding:8px 18px;font-size:13px">Sign In</a>
+      <a href="/register" class="btn-primary" style="padding:8px 18px;font-size:13px">Sign Up</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="clinics-hero">
+  <div class="clinics-hero-inner">
+    <h1 class="clinics-title">📍 Find a Vaccination Clinic</h1>
+    <p class="clinics-subtitle">{{ clinics|length }} partner clinics across Jakarta. Book instantly, get reminded automatically.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="flash-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="clinics-filters">
+      <input type="text" class="filter-input" id="searchInput" placeholder="🔍  Search clinic name or network..." oninput="filterClinics()" />
+      <select class="filter-input" id="vaccineFilter" onchange="filterClinics()" style="max-width:220px">
+        <option value="">All vaccines</option>
+        {% for key, vac in vaccines.items() %}
+        <option value="{{ key }}">{{ vac.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ── CLINIC GRID ── -->
+<div class="clinics-grid" id="clinicsGrid">
+  {% for clinic in clinics %}
+  {% set voffered = clinic.vaccines_offered | from_json %}
+  <div class="clinic-card" data-name="{{ clinic.name }} {{ clinic.branch }} {{ clinic.network }}" data-vaccines="{{ clinic.vaccines_offered }}">
+    <div class="clinic-card-top">
+      <div class="clinic-logo">{{ clinic.logo or '🏥' }}</div>
+      <div style="flex:1">
+        <div class="clinic-name">{{ clinic.name }}</div>
+        <div class="clinic-branch">{{ clinic.branch }}</div>
+      </div>
+      <div class="clinic-rating">⭐ {{ clinic.rating }}</div>
+    </div>
+
+    <div class="clinic-meta">
+      <span>📍 {{ clinic.address }}</span>
+      <span>📞 {{ clinic.phone }}</span>
+      <span>🕐 {{ clinic.opening_hours }}</span>
+      <span>💰 {{ clinic.price_range }}</span>
+    </div>
+
+    <div class="clinic-vaccines">
+      {% for vkey in voffered[:6] %}
+      <span class="clinic-vaccine-tag">{{ vaccines.get(vkey, {}).get('name', vkey) if vaccines.get(vkey) else vkey }}</span>
+      {% endfor %}
+      {% if voffered|length > 6 %}
+      <span class="clinic-vaccine-tag" style="background:var(--bg-secondary);color:var(--text-muted);border-color:var(--border)">+{{ voffered|length - 6 }} more</span>
+      {% endif %}
+    </div>
+
+    <div class="clinic-actions">
+      {% if current_user.is_authenticated %}
+      <button class="btn-book" onclick="openBookingModal({{ clinic.id }}, '{{ clinic.name }} {{ clinic.branch }}')">📅 Book Appointment</button>
+      {% else %}
+      <a href="/login" class="btn-book">📅 Sign in to Book</a>
+      {% endif %}
+      <a class="btn-directions" href="https://www.google.com/maps/search/?api=1&query={{ clinic.latitude }},{{ clinic.longitude }}" target="_blank" rel="noopener">🗺 Map</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ── BOOKING MODAL ── -->
+<div class="modal-overlay hidden" id="bookingModal">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-header">
+      <div style="font-size:18px;font-weight:800">📅 Book Appointment</div>
+      <button onclick="closeBookingModal()" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--text-muted)">×</button>
+    </div>
+    <form method="POST" action="/clinics/book" style="padding:0 24px 24px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="clinic_id" id="bookClinicId" />
+
+      <div style="margin:16px 0 20px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:4px">Clinic</div>
+        <div id="bookClinicName" style="font-size:15px;font-weight:700;color:var(--text-primary)"></div>
+      </div>
+
+      <div class="form-row">
+        <label>Vaccine</label>
+        <select name="vaccine_key" id="bookVaccineKey" onchange="syncVaccineName(this)" required>
+          <option value="">Select vaccine...</option>
+          {% for key, vac in vaccines.items() %}
+          <option value="{{ key }}" data-name="{{ vac.name }}">{{ vac.name }}</option>
+          {% endfor %}
+        </select>
+        <input type="hidden" name="vaccine_name" id="bookVaccineName" />
+      </div>
+
+      <div class="form-row">
+        <label>Appointment Date & Time</label>
+        <input type="datetime-local" name="appointment_date" id="bookDateTime" required />
+      </div>
+
+      <div class="form-row">
+        <label>Notes (optional)</label>
+        <textarea name="notes" rows="2" placeholder="Any special requests or health info for the clinic..." style="resize:vertical"></textarea>
+      </div>
+
+      <div style="background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.15);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--text-secondary)">
+        💉 After booking, CareMate will automatically set WhatsApp reminders 7 days, 1 day, and the morning of your appointment.
+      </div>
+
+      <button type="submit" class="auth-btn">Confirm Booking →</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── BOOKING CONFIRMED MODAL ── -->
+{% if booking_confirmed %}
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box" style="max-width:420px">
+    <div class="booking-confirm-box">
+      <div class="booking-confirm-icon">🎉</div>
+      <div style="font-size:20px;font-weight:900;margin-bottom:8px">Booking Confirmed!</div>
+      <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px">Your booking reference number:</div>
+      <div class="booking-confirm-code">{{ booking_confirmed }}</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:8px;margin-bottom:24px">
+        WhatsApp reminders will be sent if you've enabled them in your profile.
+      </div>
+      <button onclick="document.getElementById('confirmModal').classList.add('hidden')" class="auth-btn" style="max-width:240px;margin:0 auto">
+        Done
+      </button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+function openBookingModal(clinicId, clinicName) {
+  document.getElementById('bookClinicId').value = clinicId;
+  document.getElementById('bookClinicName').textContent = clinicName;
+  // Set min datetime to now
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('bookDateTime').min = now.toISOString().slice(0, 16);
+  document.getElementById('bookingModal').classList.remove('hidden');
+}
+
+function closeBookingModal() {
+  document.getElementById('bookingModal').classList.add('hidden');
+}
+
+function syncVaccineName(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('bookVaccineName').value = opt.dataset.name || '';
+}
+
+document.getElementById('bookingModal').addEventListener('click', function(e) {
+  if (e.target === this) closeBookingModal();
+});
+
+function filterClinics() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const vax = document.getElementById('vaccineFilter').value;
+  document.querySelectorAll('.clinic-card').forEach(card => {
+    const nameMatch = !q || card.dataset.name.toLowerCase().includes(q);
+    const vaxMatch  = !vax || (card.dataset.vaccines && card.dataset.vaccines.includes(vax));
+    card.style.display = (nameMatch && vaxMatch) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

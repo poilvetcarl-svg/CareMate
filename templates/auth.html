@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ page_title }} — CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-secondary); }
+    .auth-wrap { width: 100%; max-width: 460px; padding: 24px 16px; }
+    .auth-logo { text-align: center; margin-bottom: 32px; }
+    .auth-logo .logo-text { font-size: 28px; font-weight: 900; }
+    .auth-logo .logo-accent { color: var(--accent); }
+    .auth-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 36px 32px; box-shadow: 0 8px 40px rgba(0,0,0,0.07); }
+    .auth-title { font-size: 22px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
+    .auth-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
+    .form-row { margin-bottom: 18px; }
+    .form-row label { display: block; font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; }
+    .form-row input, .form-row select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; background: var(--bg); color: var(--text-primary); transition: border-color 0.15s; box-sizing: border-box; }
+    .form-row input:focus, .form-row select:focus { outline: none; border-color: var(--accent); }
+    .form-row .hint { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-check { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+    .form-check input[type=checkbox] { width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; accent-color: var(--accent); }
+    .form-check label { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+    .auth-btn { width: 100%; padding: 13px; border-radius: 12px; border: none; background: var(--accent); color: white; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; margin-top: 4px; }
+    .auth-btn:hover { opacity: 0.88; }
+    .auth-divider { text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 22px; }
+    .auth-divider a { color: var(--accent); font-weight: 700; text-decoration: none; }
+    .auth-alert { padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 18px; }
+    .auth-alert.error   { background: rgba(239,68,68,0.08);  color: #dc2626; border: 1px solid rgba(239,68,68,0.2); }
+    .auth-alert.success { background: rgba(5,150,105,0.08);  color: #059669; border: 1px solid rgba(5,150,105,0.2); }
+    .tab-switch { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 3px; margin-bottom: 28px; }
+    .tab-btn { flex: 1; padding: 9px; border: none; background: transparent; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: all 0.15s; }
+    .tab-btn.active { background: white; color: var(--text-primary); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .section-divider { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); text-align: center; margin: 6px 0 18px; position: relative; }
+    .section-divider::before, .section-divider::after { content:''; position: absolute; top: 50%; width: 38%; height: 1px; background: var(--border); }
+    .section-divider::before { left: 0; }
+    .section-divider::after  { right: 0; }
+  </style>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-logo">
+    <a href="/" style="text-decoration:none;color:inherit">
+      <span class="logo-text">Care<span class="logo-accent">Mate</span></span>
+    </a>
+    <p style="font-size:13px;color:var(--text-muted);margin-top:4px">Your Personalised Vaccination Platform</p>
+  </div>
+
+  <div class="auth-card">
+
+    <!-- Tab switch -->
+    <div class="tab-switch">
+      <button class="tab-btn {% if mode=='login' %}active{% endif %}" onclick="location.href='/login'">Sign In</button>
+      <button class="tab-btn {% if mode=='register' %}active{% endif %}" onclick="location.href='/register'">Create Account</button>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="auth-alert {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    {% if mode == 'login' %}
+    <!-- ── LOGIN ── -->
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-sub">Sign in to view your vaccination history and reminders.</div>
+    <form method="POST" action="/login">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-row">
+        <label>Email address</label>
+        <input type="email" name="email" placeholder="you@example.com" required autofocus />
+      </div>
+      <div class="form-row">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="auth-btn">Sign In →</button>
+    </form>
+
+    <div class="section-divider" style="margin-top:22px">or</div>
+    <div style="text-align:center">
+      <a href="/corporate/login" style="font-size:13px;color:var(--accent);font-weight:700;text-decoration:none">🏢 Sign in as a Company / HR Admin</a>
+    </div>
+
+    {% else %}
+    <!-- ── REGISTER ── -->
+    <div class="auth-title">Create your account</div>
+    <div class="auth-sub">Free — takes 30 seconds. No credit card needed.</div>
+    <form method="POST" action="/register">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-row-2">
+        <div class="form-row" style="margin-bottom:0">
+          <label>Full Name</label>
+          <input type="text" name="name" placeholder="Budi Santoso" required />
+        </div>
+        <div class="form-row" style="margin-bottom:0">
+          <label>Date of Birth</label>
+          <input type="date" name="dob" required />
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:18px">
+        <label>Email address</label>
+        <input type="email" name="email" placeholder="you@example.com" required />
+      </div>
+      <div class="form-row">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Min. 8 characters" minlength="8" required />
+      </div>
+      <div class="form-row">
+        <label>WhatsApp Number <span style="font-weight:400;text-transform:none;letter-spacing:0">(for reminders)</span></label>
+        <input type="tel" name="phone" placeholder="+62812345678" />
+        <div class="hint">Optional — we'll send you vaccine reminders via WhatsApp</div>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" name="whatsapp_opt_in" id="waOptIn" />
+        <label for="waOptIn">Send me WhatsApp vaccination reminders (you can turn this off anytime)</label>
+      </div>
+      <button type="submit" class="auth-btn">Create Account →</button>
+    </form>
+    {% endif %}
+
+    <div class="auth-divider" style="margin-top:20px">
+      {% if mode == 'login' %}
+        Don't have an account? <a href="/register">Sign up free</a>
+      {% else %}
+        Already have an account? <a href="/login">Sign in</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:16px">
+    By signing up you agree to our Terms of Use and Privacy Policy.
+  </p>
+</div>
+</body>
+</html>

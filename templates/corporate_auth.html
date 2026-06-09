@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ page_title }} — CareMate Business</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-secondary); }
+    .auth-wrap { width: 100%; max-width: 500px; padding: 24px 16px; }
+    .auth-logo { text-align: center; margin-bottom: 32px; }
+    .auth-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 36px 32px; box-shadow: 0 8px 40px rgba(0,0,0,0.07); }
+    .auth-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .auth-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
+    .form-row { margin-bottom: 16px; }
+    .form-row label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 6px; }
+    .form-row input, .form-row select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; background: var(--bg); color: var(--text-primary); box-sizing: border-box; transition: border-color 0.15s; }
+    .form-row input:focus, .form-row select:focus { outline: none; border-color: var(--accent); }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .auth-btn { width: 100%; padding: 13px; border-radius: 12px; border: none; background: var(--accent); color: white; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; margin-top: 4px; }
+    .auth-btn:hover { opacity: 0.88; }
+    .auth-divider { text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 22px; }
+    .auth-divider a { color: var(--accent); font-weight: 700; text-decoration: none; }
+    .auth-alert { padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 18px; }
+    .auth-alert.error { background: rgba(239,68,68,0.08); color: #dc2626; border: 1px solid rgba(239,68,68,0.2); }
+    .auth-alert.success { background: rgba(5,150,105,0.08); color: #059669; border: 1px solid rgba(5,150,105,0.2); }
+    .tab-switch { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 3px; margin-bottom: 28px; }
+    .tab-btn { flex: 1; padding: 9px; border: none; background: transparent; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: all 0.15s; }
+    .tab-btn.active { background: white; color: var(--text-primary); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .corp-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(124,58,237,0.08); color: #7c3aed; border: 1px solid rgba(124,58,237,0.2); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 700; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-logo">
+    <a href="/" style="text-decoration:none;color:inherit">
+      <span style="font-size:28px;font-weight:900">Care<span style="color:var(--accent)">Mate</span></span>
+    </a>
+    <p style="font-size:13px;color:var(--text-muted);margin-top:4px">For Business</p>
+  </div>
+
+  <div class="auth-card">
+    <div style="text-align:center;margin-bottom:20px">
+      <div class="corp-badge">🏢 Corporate / HR Portal</div>
+    </div>
+
+    <div class="tab-switch">
+      <button class="tab-btn {% if mode=='login' %}active{% endif %}" onclick="location.href='/corporate/login'">Sign In</button>
+      <button class="tab-btn {% if mode=='register' %}active{% endif %}" onclick="location.href='/corporate/register'">Register Company</button>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="auth-alert {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    {% if mode == 'login' %}
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-sub">Sign in to your corporate vaccination dashboard.</div>
+    <form method="POST" action="/corporate/login">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-row">
+        <label>Company Email</label>
+        <input type="email" name="email" placeholder="hr@yourcompany.com" required autofocus />
+      </div>
+      <div class="form-row">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="auth-btn">Sign In →</button>
+    </form>
+
+    {% else %}
+    <div class="auth-title">Register Your Company</div>
+    <div class="auth-sub">Free to get started. Manage employee vaccination compliance.</div>
+    <form method="POST" action="/corporate/register">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-row">
+        <label>Company Name</label>
+        <input type="text" name="company_name" placeholder="PT Maju Bersama Tbk" required />
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin-bottom:0">
+          <label>Industry</label>
+          <select name="industry" required>
+            <option value="">Select...</option>
+            <option>Healthcare</option>
+            <option>Technology</option>
+            <option>Manufacturing</option>
+            <option>Finance</option>
+            <option>Retail</option>
+            <option>Education</option>
+            <option>Hospitality</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-row" style="margin-bottom:0">
+          <label>Company Size</label>
+          <select name="employee_size" required>
+            <option value="">Select...</option>
+            <option value="1-50">1–50 employees</option>
+            <option value="50-200">50–200</option>
+            <option value="200-500">200–500</option>
+            <option value="500+">500+</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:16px">
+        <label>HR Contact Name</label>
+        <input type="text" name="contact_name" placeholder="Budi Santoso" required />
+      </div>
+      <div class="form-row">
+        <label>HR Email (your login)</label>
+        <input type="email" name="email" placeholder="hr@yourcompany.com" required />
+      </div>
+      <div class="form-row">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Min. 8 characters" minlength="8" required />
+      </div>
+      <button type="submit" class="auth-btn">Register Company →</button>
+    </form>
+    {% endif %}
+
+    <div class="auth-divider">
+      {% if mode == 'login' %}
+        New company? <a href="/corporate/register">Register here</a>
+      {% else %}
+        Already registered? <a href="/corporate/login">Sign in</a>
+      {% endif %}
+    </div>
+    <div class="auth-divider" style="margin-top:12px">
+      <a href="/login" style="color:var(--text-muted);font-size:12px">← Back to individual user login</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,11 +1,16 @@
-from flask import Flask, render_template, request, jsonify, session, Response, stream_with_context
+from flask import Flask, render_template, request, jsonify, session, Response, stream_with_context, redirect, url_for, flash
 from flask_cors import CORS
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_wtf.csrf import CSRFProtect
 from openai import OpenAI
 import os
 import json
 import math
 import base64
 import requests as http_req
+import string
+import random
+from datetime import date, datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,6 +18,40 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "vacc-dev-secret-2024")
 CORS(app)
+
+# ── Extensions ──
+csrf = CSRFProtect(app)
+
+# Database
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+    "DATABASE_URL", "sqlite:///caremate.db"
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, seed_clinics
+db.init_app(app)
+
+# Login manager
+login_manager = LoginManager(app)
+login_manager.login_view  = "login"
+login_manager.login_message = "Please sign in to access that page."
+login_manager.login_message_category = "error"
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# Jinja2 helpers
+import json as _json
+app.jinja_env.filters['from_json'] = lambda s: _json.loads(s) if s else []
+
+def _gen_code(n=8):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=n))
+
+# Initialise DB + seed clinics on first run
+with app.app_context():
+    db.create_all()
+    seed_clinics()
 
 _api_key = os.environ.get("OPENAI_API_KEY", "")
 client = OpenAI(api_key=_api_key) if _api_key.startswith("sk-") else None
@@ -682,7 +721,365 @@ def get_recommended_vaccines(data):
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", current_user=current_user)
+
+
+# ══════════════════════════════════════════════════════════
+#  AUTH ROUTES
+# ══════════════════════════════════════════════════════════
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
+    if request.method == "POST":
+        email    = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            login_user(user)
+            next_page = request.args.get("next")
+            return redirect(next_page or url_for("dashboard"))
+        flash("Invalid email or password.", "error")
+    return render_template("auth.html", mode="login", page_title="Sign In")
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
+    if request.method == "POST":
+        email    = request.form.get("email", "").strip().lower()
+        name     = request.form.get("name", "").strip()
+        password = request.form.get("password", "")
+        phone    = request.form.get("phone", "").strip() or None
+        dob_str  = request.form.get("dob", "")
+        wa_opt   = request.form.get("whatsapp_opt_in") == "on"
+
+        if User.query.filter_by(email=email).first():
+            flash("An account with that email already exists.", "error")
+            return render_template("auth.html", mode="register", page_title="Create Account")
+
+        dob = None
+        if dob_str:
+            try:
+                dob = datetime.strptime(dob_str, "%Y-%m-%d").date()
+            except ValueError:
+                pass
+
+        user = User(
+            email=email, name=name, phone=phone,
+            date_of_birth=dob, whatsapp_opt_in=wa_opt
+        )
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        flash("Welcome to CareMate! 🎉", "success")
+        return redirect(url_for("dashboard"))
+
+    return render_template("auth.html", mode="register", page_title="Create Account")
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("index"))
+
+
+# ══════════════════════════════════════════════════════════
+#  USER DASHBOARD ROUTES
+# ══════════════════════════════════════════════════════════
+
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    today = date.today()
+    vaccination_records = VaccinationRecord.query.filter_by(user_id=current_user.id)\
+        .order_by(VaccinationRecord.date_given.desc()).all()
+    pending_reminders = VaccineReminder.query.filter_by(user_id=current_user.id, sent=False)\
+        .filter(VaccineReminder.reminder_date >= today)\
+        .order_by(VaccineReminder.reminder_date).all()
+    assessments = Assessment.query.filter_by(user_id=current_user.id).all()
+    last_assessment = Assessment.query.filter_by(user_id=current_user.id)\
+        .order_by(Assessment.created_at.desc()).first()
+    bookings = Booking.query.filter_by(user_id=current_user.id)\
+        .order_by(Booking.appointment_date.desc()).all()
+
+    return render_template(
+        "user_dashboard.html",
+        vaccination_records=vaccination_records,
+        pending_reminders=pending_reminders,
+        assessments=assessments,
+        last_assessment=last_assessment,
+        bookings=bookings,
+        today=today,
+        vaccines=VACCINE_DATA["vaccines"]
+    )
+
+
+@app.route("/dashboard/log-vaccine", methods=["POST"])
+@login_required
+def log_vaccine():
+    vaccine_key  = request.form.get("vaccine_key", "")
+    vaccine_name = request.form.get("vaccine_name", "").strip()
+    date_str     = request.form.get("date_given", "")
+    dose_num     = int(request.form.get("dose_number", 1))
+    clinic_name  = request.form.get("clinic_name", "").strip() or None
+    next_date_s  = request.form.get("next_dose_date", "")
+    set_reminder = request.form.get("set_reminder", "no") == "yes"
+
+    try:
+        date_given = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        flash("Invalid date.", "error")
+        return redirect(url_for("dashboard"))
+
+    next_dose_date = None
+    if next_date_s:
+        try:
+            next_dose_date = datetime.strptime(next_date_s, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+
+    rec = VaccinationRecord(
+        user_id=current_user.id,
+        vaccine_key=vaccine_key,
+        vaccine_name=vaccine_name,
+        date_given=date_given,
+        dose_number=dose_num,
+        clinic_name=clinic_name,
+        next_dose_date=next_dose_date
+    )
+    db.session.add(rec)
+    db.session.commit()
+
+    if set_reminder and next_dose_date:
+        from reminders import schedule_vaccine_reminders
+        schedule_vaccine_reminders(
+            current_user, vaccine_key, vaccine_name, next_dose_date
+        )
+
+    flash(f"✅ {vaccine_name} (Dose {dose_num}) logged successfully!", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/dashboard/reminders")
+@login_required
+def dashboard_reminders():
+    today = date.today()
+    pending = VaccineReminder.query.filter_by(user_id=current_user.id, sent=False)\
+        .filter(VaccineReminder.reminder_date >= today)\
+        .order_by(VaccineReminder.reminder_date).all()
+    past = VaccineReminder.query.filter_by(user_id=current_user.id)\
+        .filter(VaccineReminder.reminder_date < today)\
+        .order_by(VaccineReminder.reminder_date.desc()).limit(20).all()
+    return render_template("dashboard_reminders.html",
+                           pending=pending, past=past, today=today)
+
+
+@app.route("/dashboard/history")
+@login_required
+def dashboard_history():
+    records = VaccinationRecord.query.filter_by(user_id=current_user.id)\
+        .order_by(VaccinationRecord.date_given.desc()).all()
+    return render_template("dashboard_history.html", records=records,
+                           today=date.today())
+
+
+@app.route("/dashboard/settings", methods=["GET", "POST"])
+@login_required
+def dashboard_settings():
+    if request.method == "POST":
+        current_user.name  = request.form.get("name", current_user.name).strip()
+        current_user.phone = request.form.get("phone", "").strip() or None
+        current_user.whatsapp_opt_in = request.form.get("whatsapp_opt_in") == "on"
+        db.session.commit()
+        flash("Settings saved.", "success")
+    return render_template("dashboard_settings.html")
+
+
+# ══════════════════════════════════════════════════════════
+#  CLINIC BOOKING ROUTES
+# ══════════════════════════════════════════════════════════
+
+@app.route("/clinics")
+def clinics():
+    all_clinics = Clinic.query.order_by(Clinic.rating.desc()).all()
+    booking_confirmed = request.args.get("booking_confirmed")
+    return render_template(
+        "clinics.html",
+        clinics=all_clinics,
+        vaccines=VACCINE_DATA["vaccines"],
+        booking_confirmed=booking_confirmed
+    )
+
+
+@app.route("/clinics/book", methods=["POST"])
+@login_required
+def book_clinic():
+    clinic_id    = int(request.form.get("clinic_id", 0))
+    vaccine_key  = request.form.get("vaccine_key", "")
+    vaccine_name = request.form.get("vaccine_name", "").strip()
+    appt_str     = request.form.get("appointment_date", "")
+    notes        = request.form.get("notes", "").strip() or None
+
+    clinic = Clinic.query.get_or_404(clinic_id)
+
+    try:
+        appt_dt = datetime.strptime(appt_str, "%Y-%m-%dT%H:%M")
+    except ValueError:
+        flash("Invalid appointment date.", "error")
+        return redirect(url_for("clinics"))
+
+    code = _gen_code(8)
+    booking = Booking(
+        user_id=current_user.id,
+        clinic_id=clinic_id,
+        vaccine_key=vaccine_key,
+        vaccine_name=vaccine_name,
+        appointment_date=appt_dt,
+        status="confirmed",
+        confirmation_code=code,
+        referral_fee=25000,
+        notes=notes
+    )
+    db.session.add(booking)
+    db.session.commit()
+
+    # Schedule reminders for the booking date
+    from reminders import schedule_vaccine_reminders
+    schedule_vaccine_reminders(
+        current_user, vaccine_key, vaccine_name, appt_dt.date()
+    )
+
+    return redirect(url_for("clinics", booking_confirmed=code))
+
+
+# ══════════════════════════════════════════════════════════
+#  CORPORATE ROUTES
+# ══════════════════════════════════════════════════════════
+
+@app.route("/corporate/login", methods=["GET", "POST"])
+def corporate_login():
+    if request.method == "POST":
+        email    = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        company  = Company.query.filter_by(contact_email=email).first()
+        if company and company.check_password(password):
+            session["corp_id"] = company.id
+            return redirect(url_for("corporate_dashboard"))
+        flash("Invalid email or password.", "error")
+    return render_template("corporate_auth.html", mode="login",
+                           page_title="Corporate Sign In")
+
+
+@app.route("/corporate/register", methods=["GET", "POST"])
+def corporate_register():
+    if request.method == "POST":
+        email        = request.form.get("email", "").strip().lower()
+        company_name = request.form.get("company_name", "").strip()
+        contact_name = request.form.get("contact_name", "").strip()
+        industry     = request.form.get("industry", "")
+        emp_size     = request.form.get("employee_size", "")
+        password     = request.form.get("password", "")
+
+        if Company.query.filter_by(contact_email=email).first():
+            flash("A company account with that email already exists.", "error")
+            return render_template("corporate_auth.html", mode="register",
+                                   page_title="Register Company")
+
+        company = Company(
+            name=company_name,
+            contact_email=email,
+            contact_name=contact_name,
+            industry=industry,
+            employee_size=emp_size,
+            plan="starter"
+        )
+        company.set_password(password)
+        db.session.add(company)
+        db.session.commit()
+        session["corp_id"] = company.id
+        flash(f"Welcome, {company_name}! Your corporate account is ready. 🎉", "success")
+        return redirect(url_for("corporate_dashboard"))
+
+    return render_template("corporate_auth.html", mode="register",
+                           page_title="Register Company")
+
+
+def _get_corp():
+    """Get logged-in company from session, or None."""
+    corp_id = session.get("corp_id")
+    return Company.query.get(corp_id) if corp_id else None
+
+
+@app.route("/corporate/logout")
+def corporate_logout():
+    session.pop("corp_id", None)
+    return redirect(url_for("corporate_login"))
+
+
+@app.route("/corporate/dashboard")
+def corporate_dashboard():
+    company = _get_corp()
+    if not company:
+        return redirect(url_for("corporate_login"))
+
+    employees = company.employees
+    coverage  = company.vaccination_coverage
+
+    total_pending = sum(len(e.pending_reminders()) for e in employees)
+    total_assess  = sum(len(e.assessments) for e in employees)
+
+    return render_template(
+        "corporate_dashboard.html",
+        company=company,
+        employees=employees,
+        coverage=coverage,
+        vaccines=VACCINE_DATA["vaccines"],
+        total_pending_reminders=total_pending,
+        total_assessments=total_assess
+    )
+
+
+@app.route("/corporate/dashboard/remind/<vaccine_key>")
+def corporate_send_reminder(vaccine_key):
+    company = _get_corp()
+    if not company:
+        return redirect(url_for("corporate_login"))
+
+    from reminders import send_whatsapp, build_reminder_message
+    needing = company.employees_needing(vaccine_key)
+    vac_name = VACCINE_DATA["vaccines"].get(vaccine_key, {}).get("name", vaccine_key)
+    sent = 0
+    for emp in needing:
+        if emp.phone and emp.whatsapp_opt_in:
+            msg = build_reminder_message(vac_name, emp.name, 0)
+            result = send_whatsapp(emp.phone, msg)
+            if result["ok"]:
+                sent += 1
+    flash(f"Reminder sent to {sent} employee(s) for {vac_name}.", "success")
+    return redirect(url_for("corporate_dashboard"))
+
+
+@app.route("/corporate/dashboard/reminders/send-all")
+def corporate_send_all():
+    company = _get_corp()
+    if not company:
+        return redirect(url_for("corporate_login"))
+    from reminders import send_whatsapp, build_reminder_message
+    sent = 0
+    for emp in company.employees:
+        pending = emp.pending_reminders()
+        if pending and emp.phone and emp.whatsapp_opt_in:
+            msg = build_reminder_message(pending[0].vaccine_name, emp.name, 0)
+            result = send_whatsapp(emp.phone, msg)
+            if result["ok"]:
+                sent += 1
+    flash(f"Reminders sent to {sent} employee(s).", "success")
+    return redirect(url_for("corporate_dashboard"))
 
 
 @app.route("/api/recommend", methods=["POST"])
@@ -722,6 +1119,25 @@ Be empathetic, clear, and avoid medical jargon. Do not use bullet points."""
             ai_summary = response.choices[0].message.content
         except Exception as e:
             ai_summary = f"Based on your health profile, we have identified {len(vaccines)} vaccines recommended for you. Your {risk['level'].lower()} classification indicates that timely vaccination is important for protecting your health. Please consult with a healthcare provider to discuss your personalized immunization schedule."
+
+    # Persist assessment if a user is logged in
+    if current_user.is_authenticated:
+        try:
+            asmt = Assessment(
+                user_id=current_user.id,
+                age=int(data.get("age", 0)),
+                sex=data.get("sex", ""),
+                conditions=json.dumps(data.get("conditions", [])),
+                travel_regions=json.dumps(data.get("travel_regions", [])),
+                pregnant=data.get("pregnant") == "yes",
+                risk_score=risk["percentage"],
+                risk_level=risk["level"],
+                vaccines_recommended=json.dumps([v["key"] for v in vaccines])
+            )
+            db.session.add(asmt)
+            db.session.commit()
+        except Exception as e:
+            print(f"[Assessment save] {e}")
 
     return jsonify({
         "risk": risk,
@@ -1364,4 +1780,6 @@ def did_stream_stop():
 
 
 if __name__ == "__main__":
+    from reminders import start_scheduler
+    start_scheduler(app)
     app.run(debug=True, port=5050)
