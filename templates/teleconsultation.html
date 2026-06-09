@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teleconsultation — CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    /* Fix Available Now badge — inline chip above the doctor name */
+    .doctor-status-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px; margin-bottom: 6px;
+      background: rgba(16,185,129,0.12); color: #059669;
+      width: fit-content;
+    }
+    .doctor-status-chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: #059669; }
+  </style>
+</head>
+<body class="telecon-page">
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo">
+      <span class="logo-icon">💉</span>
+      <span class="logo-text">Care<span class="logo-accent">Mate</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="/" class="nav-link">Assessment</a>
+      <a href="/teleconsultation" class="nav-link active">Teleconsultation</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="telecon-hero">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="telecon-hero-content">
+    <div class="hero-badge"><span class="badge-dot"></span>Indonesia · 2 Specialists Available Now</div>
+    <h1 class="hero-title">Talk to a <span class="gradient-text">Vaccine Expert</span></h1>
+    <p class="hero-subtitle">Connect with certified Indonesian doctors specializing in vaccinology, travel medicine, and preventive health — from anywhere, anytime.</p>
+    <div class="telecon-stats">
+      <div class="tstat"><span class="tstat-num">2</span><span class="tstat-label">Doctors Available</span></div>
+      <div class="tstat-div"></div>
+      <div class="tstat"><span class="tstat-num">Rp 150K</span><span class="tstat-label">Starting From</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- GEOLOCATION BANNER -->
+<div class="geo-banner" id="geoBanner">
+  <div class="geo-content">
+    <span class="geo-icon">📍</span>
+    <span id="geoText">Detecting your location to show nearest doctors...</span>
+    <button class="geo-btn" onclick="getUserLocation()">Use My Location</button>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<section class="filters-section">
+  <div class="filters-container">
+    <div class="filter-group">
+      <label>City</label>
+      <select id="cityFilter" onchange="filterDoctors()">
+        <option value="">All Cities</option>
+        <option value="jakarta">Jakarta</option>
+        <option value="tangerang">Tangerang</option>
+        <option value="bekasi">Bekasi</option>
+        <option value="surabaya">Surabaya</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Specialty</label>
+      <select id="specialtyFilter" onchange="filterDoctors()">
+        <option value="">All Specialties</option>
+        <option value="vaccinology">Vaccinology</option>
+        <option value="internal">Internal Medicine</option>
+        <option value="travel">Travel Medicine</option>
+        <option value="family">Family Medicine</option>
+      </select>
+    </div>
+    <div class="filter-group filter-toggle">
+      <label class="toggle-label">
+        <input type="checkbox" id="availableOnly" onchange="filterDoctors()" />
+        <span class="toggle-switch"></span>
+        Available Now Only
+      </label>
+    </div>
+    <div class="filter-group filter-search">
+      <input type="text" id="searchDoctor" placeholder="🔍 Search by name or hospital..." oninput="filterDoctors()" />
+    </div>
+  </div>
+</section>
+
+<!-- MAP BANNER -->
+<div class="map-banner">
+  <div class="map-container" style="position:relative;">
+    <div id="doctorMap" style="width:100%;height:180px;"></div>
+  </div>
+</div>
+
+<!-- DOCTORS GRID -->
+<section class="doctors-section">
+  <div class="doctors-header">
+    <h2>Available Specialists</h2>
+    <span class="doctors-count" id="doctorsCount">2 doctors available</span>
+  </div>
+  <div class="doctors-grid" id="doctorsGrid">
+    {% set ns = namespace(shown=0) %}
+    {% for doctor in doctors %}
+    {% if doctor.available and ns.shown < 2 %}
+    {% set ns.shown = ns.shown + 1 %}
+    <div class="doctor-card"
+         data-city="{{ doctor.city | lower }}"
+         data-specialty="{{ doctor.specialty | lower }}"
+         data-available="true"
+         data-name="{{ doctor.name | lower }}"
+         data-hospital="{{ doctor.hospital | lower }}">
+
+      <div class="doctor-card-top">
+        <div class="doctor-photo-wrap">
+          <!-- Tavus avatar video (auto-plays, muted, loops) -->
+          <video class="doctor-photo" autoplay muted loop playsinline
+                 style="object-fit:cover;object-position:top;">
+            <source src="{{ doctor.photo }}" type="video/mp4">
+          </video>
+          <div class="doctor-online-dot online"></div>
+        </div>
+        <div class="doctor-info">
+          <!-- Available Now chip — inline, above doctor name, no overlap -->
+          <div class="doctor-status-chip"><div class="chip-dot"></div>Available Now</div>
+          <h3 class="doctor-name">{{ doctor.name }}</h3>
+          <p class="doctor-specialty">{{ doctor.specialty }}</p>
+          <p class="doctor-hospital">🏥 {{ doctor.hospital }}</p>
+          <p class="doctor-city">📍 {{ doctor.city }}</p>
+        </div>
+      </div>
+
+      <div class="doctor-meta">
+        <div class="doctor-meta-item">
+          <span class="meta-label">Experience</span>
+          <span class="meta-val">{{ doctor.experience }}</span>
+        </div>
+        <div class="doctor-meta-item">
+          <span class="meta-label">Rating</span>
+          <span class="meta-val rating">⭐ {{ doctor.rating }} ({{ doctor.reviews }})</span>
+        </div>
+        <div class="doctor-meta-item">
+          <span class="meta-label">Languages</span>
+          <span class="meta-val">{{ doctor.languages | join(' · ') }}</span>
+        </div>
+        <div class="doctor-meta-item">
+          <span class="meta-label">Consultation Fee</span>
+          <span class="meta-val fee">{{ doctor.fee }}</span>
+        </div>
+      </div>
+
+      <div class="doctor-slots">
+        <p class="slots-label">Available slots today:</p>
+        <div class="slots-grid">
+          {% for slot in doctor.slots %}
+          <button class="slot-btn" onclick="bookSlot('{{ doctor.name }}', '{{ slot }}')">{{ slot }}</button>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="doctor-actions">
+        <a href="/consultation/{{ doctor.id }}" class="btn-consult" style="text-decoration:none;text-align:center">
+          📹 Start AI Consultation
+        </a>
+        <button class="btn-profile" onclick="viewProfile({{ doctor.id }})">View Profile</button>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+<!-- HOW TELECONSULTATION WORKS -->
+<section class="how-telecon">
+  <h2 class="section-title">How <span class="gradient-text">Teleconsultation</span> Works</h2>
+  <div class="steps-grid">
+    <div class="how-step">
+      <div class="how-step-num">01</div>
+      <div class="how-step-icon">🔬</div>
+      <h4>Complete Assessment</h4>
+      <p>Use our AI tool to get your personalized vaccine recommendations first.</p>
+    </div>
+    <div class="how-arrow">→</div>
+    <div class="how-step">
+      <div class="how-step-num">02</div>
+      <div class="how-step-icon">👨‍⚕️</div>
+      <h4>Choose Your Doctor</h4>
+      <p>Select a specialist based on location, specialty, and availability.</p>
+    </div>
+    <div class="how-arrow">→</div>
+    <div class="how-step">
+      <div class="how-step-num">03</div>
+      <div class="how-step-icon">📹</div>
+      <h4>Video Consultation</h4>
+      <p>Connect via secure video call and discuss your vaccination plan.</p>
+    </div>
+    <div class="how-arrow">→</div>
+    <div class="how-step">
+      <div class="how-step-num">04</div>
+      <div class="how-step-icon">💉</div>
+      <h4>Get Vaccinated</h4>
+      <p>Receive your prescription and schedule your vaccinations at a nearby clinic.</p>
+    </div>
+  </div>
+</section>
+
+<!-- BOOKING MODAL -->
+<div class="modal-overlay hidden" id="bookingModal" onclick="closeBookingModal()">
+  <div class="booking-modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeBookingModal()">✕</button>
+    <div class="booking-header">
+      <div class="booking-icon">📹</div>
+      <h3>Book Teleconsultation</h3>
+    </div>
+    <div class="booking-body" id="bookingBody">
+      <p class="booking-doctor-name" id="bookingDoctorName"></p>
+      <div class="booking-form">
+        <div class="booking-field">
+          <label>Your Name</label>
+          <input type="text" placeholder="Enter your full name" id="patientName" />
+        </div>
+        <div class="booking-field">
+          <label>Email</label>
+          <input type="email" placeholder="your@email.com" id="patientEmail" />
+        </div>
+        <div class="booking-field">
+          <label>Phone (WhatsApp)</label>
+          <input type="tel" placeholder="+62 xxx xxxx xxxx" id="patientPhone" />
+        </div>
+        <div class="booking-field">
+          <label>Reason for Consultation</label>
+          <textarea placeholder="Briefly describe your vaccination needs..." id="consultReason"></textarea>
+        </div>
+        <div class="booking-field">
+          <label>Preferred Time Slot</label>
+          <div class="slots-grid" id="modalSlots"></div>
+        </div>
+      </div>
+      <button class="btn-primary booking-submit" onclick="confirmBooking()">
+        Confirm Booking — Send via WhatsApp 📱
+      </button>
+      <p class="booking-note">You'll receive a confirmation link via WhatsApp within 5 minutes.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Chatbot -->
+<div class="chatbot-widget" id="chatbotWidget">
+  <div class="chatbot-header" onclick="toggleChat()">
+    <div class="chatbot-avatar">🤖</div>
+    <div class="chatbot-title">
+      <span>CareMate Assistant</span>
+      <span class="chatbot-status">Online · Ask me anything</span>
+    </div>
+    <button class="chatbot-close-btn" id="chatToggleBtn">▼</button>
+  </div>
+  <div class="chatbot-body" id="chatbotBody">
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-message bot">
+        <div class="chat-bubble">
+          Hi! 👋 Need help choosing the right doctor? Tell me your vaccination needs and I'll guide you!
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chatInput" placeholder="Ask about teleconsultation..." class="chat-input"
+             onkeypress="if(event.key==='Enter') sendMessage()" />
+      <button class="chat-send-btn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-bottom">
+    <p>⚕️ CareMate connects you with licensed Indonesian medical professionals.</p>
+    <p>© 2025 CareMate · <a href="/">Back to Assessment</a></p>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+  let selectedDoctorId = null;
+  let selectedSlot = null;
+  const allDoctors = {{ doctors | tojson }};
+
+  function filterDoctors() {
+    const city = document.getElementById('cityFilter').value.toLowerCase();
+    const specialty = document.getElementById('specialtyFilter').value.toLowerCase();
+    const availableOnly = document.getElementById('availableOnly').checked;
+    const search = document.getElementById('searchDoctor').value.toLowerCase();
+    const cards = document.querySelectorAll('.doctor-card');
+    let visible = 0;
+    cards.forEach(card => {
+      const cardCity = card.dataset.city;
+      const cardSpecialty = card.dataset.specialty;
+      const cardAvail = card.dataset.available === 'true';
+      const cardName = card.dataset.name;
+      const cardHosp = card.dataset.hospital;
+      let show = true;
+      if (city && !cardCity.includes(city)) show = false;
+      if (specialty && !cardSpecialty.includes(specialty)) show = false;
+      if (availableOnly && !cardAvail) show = false;
+      if (search && !cardName.includes(search) && !cardHosp.includes(search)) show = false;
+      card.style.display = show ? 'flex' : 'none';
+      if (show) visible++;
+    });
+    document.getElementById('doctorsCount').textContent = visible + ' doctors found';
+  }
+
+  function getUserLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        document.getElementById('geoText').textContent =
+          `📍 Location detected — showing doctors near you (${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E)`;
+      }, () => {
+        document.getElementById('geoText').textContent = '📍 Defaulting to Jakarta area doctors';
+      });
+    }
+  }
+
+  function bookConsultation(doctorId, doctorName) {
+    selectedDoctorId = doctorId;
+    const doctor = allDoctors.find(d => d.id === doctorId);
+    document.getElementById('bookingDoctorName').textContent = 'with ' + doctorName;
+    const slotsDiv = document.getElementById('modalSlots');
+    slotsDiv.innerHTML = '';
+    if (doctor && doctor.available) {
+      doctor.slots.forEach(slot => {
+        const btn = document.createElement('button');
+        btn.className = 'slot-btn';
+        btn.textContent = slot;
+        btn.onclick = () => {
+          slotsDiv.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          selectedSlot = slot;
+        };
+        slotsDiv.appendChild(btn);
+      });
+    }
+    document.getElementById('bookingModal').classList.remove('hidden');
+  }
+
+  function bookSlot(doctorName, slot) {
+    const doctor = allDoctors.find(d => d.name === doctorName);
+    if (doctor) bookConsultation(doctor.id, doctorName);
+  }
+
+  function closeBookingModal() {
+    document.getElementById('bookingModal').classList.add('hidden');
+  }
+
+  function confirmBooking() {
+    const name = document.getElementById('patientName').value;
+    const phone = document.getElementById('patientPhone').value;
+    const reason = document.getElementById('consultReason').value;
+    const doctor = allDoctors.find(d => d.id === selectedDoctorId);
+    if (!name) { alert('Please enter your name'); return; }
+    const msg = `Hello Dr. ${doctor?.name || ''}, I'd like to book a teleconsultation via CareMate.%0A%0APatient: ${name}%0ATime: ${selectedSlot || 'TBD'}%0AReason: ${reason || 'Vaccination consultation'}`;
+    const waNumber = '6281234567890';
+    window.open(`https://wa.me/${waNumber}?text=${msg}`, '_blank');
+    closeBookingModal();
+  }
+
+  function viewProfile(doctorId) {
+    const doctor = allDoctors.find(d => d.id === doctorId);
+    if (!doctor) return;
+    alert(`Dr. ${doctor.name}\n${doctor.specialty}\n${doctor.hospital}, ${doctor.city}\nExperience: ${doctor.experience}\nRating: ⭐ ${doctor.rating} (${doctor.reviews} reviews)\nLanguages: ${doctor.languages.join(', ')}\nFee: ${doctor.fee}`);
+  }
+</script>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── LEAFLET DOCTOR MAP ── initialised after page fully loads
+const _doctors = {{ doctors | tojson }};
+
+const _mapStyle = document.createElement('style');
+_mapStyle.textContent = `
+  .leaflet-popup-content-wrapper {
+    background:#13131f !important; color:#fff !important;
+    border:1px solid rgba(255,255,255,0.1) !important;
+    border-radius:14px !important; box-shadow:0 8px 32px rgba(0,0,0,0.6) !important;
+  }
+  .leaflet-popup-tip { background:#13131f !important; }
+  .leaflet-popup-close-button { color:rgba(255,255,255,0.4) !important; }
+  .leaflet-popup-content { margin:14px 16px !important; font-family:Inter,sans-serif; }
+  @keyframes mapPulse2 {
+    0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.65); }
+    70%  { box-shadow: 0 0 0 12px rgba(16,185,129,0); }
+    100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+  }
+`;
+document.head.appendChild(_mapStyle);
+
+function _makeMarkerIcon(available) {
+  const c = available ? '#10b981' : '#6b7280';
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:14px;height:14px;border-radius:50%;background:${c};
+                 border:2.5px solid rgba(255,255,255,0.85);
+                 animation:${available ? 'mapPulse2 2.2s ease-out infinite' : 'none'};"></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+    popupAnchor: [0, -10]
+  });
+}
+
+function initMap() {
+  try {
+    const mapEl = document.getElementById('doctorMap');
+    if (!mapEl) return;
+
+    const _map = L.map('doctorMap', {
+      center: [-6.35, 107.2],
+      zoom: 9,
+      scrollWheelZoom: false,
+      zoomControl: true
+    });
+
+    // CartoDB Voyager tiles — reliable, no API key, looks polished
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '© <a href="https://carto.com/">CARTO</a> © <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(_map);
+
+    // Place a marker for every doctor
+    _doctors.forEach(doc => {
+      const m = L.marker([doc.lat, doc.lng], { icon: _makeMarkerIcon(doc.available) }).addTo(_map);
+      m.bindPopup(`
+        <div style="min-width:190px;line-height:1.5">
+          <div style="font-weight:800;font-size:14px;margin-bottom:3px">${doc.name}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">${doc.specialty}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:2px">🏥 ${doc.hospital}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px">📍 ${doc.city}</div>
+          ${doc.available
+            ? `<a href="/consultation/${doc.id}" style="display:block;background:linear-gradient(135deg,#7c3aed,#3b82f6);color:#fff;text-align:center;padding:8px 12px;border-radius:9px;text-decoration:none;font-size:12px;font-weight:700">📹 Start Consultation →</a>`
+            : `<div style="background:rgba(107,114,128,0.25);color:rgba(255,255,255,0.35);text-align:center;padding:8px;border-radius:9px;font-size:12px">Next available: ${doc.slots[0]}</div>`
+          }
+        </div>
+      `);
+    });
+
+    // Force Leaflet to recalculate container size multiple times
+    setTimeout(() => _map.invalidateSize(), 100);
+    setTimeout(() => _map.invalidateSize(), 500);
+    setTimeout(() => _map.invalidateSize(), 1500);
+  } catch(e) {
+    console.warn('Map init error:', e);
+  }
+}
+
+// Run after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMap);
+} else {
+  initMap();
+}
+</script>
+</body>
+</html>

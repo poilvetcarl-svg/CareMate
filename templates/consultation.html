@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consultation with {{ doctor.name }} — CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    body { background: #080810; overflow: hidden; }
+
+    /* ── TOP BAR ── */
+    .consult-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 60px; background: rgba(8,8,16,0.95); border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; backdrop-filter: blur(20px);
+    }
+    .consult-bar-left { display: flex; align-items: center; gap: 12px; }
+    .consult-logo { font-weight: 800; font-size: 18px; color: #fff; text-decoration: none; }
+    .consult-logo span { color: #7c3aed; }
+    .consult-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.12); }
+    .consult-doctor-name { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); }
+    .consult-bar-right { display: flex; align-items: center; gap: 12px; }
+    .call-timer { font-size: 13px; font-weight: 700; color: #10b981; font-variant-numeric: tabular-nums; }
+    .call-live-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: livePulse 1.5s ease infinite; }
+    @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+    .btn-end-call {
+      background: #ef4444; color: white; border: none; padding: 8px 18px;
+      border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+    }
+    .btn-end-call:hover { background: #dc2626; transform: scale(1.03); }
+
+    /* ── MAIN LAYOUT ── */
+    .consult-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      grid-template-rows: calc(100vh - 60px);
+      margin-top: 60px;
+      height: calc(100vh - 60px);
+    }
+
+    /* ── VIDEO AREA ── */
+    .video-area {
+      position: relative; background: #060610; overflow: hidden;
+    }
+
+    /* ── TAVUS IFRAME (fills the entire video area) ── */
+    #tavusFrame {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      border: none; z-index: 1;
+      display: none; /* shown once URL is ready */
+    }
+
+    /* ── PRE-LOAD BACKGROUND (blurred doctor photo while Tavus is initialising) ── */
+    .tavus-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background-size: cover; background-position: center top;
+      filter: brightness(0.3) blur(8px) saturate(0.6);
+      transform: scale(1.05);
+    }
+
+    /* ── CONNECTING OVERLAY ── */
+    .tavus-loading {
+      position: absolute; inset: 0; z-index: 10;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 20px; background: rgba(6,6,16,0.88);
+      transition: opacity 0.6s;
+    }
+    .tavus-loading.hidden { opacity: 0; pointer-events: none; }
+    .tavus-loading-avatar {
+      width: 100px; height: 100px; border-radius: 50%;
+      background-image: url('{{ doctor.photo }}');
+      background-size: cover; background-position: center top;
+      border: 3px solid rgba(124,58,237,0.5);
+      box-shadow: 0 0 40px rgba(124,58,237,0.3);
+      animation: avatarPulse 2s ease-in-out infinite;
+    }
+    @keyframes avatarPulse {
+      0%,100% { box-shadow: 0 0 40px rgba(124,58,237,0.3); transform: scale(1); }
+      50%      { box-shadow: 0 0 60px rgba(124,58,237,0.55); transform: scale(1.04); }
+    }
+    .tavus-loading-text { text-align: center; }
+    .tavus-loading-text h3 { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .tavus-loading-text p  { font-size: 13px; color: rgba(255,255,255,0.45); }
+    .tavus-spinner-row { display: flex; gap: 8px; margin-top: 4px; }
+    .tavus-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #7c3aed;
+      animation: dotFade 1.4s ease-in-out infinite;
+    }
+    .tavus-dot:nth-child(2) { animation-delay: 0.2s; }
+    .tavus-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotFade { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+
+    /* ── FALLBACK BANNER (Tavus not configured) ── */
+    .tavus-fallback {
+      position: absolute; inset: 0; z-index: 10;
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; padding: 32px; text-align: center;
+    }
+    .tavus-fallback .fb-avatar {
+      width: 120px; height: 120px; border-radius: 50%;
+      background-image: url('{{ doctor.photo }}');
+      background-size: cover; background-position: center;
+      border: 3px solid rgba(124,58,237,0.4);
+      animation: breatheIdle 5s ease-in-out infinite;
+    }
+    @keyframes breatheIdle {
+      0%,100% { transform: scale(1.0) translateY(0); }
+      40%     { transform: scale(1.025) translateY(-6px); }
+    }
+    .tavus-fallback h3 { font-size: 20px; font-weight: 800; color: #fff; }
+    .tavus-fallback p  { font-size: 13px; color: rgba(255,255,255,0.5); max-width: 300px; line-height: 1.6; }
+    .fb-configure-btn {
+      background: rgba(124,58,237,0.2); border: 1px solid rgba(124,58,237,0.4);
+      color: #a78bfa; padding: 10px 20px; border-radius: 10px; font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .fb-configure-btn:hover { background: rgba(124,58,237,0.35); }
+
+    /* ── HUD badges (float above iframe, pointer-events: none so clicks pass through) ── */
+    .hud-badge {
+      position: absolute; z-index: 50; pointer-events: none;
+    }
+    .video-live-badge {
+      top: 16px; left: 16px;
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 5px 12px; border-radius: 100px;
+      font-size: 11px; font-weight: 700; color: #fff; letter-spacing: 0.5px;
+    }
+    .live-dot-red { width: 7px; height: 7px; border-radius: 50%; background: #ef4444;
+      animation: livePulseRed 1.2s ease infinite; }
+    @keyframes livePulseRed { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .video-ai-badge {
+      top: 16px; right: 16px;
+      background: rgba(124,58,237,0.8); backdrop-filter: blur(8px);
+      padding: 5px 12px; border-radius: 100px;
+      font-size: 11px; font-weight: 800; color: #fff; letter-spacing: 1px;
+    }
+
+    /* ── FLOATING RISK SCORE CARD ── */
+    .risk-float {
+      position: absolute; bottom: 24px; left: 24px; z-index: 50;
+      background: rgba(8,8,20,0.82); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+      padding: 12px 16px; display: none; flex-direction: column; gap: 4px;
+      min-width: 148px; pointer-events: none;
+      animation: fadeUp 0.5s ease;
+    }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+    .risk-float.visible { display: flex; }
+    .risk-float-label { font-size: 9px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: rgba(255,255,255,0.4); }
+    .risk-float-score { font-size: 30px; font-weight: 900; line-height: 1.1; }
+    .risk-float-level { font-size: 11px; font-weight: 700; }
+    .risk-float-vaccines { font-size: 10px; color: rgba(255,255,255,0.4);
+      line-height: 1.6; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 6px; }
+
+    /* ── SIDEBAR ── */
+    .consult-sidebar {
+      display: flex; flex-direction: column;
+      background: #0f0f1a; border-left: 1px solid rgba(255,255,255,0.06);
+      height: 100%; overflow: hidden;
+    }
+    .sidebar-tabs {
+      display: flex; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .sidebar-tab {
+      flex: 1; padding: 14px; font-size: 13px; font-weight: 600;
+      color: rgba(255,255,255,0.4); text-align: center; cursor: pointer;
+      border-bottom: 2px solid transparent; transition: all 0.2s;
+    }
+    .sidebar-tab.active { color: #a78bfa; border-bottom-color: #7c3aed; }
+
+    /* TAVUS INFO CARD (shown when Tavus active) */
+    .tavus-info-card {
+      margin: 16px; padding: 16px;
+      background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(59,130,246,0.06));
+      border: 1px solid rgba(124,58,237,0.2); border-radius: 14px;
+    }
+    .tavus-info-card h4 { font-size: 13px; font-weight: 700; color: #a78bfa; margin-bottom: 8px; }
+    .tavus-info-card p  { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+    .tavus-tips { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .tavus-tip {
+      display: flex; gap: 8px; align-items: flex-start;
+      font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5;
+    }
+    .tavus-tip-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+    /* TRANSCRIPT */
+    .transcript-panel {
+      flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .transcript-panel::-webkit-scrollbar { width: 4px; }
+    .transcript-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+    .transcript-msg { display: flex; flex-direction: column; gap: 4px; animation: fadeUp 0.3s ease; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
+    .transcript-msg.doctor { align-items: flex-start; }
+    .transcript-msg.patient { align-items: flex-end; }
+    .msg-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.3); padding: 0 4px; }
+    .msg-bubble {
+      max-width: 90%; padding: 12px 14px; border-radius: 16px; font-size: 13px; line-height: 1.6;
+    }
+    .transcript-msg.doctor .msg-bubble {
+      background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.2);
+      border-bottom-left-radius: 4px; color: rgba(255,255,255,0.9);
+    }
+    .transcript-msg.patient .msg-bubble {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+      border-bottom-right-radius: 4px; color: rgba(255,255,255,0.8);
+    }
+    .typing-bubble {
+      background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 16px; border-bottom-left-radius: 4px;
+      padding: 12px 16px; display: flex; gap: 4px; align-items: center;
+    }
+    .typing-bubble span {
+      width: 7px; height: 7px; background: #a78bfa; border-radius: 50%;
+      animation: dotBounce 1.2s infinite;
+    }
+    @keyframes dotBounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }
+    .typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+
+    /* INPUT AREA */
+    .sidebar-input-area {
+      border-top: 1px solid rgba(255,255,255,0.06); padding: 14px;
+    }
+    .patient-name-setup {
+      padding: 20px 16px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .patient-name-setup label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.6); }
+    .patient-name-setup input {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 14px;
+      outline: none; font-family: inherit;
+    }
+    .patient-name-setup input:focus { border-color: #7c3aed; }
+    .btn-start-consult {
+      background: linear-gradient(135deg, #7c3aed, #3b82f6); color: white; border: none;
+      padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700;
+      cursor: pointer; width: 100%; transition: all 0.2s;
+    }
+    .btn-start-consult:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,58,237,0.4); }
+
+    .input-row { display: flex; gap: 8px; }
+    .consult-input {
+      flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px;
+      outline: none; font-family: inherit; resize: none; max-height: 80px;
+    }
+    .consult-input:focus { border-color: #7c3aed; }
+    .btn-send-consult {
+      width: 40px; height: 40px; background: #7c3aed; border: none; border-radius: 10px;
+      color: white; font-size: 16px; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; transition: all 0.2s; align-self: flex-end;
+    }
+    .btn-send-consult:hover { background: #6d28d9; }
+    .btn-mic-speak {
+      width: 40px; height: 40px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px; color: rgba(255,255,255,0.6); font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      align-self: flex-end; transition: all 0.2s;
+    }
+    .btn-mic-speak.listening { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #ef4444; animation: micPulse 1s infinite; }
+    @keyframes micPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
+    .input-hint { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 6px; text-align: center; }
+
+    /* NOTES PANEL */
+    .notes-panel { flex: 1; padding: 16px; display: none; flex-direction: column; gap: 12px; overflow-y: auto; }
+    .note-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; }
+    .note-card h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
+    .note-card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .note-card ul li { font-size: 13px; color: rgba(255,255,255,0.7); display: flex; gap: 8px; }
+    .note-card ul li::before { content: "•"; color: #7c3aed; }
+
+    /* PRESCRIPTION */
+    .btn-rx {
+      width: 100%; padding: 11px; border: none; border-radius: 10px;
+      background: linear-gradient(135deg, #7c3aed, #2563eb);
+      color: #fff; font-size: 13px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s; letter-spacing: 0.3px;
+    }
+    .btn-rx:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,58,237,0.4); }
+    .btn-rx:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .rx-card {
+      background: #0d1117; border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 14px; padding: 16px; display: none; flex-direction: column; gap: 12px;
+    }
+    .rx-card.visible { display: flex; }
+
+    .rx-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px; }
+    .rx-logo { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #7c3aed; text-transform: uppercase; margin-bottom: 4px; }
+    .rx-title { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+    .rx-meta { font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.8; }
+    .rx-meta span { color: rgba(255,255,255,0.7); }
+
+    .rx-section-label {
+      font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+      color: #7c3aed; margin-bottom: 8px;
+    }
+
+    .rx-vaccine-list { display: flex; flex-direction: column; gap: 8px; }
+    .rx-vaccine-item {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px; padding: 10px 12px;
+    }
+    .rx-vaccine-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+    .rx-priority-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .rx-priority-dot.urgent  { background: #ef4444; }
+    .rx-priority-dot.routine { background: #10b981; }
+    .rx-vaccine-generic { font-size: 10px; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
+    .rx-icd { background: rgba(124,58,237,0.2); color: #a78bfa; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; }
+    .rx-vaccine-detail { font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.8; display: flex; flex-direction: column; gap: 1px; }
+    .rx-vaccine-brand { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 3px; }
+    .rx-vaccine-reason { font-size: 11px; color: #a78bfa; margin-top: 4px; font-style: italic; }
+    .rx-vaccine-contra { font-size: 10px; color: #fbbf24; margin-top: 3px; }
+
+    .rx-clinical-block { margin-bottom: 12px; padding: 10px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 9px; }
+    .rx-clinical-label { font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 5px; }
+    .rx-clinical-text { font-size: 11px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+    .rx-icd-line { font-size: 10px; color: rgba(124,58,237,0.7); margin-top: 4px; font-weight: 600; }
+
+    .rx-prescriber-block { margin-top: 8px; padding: 9px 12px; background: rgba(124,58,237,0.06); border: 1px solid rgba(124,58,237,0.15); border-radius: 9px; }
+    .rx-prescriber-label { font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #a78bfa; margin-bottom: 4px; }
+    .rx-prescriber-text { font-size: 11px; color: rgba(255,255,255,0.55); line-height: 1.6; }
+
+    .rx-text-block { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.7; }
+
+    .rx-warning { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 8px; padding: 8px 10px; font-size: 11px; color: #fbbf24; line-height: 1.6; }
+
+    .rx-footer { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; text-align: center; }
+    .rx-signature { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.8; }
+    .rx-signature strong { color: rgba(255,255,255,0.85); }
+
+    .rx-actions { display: flex; gap: 8px; }
+    .btn-rx-print {
+      flex: 1; padding: 9px; border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 9px; background: transparent; color: rgba(255,255,255,0.6);
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-rx-print:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .btn-rx-regen {
+      flex: 1; padding: 9px; border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 9px; background: rgba(124,58,237,0.1); color: #a78bfa;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-rx-regen:hover { background: rgba(124,58,237,0.2); }
+
+    /* END CALL MODAL */
+    .end-modal-overlay {
+      position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;
+    }
+    .end-modal {
+      background: #13131f; border: 1px solid rgba(255,255,255,0.08); border-radius: 24px;
+      padding: 40px; text-align: center; max-width: 400px; width: 90%;
+      animation: scaleIn 0.3s ease;
+    }
+    @keyframes scaleIn { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:none} }
+    .end-modal-icon { font-size: 56px; margin-bottom: 16px; }
+    .end-modal h3 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .end-modal p { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 28px; }
+    .end-modal-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── LANGUAGE TOGGLE ── */
+    .lang-toggle {
+      display: flex; align-items: center;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; overflow: hidden;
+    }
+    .lang-btn {
+      background: transparent; border: none; color: rgba(255,255,255,0.4);
+      padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer;
+      transition: all 0.18s; white-space: nowrap; letter-spacing: 0.3px;
+    }
+    .lang-btn:hover { color: rgba(255,255,255,0.7); }
+    .lang-btn.active { background: rgba(124,58,237,0.55); color: #fff; }
+    .lang-btn-sep { width: 1px; background: rgba(255,255,255,0.1); align-self: stretch; }
+
+    /* ── RESTART BANNER (shown while switching language) ── */
+    .lang-switch-banner {
+      position: absolute; inset: 0; z-index: 20;
+      background: rgba(6,6,16,0.92); display: none;
+      flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    }
+    .lang-switch-banner.visible { display: flex; }
+    .lang-switch-banner p { font-size: 14px; color: rgba(255,255,255,0.6); }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 768px) {
+      .consult-layout { grid-template-columns: 1fr; grid-template-rows: 55vh 45vh; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="consult-bar">
+  <div class="consult-bar-left">
+    <a href="/" class="consult-logo">Care<span>Mate</span></a>
+    <div class="consult-sep"></div>
+    <span class="consult-doctor-name">{{ doctor.name }} · {{ doctor.specialty }}</span>
+  </div>
+  <div class="consult-bar-right">
+    <!-- Language toggle -->
+    <div class="lang-toggle" title="Switch consultation language">
+      <button class="lang-btn active" id="btnLangID" data-lang="indonesian" onclick="switchLanguage('indonesian')">🇮🇩 Indo</button>
+      <div class="lang-btn-sep"></div>
+      <button class="lang-btn" id="btnLangEN" data-lang="english" onclick="switchLanguage('english')">🇬🇧 ENG</button>
+    </div>
+    <div class="call-live-dot"></div>
+    <span class="call-timer" id="callTimer">00:00</span>
+    <button class="btn-end-call" onclick="endCall()">📞 End Call</button>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="consult-layout">
+
+  <!-- VIDEO AREA -->
+  <div class="video-area">
+
+    <!-- Blurred pre-load background -->
+    <div class="tavus-bg" id="tavusBg" style="background-image: url('{{ doctor.photo }}');"></div>
+
+    <!-- Tavus CVI iframe — filled once conversation URL is ready -->
+    <iframe
+      id="tavusFrame"
+      allow="camera; microphone; autoplay; display-capture; fullscreen"
+      allowfullscreen
+    ></iframe>
+
+    <!-- Connecting / loading overlay -->
+    <div class="tavus-loading" id="tavusLoading">
+      <div class="tavus-loading-avatar"></div>
+      <div class="tavus-loading-text">
+        <h3>Connecting to {{ doctor.name }}</h3>
+        <p>Setting up your AI consultation…</p>
+        <div class="tavus-spinner-row" style="justify-content:center">
+          <div class="tavus-dot"></div>
+          <div class="tavus-dot"></div>
+          <div class="tavus-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fallback when Tavus not configured -->
+    <div class="tavus-fallback" id="tavusFallback">
+      <div class="fb-avatar"></div>
+      <h3>{{ doctor.name }}</h3>
+      <p>{{ doctor.specialty }}<br>{{ doctor.hospital }}, {{ doctor.city }}</p>
+      <p style="margin-top:8px">Configure TAVUS_API_KEY and TAVUS_REPLICA_ID in .env to enable live AI video consultation.</p>
+      <button class="fb-configure-btn" onclick="window.open('https://platform.tavus.io','_blank')">
+        Get Tavus API Key →
+      </button>
+    </div>
+
+    <!-- Language-switch overlay (shown briefly while restarting) -->
+    <div class="lang-switch-banner" id="langSwitchBanner">
+      <div class="tavus-dot" style="width:16px;height:16px;background:#7c3aed;border-radius:50%;animation:dotFade 1s ease-in-out infinite;"></div>
+      <p id="langSwitchMsg">Switching language…</p>
+    </div>
+
+    <!-- HUD badges floating above iframe -->
+    <div class="hud-badge video-live-badge"><div class="live-dot-red"></div>LIVE</div>
+    <div class="hud-badge video-ai-badge">AI</div>
+
+    <!-- Floating risk score (populated from localStorage if available) -->
+    <div class="risk-float hud-badge" id="riskFloat">
+      <div class="risk-float-label">Your Risk Score</div>
+      <div class="risk-float-score" id="rfScore">—</div>
+      <div class="risk-float-level" id="rfLevel"></div>
+      <div class="risk-float-vaccines" id="rfVaccines"></div>
+    </div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="consult-sidebar">
+
+    <!-- Tabs -->
+    <div class="sidebar-tabs">
+      <div class="sidebar-tab active" onclick="switchTab('chat')">💬 Text Chat</div>
+      <div class="sidebar-tab" onclick="switchTab('notes')">📋 Notes</div>
+    </div>
+
+    <!-- Setup panel hidden — auto-started from localStorage name -->
+
+    <!-- TRANSCRIPT -->
+    <div class="transcript-panel hidden" id="transcriptPanel"></div>
+
+    <!-- NOTES PANEL -->
+    <div class="notes-panel" id="notesPanel">
+
+      <!-- Generate Prescription button -->
+      <button class="btn-rx" id="btnGenRx" onclick="generatePrescription()">
+        <span>📄</span> Generate Prescription
+      </button>
+
+      <!-- Prescription card (hidden until generated) -->
+      <div class="rx-card" id="rxCard">
+
+        <div class="rx-header">
+          <div class="rx-logo">CareMate · Vaccination Prescription</div>
+          <div class="rx-title">Resep / Prescription</div>
+          <div class="rx-meta">
+            Dokter: <span id="rxDoctor">—</span><br>
+            Pasien: <span id="rxPatient">—</span><br>
+            Tanggal: <span id="rxDate">—</span><br>
+            <span id="rxIcdCodes" style="font-size:10px;color:#a78bfa;font-weight:600"></span>
+          </div>
+        </div>
+
+        <!-- Clinical notes -->
+        <div class="rx-clinical-block" id="rxClinicalBlock" style="display:none">
+          <div class="rx-clinical-label">📋 Clinical Notes</div>
+          <div class="rx-clinical-text" id="rxClinicalNotes"></div>
+        </div>
+
+        <div>
+          <div class="rx-section-label">R/ Vaksinasi yang Diresepkan</div>
+          <div class="rx-vaccine-list" id="rxVaccineList"></div>
+        </div>
+
+        <div id="rxInstructionsBlock">
+          <div class="rx-section-label">📋 Instruksi Pasca-Vaksinasi</div>
+          <div class="rx-text-block" id="rxInstructions"></div>
+        </div>
+
+        <div id="rxFollowUpBlock">
+          <div class="rx-section-label">🗓 Kontrol Ulang</div>
+          <div class="rx-text-block" id="rxFollowUp"></div>
+        </div>
+
+        <div class="rx-warning" id="rxWarnings" style="display:none"></div>
+
+        <!-- Prescriber note -->
+        <div class="rx-prescriber-block" id="rxPrescriberBlock" style="display:none">
+          <div class="rx-prescriber-label">Note for Vaccinating Clinician</div>
+          <div class="rx-prescriber-text" id="rxPrescriberNote"></div>
+        </div>
+
+        <div class="rx-footer">
+          <div class="rx-signature">
+            <strong id="rxSignDoctor">—</strong><br>
+            <span id="rxSignSpec">—</span><br>
+            <span id="rxSignHosp">—</span>
+          </div>
+        </div>
+
+        <div class="rx-actions">
+          <button class="btn-rx-print" onclick="printPrescription()">🖨 Print</button>
+          <button class="btn-rx-regen" onclick="generatePrescription()">↻ Regenerate</button>
+        </div>
+      </div>
+
+      <!-- Doctor info -->
+      <div class="note-card">
+        <h4>Doctor Profile</h4>
+        <ul>
+          <li>{{ doctor.name }}</li>
+          <li>{{ doctor.specialty }}</li>
+          <li>{{ doctor.hospital }}, {{ doctor.city }}</li>
+          <li>{{ doctor.experience }} experience</li>
+          <li>⭐ {{ doctor.rating }} ({{ doctor.reviews }} reviews)</li>
+        </ul>
+      </div>
+
+      <div class="note-card">
+        <h4>Consultation Summary</h4>
+        <div id="summaryContent" style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6">
+          Summary will appear after the consultation.
+        </div>
+      </div>
+    </div>
+
+    <!-- TEXT CHAT INPUT AREA -->
+    <div class="sidebar-input-area hidden" id="inputArea">
+      <div class="input-row">
+        <button class="btn-mic-speak" id="sttBtn" onclick="toggleSpeech()" title="Click to speak">🎙️</button>
+        <textarea class="consult-input" id="consultInput" placeholder="Type a question or click 🎙️ to speak…" rows="1"
+                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendConsultMessage()}"></textarea>
+        <button class="btn-send-consult" onclick="sendConsultMessage()">➤</button>
+      </div>
+      <div class="input-hint">This text chat is separate from the voice conversation in the video →</div>
+    </div>
+  </div>
+</div>
+
+<!-- END CALL MODAL -->
+<div class="end-modal-overlay hidden" id="endModal">
+  <div class="end-modal">
+    <div class="end-modal-icon">📋</div>
+    <h3>Consultation Complete</h3>
+    <p>Your session with {{ doctor.name }} has ended. What would you like to do next?</p>
+    <div class="end-modal-btns">
+      <a href="/teleconsultation" class="btn-secondary" style="padding:12px 20px;font-size:14px">← Back to Doctors</a>
+      <a href="/" class="btn-primary" style="padding:12px 20px;font-size:14px">New Assessment</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const DOCTOR_ID      = {{ doctor.id }};
+  const DOCTOR_NAME    = "{{ doctor.name }}";
+  const DOCTOR_GENDER  = "{{ doctor.gender | default('female') }}";
+  const DOCTOR_TTS_VOICE = "{{ doctor.tts_voice | default('nova') }}";
+
+  let patientName     = "";
+  let consultHistory  = [];
+  let callSeconds     = 0;
+  let callInterval    = null;
+  let currentAudio    = null;
+  let recognition     = null;
+  let tavusConvId     = null;   // active Tavus conversation ID
+  let currentLang     = 'indonesian';  // default — matches doctor profile
+
+  // ── INIT ──
+  window.addEventListener('load', () => {
+    // Read patient name from localStorage (set during assessment)
+    try {
+      const saved = localStorage.getItem('lastAssessment');
+      if (saved) {
+        const d = JSON.parse(saved);
+        patientName = d.patient_name || d.form?.patient_name || '';
+      }
+      if (!patientName) patientName = localStorage.getItem('patientName') || '';
+    } catch(e) {}
+
+    initTavus();
+    initSpeechRecognition();
+    startTimer();
+    initRiskFloat();
+    // Auto-start the text chat immediately
+    autoStartConsultation();
+  });
+
+  // ── FLOATING RISK SCORE ──
+  function initRiskFloat() {
+    try {
+      const saved = localStorage.getItem('lastAssessment');
+      if (!saved) return;
+      const data = JSON.parse(saved);
+      const risk = data.risk;
+      const vaccines = data.vaccines || [];
+      if (!risk || !risk.percentage) return;
+
+      const pct   = risk.percentage;
+      const level = risk.level || '';
+      // Pick colour by risk level
+      const color = pct < 30 ? '#2ed573' : pct < 60 ? '#ffa502' : '#ff4757';
+
+      document.getElementById('rfScore').textContent  = pct + '%';
+      document.getElementById('rfScore').style.color  = color;
+      document.getElementById('rfLevel').textContent  = risk.emoji ? `${risk.emoji} ${level}` : level;
+      document.getElementById('rfLevel').style.color  = color;
+
+      if (vaccines.length) {
+        document.getElementById('rfVaccines').textContent =
+          '💉 ' + vaccines.slice(0, 3).join(' · ') + (vaccines.length > 3 ? ` +${vaccines.length - 3} more` : '');
+      }
+
+      document.getElementById('riskFloat').classList.add('visible');
+    } catch(e) {}
+  }
+
+  // End Tavus session when leaving the page
+  window.addEventListener('beforeunload', () => {
+    if (tavusConvId) {
+      navigator.sendBeacon(`/api/tavus/conversation/${tavusConvId}`,
+        new Blob([JSON.stringify({})], { type: 'application/json' }));
+    }
+  });
+
+  // ── TAVUS CVI INIT ──
+  async function initTavus(langOverride) {
+    try {
+      // Check if Tavus is configured server-side
+      const check = await fetch('/api/tavus/enabled');
+      const { enabled } = await check.json();
+
+      if (!enabled) {
+        document.getElementById('tavusLoading').classList.add('hidden');
+        document.getElementById('tavusFallback').style.display = 'flex';
+        return;
+      }
+
+      // Load assessment from localStorage
+      let patientContext = null;
+      try {
+        const saved = localStorage.getItem('lastAssessment');
+        if (saved) patientContext = JSON.parse(saved);
+      } catch(e) {}
+
+      // Create a Tavus conversation for this doctor
+      const r = await fetch('/api/tavus/conversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          doctor_id: DOCTOR_ID,
+          patient_context: patientContext,
+          language_override: langOverride || null
+        })
+      });
+
+      const data = await r.json();
+
+      if (!data.conversation_url) {
+        throw new Error(data.error || JSON.stringify(data));
+      }
+
+      tavusConvId = data.conversation_id;
+      console.log('Tavus conversation created:', tavusConvId, 'lang:', langOverride || 'auto');
+
+      // Load the conversation URL into the iframe
+      const frame = document.getElementById('tavusFrame');
+      frame.src = data.conversation_url;
+
+      frame.onload = () => {
+        document.getElementById('tavusLoading').classList.add('hidden');
+        document.getElementById('langSwitchBanner').classList.remove('visible');
+        document.getElementById('tavusBg').style.display = 'none';
+        frame.style.display = 'block';
+        console.log('Tavus CVI iframe loaded ✓');
+      };
+
+      // Fallback: hide loading after 15s
+      setTimeout(() => {
+        if (!document.getElementById('tavusLoading').classList.contains('hidden')) {
+          document.getElementById('tavusLoading').classList.add('hidden');
+          frame.style.display = 'block';
+        }
+        document.getElementById('langSwitchBanner').classList.remove('visible');
+      }, 15000);
+
+    } catch (err) {
+      console.warn('Tavus init error:', err);
+      document.getElementById('tavusLoading').classList.add('hidden');
+      document.getElementById('langSwitchBanner').classList.remove('visible');
+      document.getElementById('tavusFallback').style.display = 'flex';
+    }
+  }
+
+  // ── LANGUAGE SWITCH ──
+  async function switchLanguage(lang) {
+    if (lang === currentLang) return;
+    currentLang = lang;
+
+    // Update button states immediately
+    document.getElementById('btnLangID').classList.toggle('active', lang === 'indonesian');
+    document.getElementById('btnLangEN').classList.toggle('active', lang === 'english');
+
+    // Show switch banner
+    const banner = document.getElementById('langSwitchBanner');
+    document.getElementById('langSwitchMsg').textContent =
+      lang === 'indonesian' ? 'Berganti ke Bahasa Indonesia…' : 'Switching to English…';
+    banner.classList.add('visible');
+
+    // Hide the current iframe
+    const frame = document.getElementById('tavusFrame');
+    frame.style.display = 'none';
+    frame.src = '';
+
+    // End current Tavus conversation
+    if (tavusConvId) {
+      try {
+        await fetch(`/api/tavus/conversation/${tavusConvId}`, { method: 'DELETE' });
+      } catch(e) {}
+      tavusConvId = null;
+    }
+
+    // Start a new conversation in the chosen language
+    await initTavus(lang);
+  }
+
+  // ── CALL TIMER ──
+  function startTimer() {
+    callInterval = setInterval(() => {
+      callSeconds++;
+      const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+      const s = String(callSeconds % 60).padStart(2, '0');
+      document.getElementById('callTimer').textContent = `${m}:${s}`;
+    }, 1000);
+  }
+
+  // ── SPEECH RECOGNITION (for text chat input) ──
+  function initSpeechRecognition() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    recognition = new SR();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.onresult = (event) => {
+      const t = Array.from(event.results).map(r => r[0].transcript).join('');
+      document.getElementById('consultInput').value = t;
+      if (event.results[event.results.length - 1].isFinal) {
+        stopSpeech(); sendConsultMessage();
+      }
+    };
+    recognition.onend  = () => stopSpeech();
+    recognition.onerror = () => stopSpeech();
+  }
+
+  let isListening = false;
+  function toggleSpeech() {
+    if (!recognition) { alert('Speech recognition not available. Please type.'); return; }
+    isListening ? stopSpeech() : startSpeech();
+  }
+  function startSpeech() {
+    isListening = true;
+    document.getElementById('sttBtn').classList.add('listening');
+    document.getElementById('sttBtn').textContent = '🔴';
+    recognition.start();
+  }
+  function stopSpeech() {
+    isListening = false;
+    const btn = document.getElementById('sttBtn');
+    btn.classList.remove('listening');
+    btn.textContent = '🎙️';
+    try { recognition.stop(); } catch(e) {}
+  }
+
+  // ── TABS ──
+  function switchTab(tab) {
+    document.querySelectorAll('.sidebar-tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0 && tab === 'chat') || (i === 1 && tab === 'notes'));
+    });
+    document.getElementById('notesPanel').style.display  = tab === 'notes' ? 'flex' : 'none';
+    document.getElementById('transcriptPanel').classList.toggle('hidden', tab === 'notes');
+  }
+
+  // ── AUTO-START TEXT CONSULTATION ──
+  function autoStartConsultation() {
+    document.getElementById('transcriptPanel').classList.remove('hidden');
+    document.getElementById('inputArea').classList.remove('hidden');
+  }
+
+  // ── SEND TEXT MESSAGE ──
+  async function sendConsultMessage(autoMessage) {
+    const input = document.getElementById('consultInput');
+    const text  = autoMessage || input.value.trim();
+    if (!text) return;
+    if (!autoMessage) input.value = '';
+    if (!autoMessage) appendTranscript('patient', text, patientName || 'You');
+    consultHistory.push({ role: 'user', content: text });
+
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    const typingEl = appendTyping();
+
+    try {
+      const res = await fetch('/api/consult', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          history: consultHistory.slice(-20),
+          doctor_id: DOCTOR_ID,
+          patient_name: patientName
+        })
+      });
+
+      typingEl.remove();
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullReply = '';
+      const msgEl = appendTranscript('doctor', '', DOCTOR_NAME);
+      const bubble = msgEl.querySelector('.msg-bubble');
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        fullReply += decoder.decode(value, { stream: true });
+        bubble.textContent = fullReply;
+        scrollTranscript();
+      }
+
+      consultHistory.push({ role: 'assistant', content: fullReply });
+      speakText(fullReply);
+      if (consultHistory.length >= 4) updateSummary();
+
+    } catch (e) {
+      typingEl.remove();
+      appendTranscript('doctor', 'I apologise, there was a connection issue. Please try again.', DOCTOR_NAME);
+    }
+  }
+
+  // ── SPEAK (OpenAI TTS → browser fallback) ──
+  async function speakText(text) {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice: DOCTOR_TTS_VOICE })
+      });
+      if (!res.ok) throw new Error('TTS unavailable');
+      const blob  = await res.blob();
+      const url   = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      currentAudio = audio;
+      audio.onended = () => { URL.revokeObjectURL(url); currentAudio = null; };
+      audio.play();
+    } catch {
+      const synth = window.speechSynthesis;
+      if (synth) { const u = new SpeechSynthesisUtterance(text); u.rate = 0.92; synth.speak(u); }
+    }
+  }
+
+  // ── TRANSCRIPT UI ──
+  function appendTranscript(role, text, label) {
+    const panel = document.getElementById('transcriptPanel');
+    const div   = document.createElement('div');
+    div.className = `transcript-msg ${role}`;
+    div.innerHTML = `<div class="msg-label">${label}</div><div class="msg-bubble">${text}</div>`;
+    panel.appendChild(div);
+    scrollTranscript();
+    return div;
+  }
+  function appendTyping() {
+    const panel = document.getElementById('transcriptPanel');
+    const div   = document.createElement('div');
+    div.className = 'transcript-msg doctor';
+    div.innerHTML = `<div class="msg-label">${DOCTOR_NAME}</div><div class="typing-bubble"><span></span><span></span><span></span></div>`;
+    panel.appendChild(div);
+    scrollTranscript();
+    return div;
+  }
+  function scrollTranscript() {
+    const p = document.getElementById('transcriptPanel');
+    p.scrollTop = p.scrollHeight;
+  }
+
+  // ── SUMMARY ──
+  function updateSummary() {
+    const msgs  = consultHistory.filter(m => m.role === 'assistant').map(m => m.content).join(' ');
+    const words = msgs.split(' ').slice(0, 60).join(' ');
+    document.getElementById('summaryContent').textContent = words + (msgs.length > 300 ? '…' : '');
+  }
+
+  // ── PRESCRIPTION ──
+  async function generatePrescription() {
+    const btn = document.getElementById('btnGenRx');
+    btn.disabled = true;
+    btn.innerHTML = '<span style="animation:dotFade 1s infinite">⏳</span> Generating…';
+
+    // Gather everything we need
+    let assessment = null;
+    try { assessment = JSON.parse(localStorage.getItem('lastAssessment') || 'null'); } catch(e) {}
+
+    try {
+      const res = await fetch('/api/prescription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          doctor_id:    DOCTOR_ID,
+          patient_name: patientName || 'Pasien',
+          history:      consultHistory,
+          assessment:   assessment || {},
+          language:     currentLang
+        })
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      renderPrescription(data);
+
+      // Switch to Notes tab so the user sees it
+      switchTab('notes');
+
+    } catch(err) {
+      console.error('Prescription error:', err);
+      alert('Gagal membuat resep. Coba lagi setelah percakapan lebih panjang.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span>📄</span> Generate Prescription';
+    }
+  }
+
+  function renderPrescription(data) {
+    const rx   = data.prescription || {};
+    const doc  = data.doctor || {};
+    const lang = data.language || 'indonesian';
+    const isID = lang === 'indonesian';
+
+    // Header
+    document.getElementById('rxDoctor').textContent  = doc.name || DOCTOR_NAME;
+    document.getElementById('rxPatient').textContent = data.patient || patientName || '—';
+    document.getElementById('rxDate').textContent    = data.date || new Date().toLocaleDateString('id-ID', {day:'2-digit',month:'long',year:'numeric'});
+
+    // Labels
+    document.querySelector('#rxCard .rx-section-label:nth-of-type(1)').textContent = isID ? '💉 Vaksin yang Diresepkan' : '💉 Prescribed Vaccines';
+    document.getElementById('rxInstructionsBlock').querySelector('.rx-section-label').textContent = isID ? '📋 Instruksi' : '📋 Instructions';
+    document.getElementById('rxFollowUpBlock').querySelector('.rx-section-label').textContent = isID ? '🗓 Kontrol Ulang' : '🗓 Follow-up';
+    document.getElementById('btnGenRx').innerHTML = '<span>📄</span> ' + (isID ? 'Generate Ulang Resep' : 'Regenerate Prescription');
+
+    // Clinical notes + ICD codes
+    const clinNotes = rx.clinical_notes || '';
+    const icdCodes  = (rx.diagnosis_codes || []).join(' · ');
+    const prescNote = rx.prescriber_note || '';
+    document.getElementById('rxClinicalNotes').textContent = clinNotes;
+    document.getElementById('rxClinicalBlock').style.display = clinNotes ? 'block' : 'none';
+    document.getElementById('rxIcdCodes').textContent = icdCodes ? `ICD-10: ${icdCodes}` : '';
+    document.getElementById('rxPrescriberNote').textContent = prescNote;
+    document.getElementById('rxPrescriberBlock').style.display = prescNote ? 'block' : 'none';
+
+    // Vaccine list
+    const list = document.getElementById('rxVaccineList');
+    list.innerHTML = '';
+    const vaccines = rx.vaccines || [];
+    if (vaccines.length === 0) {
+      list.innerHTML = `<div style="font-size:12px;color:rgba(255,255,255,0.35);text-align:center;padding:8px">${isID ? 'Tidak ada vaksin dalam resep' : 'No vaccines in prescription'}</div>`;
+    } else {
+      vaccines.forEach((v, i) => {
+        const isPriority = (v.priority || '').toLowerCase() === 'urgent';
+        list.insertAdjacentHTML('beforeend', `
+          <div class="rx-vaccine-item">
+            <div class="rx-vaccine-name">
+              <div class="rx-priority-dot ${isPriority ? 'urgent' : 'routine'}"></div>
+              <span>${i + 1}. ${v.name || '—'}</span>
+            </div>
+            ${v.generic_name ? `<div class="rx-vaccine-generic">${v.generic_name}${v.icd10 ? ' &nbsp;·&nbsp; <span class="rx-icd">'+v.icd10+'</span>' : ''}</div>` : ''}
+            <div class="rx-vaccine-detail">
+              <span>💊 ${v.dose || '—'}</span>
+              <span>📍 ${v.route || '—'}</span>
+              <span>📅 ${v.schedule || '—'}</span>
+            </div>
+            ${v.brand_options ? `<div class="rx-vaccine-brand">Brand: ${v.brand_options}</div>` : ''}
+            ${v.indication ? `<div class="rx-vaccine-reason">↳ ${v.indication}</div>` : ''}
+            ${v.contraindications && v.contraindications !== 'Tidak ada' && v.contraindications !== 'None'
+              ? `<div class="rx-vaccine-contra">⚠ ${v.contraindications}</div>` : ''}
+          </div>
+        `);
+      });
+    }
+
+    // Instructions & Follow-up
+    document.getElementById('rxInstructions').textContent = rx.instructions || '—';
+    document.getElementById('rxFollowUp').textContent     = rx.follow_up    || '—';
+
+    // Warnings
+    const warnEl = document.getElementById('rxWarnings');
+    if (rx.warnings && rx.warnings.trim()) {
+      warnEl.textContent = '⚠️ ' + rx.warnings;
+      warnEl.style.display = 'block';
+    } else {
+      warnEl.style.display = 'none';
+    }
+
+    // Signature
+    document.getElementById('rxSignDoctor').textContent = doc.name || DOCTOR_NAME;
+    document.getElementById('rxSignSpec').textContent   = doc.specialty || '';
+    document.getElementById('rxSignHosp').textContent   = doc.hospital ? `${doc.hospital}, ${doc.city || ''}` : '';
+
+    // Show the card
+    document.getElementById('rxCard').classList.add('visible');
+  }
+
+  function printPrescription() {
+    const rx = document.getElementById('rxCard');
+    if (!rx || !rx.classList.contains('visible')) return;
+
+    const doctor  = document.getElementById('rxDoctor').textContent;
+    const patient = document.getElementById('rxPatient').textContent;
+    const date    = document.getElementById('rxDate').textContent;
+    const vaccines = [...document.querySelectorAll('.rx-vaccine-item')].map(el => el.innerText).join('\n\n');
+    const instructions = document.getElementById('rxInstructions').textContent;
+    const followup     = document.getElementById('rxFollowUp').textContent;
+    const warnings     = document.getElementById('rxWarnings').style.display !== 'none'
+                         ? document.getElementById('rxWarnings').textContent : '';
+    const signDoctor = document.getElementById('rxSignDoctor').textContent;
+    const signSpec   = document.getElementById('rxSignSpec').textContent;
+    const signHosp   = document.getElementById('rxSignHosp').textContent;
+
+    const win = window.open('', '_blank');
+    win.document.write(`<!DOCTYPE html><html><head>
+      <meta charset="UTF-8">
+      <title>Resep — ${patient}</title>
+      <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 24px; color: #1e293b; }
+        .header { text-align: center; border-bottom: 2px solid #7c3aed; padding-bottom: 16px; margin-bottom: 20px; }
+        .logo { color: #7c3aed; font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
+        h1 { font-size: 20px; margin: 6px 0 12px; }
+        .meta { font-size: 13px; line-height: 1.8; color: #475569; }
+        .meta strong { color: #1e293b; }
+        .section { margin-top: 20px; }
+        .section-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #7c3aed; margin-bottom: 8px; }
+        .vaccine { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
+        .vaccine-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+        .vaccine-detail { font-size: 12px; color: #64748b; }
+        .vaccine-reason { font-size: 12px; color: #7c3aed; font-style: italic; margin-top: 3px; }
+        .text-block { font-size: 13px; color: #334155; line-height: 1.7; }
+        .warning { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 10px 12px; font-size: 12px; color: #92400e; margin-top: 12px; }
+        .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: right; }
+        .signature { font-size: 13px; color: #475569; line-height: 1.8; }
+        .signature strong { color: #1e293b; }
+        @media print { body { margin: 20px; } }
+      </style>
+    </head><body>
+      <div class="header">
+        <div class="logo">CareMate · Vaccination Prescription</div>
+        <h1>Resep Vaksinasi</h1>
+        <div class="meta">
+          Dokter: <strong>${doctor}</strong><br>
+          Pasien: <strong>${patient}</strong><br>
+          Tanggal: <strong>${date}</strong>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">💉 Vaksin yang Diresepkan</div>
+        ${[...document.querySelectorAll('.rx-vaccine-item')].map((el, i) => {
+          const name   = el.querySelector('.rx-vaccine-name')?.textContent?.trim() || '';
+          const detail = el.querySelector('.rx-vaccine-detail')?.textContent?.trim() || '';
+          const reason = el.querySelector('.rx-vaccine-reason')?.textContent?.trim() || '';
+          return `<div class="vaccine">
+            <div class="vaccine-name">${name}</div>
+            <div class="vaccine-detail">${detail}</div>
+            ${reason ? `<div class="vaccine-reason">${reason}</div>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="section">
+        <div class="section-label">📋 Instruksi</div>
+        <div class="text-block">${instructions}</div>
+      </div>
+      <div class="section">
+        <div class="section-label">🗓 Kontrol Ulang</div>
+        <div class="text-block">${followup}</div>
+      </div>
+      ${warnings ? `<div class="warning">${warnings}</div>` : ''}
+      <div class="footer">
+        <div class="signature">
+          <strong>${signDoctor}</strong><br>
+          ${signSpec}<br>
+          ${signHosp}
+        </div>
+      </div>
+    </body></html>`);
+    win.document.close();
+    setTimeout(() => win.print(), 400);
+  }
+
+  // ── END CALL ──
+  async function endCall() {
+    clearInterval(callInterval);
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+    // End Tavus conversation
+    if (tavusConvId) {
+      try {
+        await fetch(`/api/tavus/conversation/${tavusConvId}`, { method: 'DELETE' });
+        console.log('Tavus conversation ended');
+      } catch(e) { console.warn('Could not end Tavus conversation:', e); }
+      tavusConvId = null;
+    }
+
+    document.getElementById('endModal').classList.remove('hidden');
+  }
+</script>
+</body>
+</html>

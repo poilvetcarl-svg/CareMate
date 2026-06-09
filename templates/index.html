@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareMate — Intelligent Vaccination Platform</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo">
+      <span class="logo-icon">💉</span>
+      <span class="logo-text">Care<span class="logo-accent">Mate</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="#assessment" class="nav-link">Assessment</a>
+      <a href="#how-it-works" class="nav-link">How It Works</a>
+      <a href="/teleconsultation" class="nav-link">Teleconsultation</a>
+      <button class="nav-cta" onclick="scrollToAssessment()">Start Free</button>
+    </div>
+    <button class="menu-toggle" id="menuToggle">☰</button>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      AI-Powered · CDC/WHO Guidelines · Real-time Analysis
+    </div>
+    <h1 class="hero-title">
+      Your Personalized<br />
+      <span class="gradient-text">Vaccination Plan</span><br />
+      in Seconds
+    </h1>
+    <p class="hero-subtitle">
+      Enter your health profile and get instant AI-powered vaccine recommendations,
+      risk assessment, and expert teleconsultation — all in one place.
+    </p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="scrollToAssessment()">
+        Get My Vaccine Plan
+        <span class="btn-arrow">→</span>
+      </button>
+      <a href="/teleconsultation" class="btn-secondary">
+        <span class="btn-icon">👨‍⚕️</span>
+        Talk to a Doctor
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-num" data-count="15000">0</span><span class="stat-suffix">+</span>
+        <span class="stat-label">Assessments Done</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-num" data-count="13">0</span>
+        <span class="stat-label">Vaccines Covered</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-num" data-count="98">0</span><span class="stat-suffix">%</span>
+        <span class="stat-label">Accuracy Rate</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== VIDEO SECTION ===== -->
+<section class="video-section" id="how-it-works">
+  <div class="section-header">
+    <div class="section-badge">How It Works</div>
+    <h2 class="section-title">Science-Backed. <span class="gradient-text">AI-Powered.</span></h2>
+    <p class="section-subtitle">Our recommendation engine combines CDC/WHO guidelines with advanced AI to give you clinically accurate, personalized vaccine advice.</p>
+  </div>
+  <div class="video-grid">
+    <!-- TED-Ed "How do vaccines work?" — rb7TVW77ZCs -->
+    <div class="video-card" onclick="openVideoModal('rb7TVW77ZCs', 'How Vaccines Train Your Immune System')">
+      <div class="video-thumb">
+        <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600&q=80" alt="How vaccines work" class="video-bg-img" />
+        <div class="video-overlay">
+          <div class="play-btn">▶</div>
+          <div class="video-duration">5:12</div>
+        </div>
+      </div>
+      <div class="video-info">
+        <span class="video-tag">Science · TED-Ed</span>
+        <h3>How Vaccines Train Your Immune System</h3>
+        <p>Understand the science behind immunization and why it's the most powerful tool in preventive medicine.</p>
+      </div>
+    </div>
+    <!-- Kurzgesagt "How The Immune System Actually Works" — 0h5Jd7sgQWY -->
+    <div class="video-card" onclick="openVideoModal('0h5Jd7sgQWY', 'How The Immune System Actually Works')">
+      <div class="video-thumb">
+        <img src="https://images.unsplash.com/photo-1576086213369-97a306d36557?w=600&q=80" alt="Immune system cells" class="video-bg-img" />
+        <div class="video-overlay">
+          <div class="play-btn">▶</div>
+          <div class="video-duration">8:05</div>
+        </div>
+      </div>
+      <div class="video-info">
+        <span class="video-tag">Science · Kurzgesagt</span>
+        <h3>How The Immune System Actually Works</h3>
+        <p>An animated deep-dive into how your body fights infection — and why vaccines are its most powerful trainer.</p>
+      </div>
+    </div>
+    <!-- TED-Ed "The side effects of vaccines" — oKkD6VFm3IU -->
+    <div class="video-card" onclick="openVideoModal('oKkD6VFm3IU', 'The Side Effects of Vaccines – How Do They Happen?')">
+      <div class="video-thumb">
+        <img src="https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?w=600&q=80" alt="Vaccine science" class="video-bg-img" />
+        <div class="video-overlay">
+          <div class="play-btn">▶</div>
+          <div class="video-duration">5:18</div>
+        </div>
+      </div>
+      <div class="video-info">
+        <span class="video-tag">Health · TED-Ed</span>
+        <h3>The Side Effects of Vaccines – How Do They Happen?</h3>
+        <p>Understand what causes common vaccine side effects and why they're actually a sign your immune system is working.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO MODAL -->
+<div class="video-modal-overlay hidden" id="videoModal" onclick="closeVideoModal()">
+  <div class="video-modal-content" onclick="event.stopPropagation()">
+    <button class="video-modal-close" onclick="closeVideoModal()">✕</button>
+    <h3 class="video-modal-title" id="videoModalTitle"></h3>
+    <div class="video-responsive">
+      <iframe id="videoIframe" src="" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== ASSESSMENT FORM ===== -->
+<section class="assessment-section" id="assessment">
+  <div class="assessment-container">
+    <div class="assessment-header">
+      <div class="section-badge">Free Assessment</div>
+      <h2 class="section-title">Get Your Personalized<br /><span class="gradient-text">Vaccine Plan</span></h2>
+      <p class="section-subtitle">Takes less than 2 minutes. Clinically validated. Completely private.</p>
+    </div>
+
+    <div class="form-card" id="assessmentForm">
+      <!-- STEP INDICATOR -->
+      <div class="steps-bar">
+        <div class="step active" data-step="1">
+          <div class="step-circle">1</div>
+          <span>Profile</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" data-step="2">
+          <div class="step-circle">2</div>
+          <span>Health</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" data-step="3">
+          <div class="step-circle">3</div>
+          <span>Travel</span>
+        </div>
+      </div>
+
+      <!-- STEP 1: BASIC PROFILE -->
+      <div class="form-step" id="step1">
+        <h3 class="step-title">Tell us about yourself</h3>
+
+        <div class="form-group">
+          <label class="form-label">Your Name <span class="required">*</span></label>
+          <input type="text" id="patientNameInput" placeholder="e.g. Budi Santoso"
+                 class="text-input"
+                 style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid rgba(124,58,237,0.2);
+                        background:rgba(124,58,237,0.04);font-size:15px;font-family:inherit;outline:none;
+                        color:#1e293b;transition:border-color .2s"
+                 onfocus="this.style.borderColor='#7c3aed'"
+                 onblur="this.style.borderColor='rgba(124,58,237,0.2)'" />
+          <p class="form-hint" style="font-size:12px;color:#94a3b8;margin-top:6px">
+            Your doctor will use this name to greet you during the consultation.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Age <span class="required">*</span></label>
+          <div class="age-input-group">
+            <input type="range" id="ageSlider" min="18" max="100" value="35" class="age-slider" oninput="updateAge(this.value)" />
+            <div class="age-display">
+              <span id="ageValue">35</span>
+              <span class="age-unit">years old</span>
+            </div>
+          </div>
+          <div class="age-labels">
+            <span>18</span><span>40</span><span>60</span><span>80</span><span>100</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Biological Sex <span class="required">*</span></label>
+          <div class="option-group" id="sexGroup">
+            <label class="option-card">
+              <input type="radio" name="sex" value="male" />
+              <div class="option-content">
+                <span class="option-icon">♂️</span>
+                <span>Male</span>
+              </div>
+            </label>
+            <label class="option-card">
+              <input type="radio" name="sex" value="female" />
+              <div class="option-content">
+                <span class="option-icon">♀️</span>
+                <span>Female</span>
+              </div>
+            </label>
+            <label class="option-card">
+              <input type="radio" name="sex" value="other" />
+              <div class="option-content">
+                <span class="option-icon">⚧</span>
+                <span>Other</span>
+              </div>
+            </label>
+          </div>
+          <p id="sexHint" style="display:none;font-size:12px;color:#ef4444;margin-top:6px;font-weight:600">
+            ⚠️ Please select a biological sex to continue.
+          </p>
+        </div>
+
+        <div class="form-group" id="pregnancyGroup" style="display:none">
+          <label class="form-label">Are you currently pregnant?</label>
+          <div class="option-group">
+            <label class="option-card">
+              <input type="radio" name="pregnant" value="yes" />
+              <div class="option-content"><span class="option-icon">🤰</span><span>Yes</span></div>
+            </label>
+            <label class="option-card">
+              <input type="radio" name="pregnant" value="no" checked />
+              <div class="option-content"><span class="option-icon">✗</span><span>No</span></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Vaccination history</label>
+          <div class="option-group">
+            <label class="option-card">
+              <input type="radio" name="vaccinated_recently" value="yes" />
+              <div class="option-content"><span class="option-icon">✅</span><span>Up to date</span></div>
+            </label>
+            <label class="option-card">
+              <input type="radio" name="vaccinated_recently" value="no" checked />
+              <div class="option-content"><span class="option-icon">❓</span><span>Not sure / outdated</span></div>
+            </label>
+          </div>
+        </div>
+
+        <button class="btn-next" onclick="goToStep(2)">Continue →</button>
+      </div>
+
+      <!-- STEP 2: HEALTH CONDITIONS -->
+      <div class="form-step hidden" id="step2">
+        <h3 class="step-title">Health conditions</h3>
+        <p class="step-desc">Select all that apply. This helps us prioritize vaccines that matter most for your safety.</p>
+
+        <div class="conditions-grid" id="conditionsGrid">
+          <label class="condition-card">
+            <input type="checkbox" name="conditions" value="diabetes" />
+            <div class="condition-content">
+              <span class="condition-icon">🩸</span>
+              <span class="condition-name">Diabetes</span>
+              <span class="condition-risk">High risk</span>
+            </div>
+          </label>
+          <label class="condition-card">
+            <input type="checkbox" name="conditions" value="heart_disease" />
+            <div class="condition-content">
+              <span class="condition-icon">❤️</span>
+              <span class="condition-name">Heart Disease</span>
+              <span class="condition-risk">High risk</span>
+            </div>
+          </label>
+          <label class="condition-card">
+            <input type="checkbox" name="conditions" value="lung_disease" />
+            <div class="condition-content">
+              <span class="condition-icon">🫁</span>
+              <span class="condition-name">Lung Disease (COPD/Asthma)</span>
+              <span class="condition-risk">High risk</span>
+            </div>
+          </label>
+          <label class="condition-card">
+            <input type="checkbox" name="conditions" value="cancer" />
+            <div class="condition-content">
+              <span class="condition-icon">🎗️</span>
+              <span class="condition-name">Cancer / Chemotherapy</span>
+              <span class="condition-risk">Very high risk</span>
+            </div>
+          </label>
+          <label class="condition-card">
+            <input type="checkbox" name="conditions" value="hiv" />
+            <div class="condition-content">
+              <span class="condition-icon">🔴</span>
+              <span class="condition-name">HIV / AIDS</span>
+              <span class="condition-risk">Very high risk</span>
+            </div>
+          </label>
+          <label class="condition-card">
+            <input type="checkbox" name="conditions" value="kidney_disease" />
+            <div class="condition-content">
+              <span class="condition-icon">🫘</span>
+              <span class="condition-name">Kidney Disease</span>
+              <span class="condition-risk">High risk</span>
+            </div>
+          </label>
+          <label class="condition-card">
+            <input type="checkbox" name="conditions" value="liver_disease" />
+            <div class="condition-content">
+              <span class="condition-icon">🟤</span>
+              <span class="condition-name">Liver Disease</span>
+              <span class="condition-risk">High risk</span>
+            </div>
+          </label>
+          <label class="condition-card">
+            <input type="checkbox" name="conditions" value="immunocompromised" />
+            <div class="condition-content">
+              <span class="condition-icon">🛡️</span>
+              <span class="condition-name">Immunocompromised</span>
+              <span class="condition-risk">Very high risk</span>
+            </div>
+          </label>
+          <label class="condition-card">
+            <input type="checkbox" name="conditions" value="asplenia" />
+            <div class="condition-content">
+              <span class="condition-icon">⚕️</span>
+              <span class="condition-name">No Spleen (Asplenia)</span>
+              <span class="condition-risk">Very high risk</span>
+            </div>
+          </label>
+          <label class="condition-card">
+            <input type="checkbox" name="conditions" value="smoking" />
+            <div class="condition-content">
+              <span class="condition-icon">🚬</span>
+              <span class="condition-name">Smoking</span>
+              <span class="condition-risk">Moderate risk</span>
+            </div>
+          </label>
+          <label class="condition-card">
+            <input type="checkbox" name="conditions" value="obesity" />
+            <div class="condition-content">
+              <span class="condition-icon">⚖️</span>
+              <span class="condition-name">Obesity (BMI ≥ 30)</span>
+              <span class="condition-risk">Moderate risk</span>
+            </div>
+          </label>
+          <label class="condition-card none-card">
+            <input type="checkbox" name="conditions" value="none" id="noneCondition" />
+            <div class="condition-content">
+              <span class="condition-icon">✅</span>
+              <span class="condition-name">None of the above</span>
+              <span class="condition-risk">Low risk</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn-back" onclick="goToStep(1)">← Back</button>
+          <button class="btn-next" onclick="goToStep(3)">Continue →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: TRAVEL -->
+      <div class="form-step hidden" id="step3">
+        <h3 class="step-title">Travel & Lifestyle</h3>
+        <p class="step-desc">International travel can expose you to diseases not common in your home country.</p>
+
+        <div class="form-group">
+          <label class="form-label">Do you plan to travel internationally?</label>
+          <div class="option-group">
+            <label class="option-card">
+              <input type="radio" name="travel" value="yes" id="travelYes" onchange="toggleTravel(true)" />
+              <div class="option-content"><span class="option-icon">✈️</span><span>Yes</span></div>
+            </label>
+            <label class="option-card">
+              <input type="radio" name="travel" value="no" checked id="travelNo" onchange="toggleTravel(false)" />
+              <div class="option-content"><span class="option-icon">🏠</span><span>No plans</span></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group hidden" id="travelRegions">
+          <label class="form-label">Select your travel destinations</label>
+          <div class="regions-grid">
+            <label class="region-card">
+              <input type="checkbox" name="travel_regions" value="Southeast Asia" />
+              <div class="region-content"><span>🌏</span><span>Southeast Asia</span></div>
+            </label>
+            <label class="region-card">
+              <input type="checkbox" name="travel_regions" value="South Asia" />
+              <div class="region-content"><span>🇮🇳</span><span>South Asia</span></div>
+            </label>
+            <label class="region-card">
+              <input type="checkbox" name="travel_regions" value="East Asia" />
+              <div class="region-content"><span>🇯🇵</span><span>East Asia</span></div>
+            </label>
+            <label class="region-card">
+              <input type="checkbox" name="travel_regions" value="Sub-Saharan Africa" />
+              <div class="region-content"><span>🌍</span><span>Sub-Saharan Africa</span></div>
+            </label>
+            <label class="region-card">
+              <input type="checkbox" name="travel_regions" value="Latin America" />
+              <div class="region-content"><span>🌎</span><span>Latin America</span></div>
+            </label>
+            <label class="region-card">
+              <input type="checkbox" name="travel_regions" value="Middle East" />
+              <div class="region-content"><span>🕌</span><span>Middle East</span></div>
+            </label>
+            <label class="region-card">
+              <input type="checkbox" name="travel_regions" value="Europe" />
+              <div class="region-content"><span>🇪🇺</span><span>Europe</span></div>
+            </label>
+            <label class="region-card">
+              <input type="checkbox" name="travel_regions" value="North America" />
+              <div class="region-content"><span>🇺🇸</span><span>North America</span></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn-back" onclick="goToStep(2)">← Back</button>
+          <button class="btn-submit" onclick="submitAssessment()">
+            <span class="btn-submit-text">Get My Results</span>
+            <span class="btn-submit-icon">🔬</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== RESULTS SECTION ===== -->
+<section class="results-section hidden" id="resultsSection">
+  <div class="results-container">
+
+    <!-- AI Summary -->
+    <div class="ai-summary-card">
+      <div class="ai-badge">
+        <span class="ai-dot"></span>
+        AI Clinical Analysis
+      </div>
+      <p class="ai-summary-text" id="aiSummaryText">Analyzing your health profile...</p>
+    </div>
+
+    <!-- Risk Score -->
+    <div class="risk-card">
+      <div class="risk-header">
+        <h3>Your Risk Assessment</h3>
+        <span class="risk-badge" id="riskBadge">—</span>
+      </div>
+      <div class="risk-visual">
+        <div class="risk-gauge-container">
+          <svg class="risk-gauge" viewBox="0 0 220 145">
+            <defs>
+              <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#2ED573"/>
+                <stop offset="50%" style="stop-color:#FFA502"/>
+                <stop offset="100%" style="stop-color:#FF4757"/>
+              </linearGradient>
+            </defs>
+            <!-- Track -->
+            <path d="M 15 115 A 95 95 0 0 1 205 115" fill="none" stroke="rgba(5,150,105,0.12)" stroke-width="14" stroke-linecap="round"/>
+            <!-- Animated arc -->
+            <path d="M 15 115 A 95 95 0 0 1 205 115" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round"
+                  stroke-dasharray="298" stroke-dashoffset="298" id="gaugeArc" class="gauge-arc"/>
+            <!-- Score text embedded in SVG — no overlap possible -->
+            <text x="110" y="92" text-anchor="middle" dominant-baseline="middle"
+                  font-size="42" font-weight="900" font-family="Inter, sans-serif"
+                  fill="#0f172a" id="riskScore">0%</text>
+            <text x="110" y="124" text-anchor="middle"
+                  font-size="11" font-family="Inter, sans-serif"
+                  fill="#94a3b8" letter-spacing="1">RISK SCORE</text>
+          </svg>
+        </div>
+        <div class="risk-factors-list" id="riskFactorsList"></div>
+      </div>
+      <p class="risk-advice" id="riskAdvice"></p>
+    </div>
+
+    <!-- Vaccine Recommendations -->
+    <div class="vaccines-section">
+      <h3 class="vaccines-title">
+        Recommended Vaccines
+        <span class="vaccines-count" id="vaccineCount">0</span>
+      </h3>
+      <div class="vaccines-grid" id="vaccinesGrid"></div>
+    </div>
+
+    <!-- CTA -->
+    <div class="results-cta">
+      <div class="cta-card">
+        <div class="cta-icon">👨‍⚕️</div>
+        <div class="cta-text">
+          <h4>Ready to get vaccinated?</h4>
+          <p>Connect with a certified vaccine specialist for your personalized immunization plan.</p>
+        </div>
+        <a href="/teleconsultation" class="btn-primary" target="_blank">Book Teleconsultation</a>
+      </div>
+      <div class="cta-card secondary">
+        <div class="cta-icon">🔄</div>
+        <div class="cta-text">
+          <h4>Reassess your profile</h4>
+          <p>Update your health information for a fresh analysis.</p>
+        </div>
+        <button class="btn-secondary" onclick="resetAssessment()">Start Over</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PARTNERS / TRUST ===== -->
+<section class="trust-section">
+  <p class="trust-label">Following guidelines from</p>
+  <div class="trust-logos">
+    <div class="trust-logo">🏥 CDC</div>
+    <div class="trust-logo">🌍 WHO</div>
+    <div class="trust-logo">🇮🇩 Kemenkes RI</div>
+    <div class="trust-logo">⚕️ PAPDI</div>
+    <div class="trust-logo">🔬 IDAI</div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <span class="logo-icon">💉</span>
+      <span class="logo-text">Care<span class="logo-accent">Mate</span></span>
+      <p>AI-powered preventive health for everyone.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h5>Platform</h5>
+        <a href="#assessment">Free Assessment</a>
+        <a href="/teleconsultation">Teleconsultation</a>
+        <a href="#how-it-works">How It Works</a>
+      </div>
+      <div class="footer-col">
+        <h5>Medical</h5>
+        <a href="#">CDC Guidelines</a>
+        <a href="#">WHO Schedule</a>
+        <a href="#">Travel Medicine</a>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <a href="#">About Us</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>⚕️ CareMate is for informational purposes only and does not replace professional medical advice.</p>
+    <p>© 2025 CareMate. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- ===== CHATBOT ===== -->
+<div class="chatbot-widget" id="chatbotWidget">
+  <div class="chatbot-header" onclick="toggleChat()">
+    <div class="chatbot-avatar">🤖</div>
+    <div class="chatbot-title">
+      <span>CareMate Assistant</span>
+      <span class="chatbot-status">Online · Ask me anything</span>
+    </div>
+    <button class="chatbot-close-btn" id="chatToggleBtn">▼</button>
+  </div>
+  <div class="chatbot-body" id="chatbotBody">
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-message bot">
+        <div class="chat-bubble">
+          Hi! 👋 I'm your CareMate Assistant. I can help you understand vaccines, schedules, side effects, and travel recommendations. What would you like to know?
+        </div>
+      </div>
+      <div class="chat-suggestions">
+        <button class="chat-suggestion" onclick="sendSuggestion('What vaccines do I need for travel to Southeast Asia?')">✈️ Travel vaccines</button>
+        <button class="chat-suggestion" onclick="sendSuggestion('Are vaccines safe during pregnancy?')">🤰 Pregnancy safety</button>
+        <button class="chat-suggestion" onclick="sendSuggestion('What are common vaccine side effects?')">💊 Side effects</button>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chatInput" placeholder="Ask about vaccines..." class="chat-input"
+             onkeypress="if(event.key==='Enter') sendMessage()" />
+      <button class="chat-send-btn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">Analyzing your health profile...</p>
+    <div class="loading-dots">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</div>
+
+<!-- Vaccine detail modal -->
+<div class="modal-overlay hidden" id="vaccineModal" onclick="closeModal()">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
