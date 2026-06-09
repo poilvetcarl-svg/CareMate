@@ -626,6 +626,83 @@ body {
 .cta-text p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
 
 /* ===== TRUST SECTION ===== */
+/* ── REFERENCES SECTION ─────────────────────────────────── */
+.references-section {
+  padding: 80px 24px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.references-section .section-header { margin-bottom: 52px; }
+
+.references-grid {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 32px;
+}
+
+/* Category card */
+.ref-category {
+  border: 1px solid var(--border); border-radius: 18px;
+  overflow: hidden; background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  animation: fadeUp 0.4s ease both;
+}
+
+/* Category header bar */
+.ref-category-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 24px; border-bottom: 1px solid var(--border);
+}
+.ref-cat-icon { font-size: 26px; flex-shrink: 0; }
+.ref-cat-title { font-size: 15px; font-weight: 800; color: var(--text-primary); }
+.ref-cat-sub   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* Colour accents per organisation */
+.ref-cat-papdi  { background: rgba(124,58,237,0.06); border-bottom-color: rgba(124,58,237,0.15); }
+.ref-cat-papdi .ref-cat-title { color: #7c3aed; }
+.ref-cat-cdc    { background: rgba(239,68,68,0.05); border-bottom-color: rgba(239,68,68,0.12); }
+.ref-cat-cdc .ref-cat-title { color: #dc2626; }
+.ref-cat-who    { background: rgba(2,132,199,0.05); border-bottom-color: rgba(2,132,199,0.12); }
+.ref-cat-who .ref-cat-title { color: #0284c7; }
+.ref-cat-kemenkes { background: rgba(5,150,105,0.05); border-bottom-color: rgba(5,150,105,0.12); }
+.ref-cat-kemenkes .ref-cat-title { color: #059669; }
+
+/* Items list */
+.ref-items { display: flex; flex-direction: column; }
+.ref-item {
+  display: flex; gap: 16px; padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.ref-item:last-child { border-bottom: none; }
+.ref-item:hover { background: var(--bg-secondary); }
+
+.ref-item-icon {
+  font-size: 20px; flex-shrink: 0;
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  margin-top: 2px;
+}
+.ref-item-body { flex: 1; }
+.ref-item-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; line-height: 1.4; }
+.ref-item-desc  { font-size: 13px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 10px; }
+.ref-item-tags  { display: flex; flex-wrap: wrap; gap: 5px; }
+.ref-tag {
+  font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 20px;
+  background: rgba(5,150,105,0.08); color: var(--accent);
+  border: 1px solid rgba(5,150,105,0.2); letter-spacing: 0.3px;
+}
+
+/* Disclaimer */
+.ref-disclaimer {
+  max-width: 1100px; margin: 28px auto 0;
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 16px 20px; border-radius: 12px;
+  background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2);
+}
+.ref-disc-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.ref-disclaimer p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+.ref-disclaimer strong { color: var(--text-primary); }
+
 .trust-section { padding: 60px 24px; text-align: center; border-top: 1px solid var(--border); background: var(--bg-secondary); }
 .trust-label { font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 24px; }
 .trust-logos { display: flex; align-items: center; justify-content: center; gap: 40px; flex-wrap: wrap; }
