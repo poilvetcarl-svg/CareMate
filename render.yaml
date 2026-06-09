@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: caremate
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: singapore
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: caremate-db
+          property: connectionString
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: TAVUS_API_KEY
+        sync: false
+      - key: D_ID_API_KEY
+        sync: false
+    healthCheckPath: /
+
+databases:
+  - name: caremate-db
+    plan: free
+    region: singapore
