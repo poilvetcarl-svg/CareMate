@@ -67,7 +67,7 @@
 }
 
 .dash-nav-item.active {
-  background: rgba(5, 150, 105, 0.1);
+  background: rgba(0, 214, 143, 0.1);
   color: var(--accent);
 }
 

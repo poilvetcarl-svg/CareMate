@@ -416,9 +416,9 @@
   <div class="consult-bar-right">
     <!-- Language toggle -->
     <div class="lang-toggle" title="Switch consultation language">
-      <button class="lang-btn active" id="btnLangID" data-lang="indonesian" onclick="switchLanguage('indonesian')">🇮🇩 Indo</button>
+      <button class="lang-btn" id="btnLangID" data-lang="indonesian" onclick="switchLanguage('indonesian')">🇮🇩 Indo</button>
       <div class="lang-btn-sep"></div>
-      <button class="lang-btn" id="btnLangEN" data-lang="english" onclick="switchLanguage('english')">🇬🇧 ENG</button>
+      <button class="lang-btn active" id="btnLangEN" data-lang="english" onclick="switchLanguage('english')">🇬🇧 ENG</button>
     </div>
     <div class="call-live-dot"></div>
     <span class="call-timer" id="callTimer">00:00</span>
@@ -618,26 +618,29 @@
   const DOCTOR_GENDER  = "{{ doctor.gender | default('female') }}";
   const DOCTOR_TTS_VOICE = "{{ doctor.tts_voice | default('nova') }}";
 
-  let patientName     = "";
+  // Server-side user name takes priority (logged-in user)
+  let patientName     = {{ user_name | tojson }};
   let consultHistory  = [];
   let callSeconds     = 0;
   let callInterval    = null;
   let currentAudio    = null;
   let recognition     = null;
   let tavusConvId     = null;   // active Tavus conversation ID
-  let currentLang     = 'indonesian';  // default — matches doctor profile
+  let currentLang     = 'english';  // default — English first
 
   // ── INIT ──
   window.addEventListener('load', () => {
-    // Read patient name from localStorage (set during assessment)
-    try {
-      const saved = localStorage.getItem('lastAssessment');
-      if (saved) {
-        const d = JSON.parse(saved);
-        patientName = d.patient_name || d.form?.patient_name || '';
-      }
-      if (!patientName) patientName = localStorage.getItem('patientName') || '';
-    } catch(e) {}
+    // Fill name from localStorage only if not already set from logged-in user
+    if (!patientName) {
+      try {
+        const saved = localStorage.getItem('lastAssessment');
+        if (saved) {
+          const d = JSON.parse(saved);
+          patientName = d.patient_name || d.form?.patient_name || '';
+        }
+        if (!patientName) patientName = localStorage.getItem('patientName') || '';
+      } catch(e) {}
+    }
 
     initTavus();
     initSpeechRecognition();
@@ -711,7 +714,7 @@
         body: JSON.stringify({
           doctor_id: DOCTOR_ID,
           patient_context: patientContext,
-          language_override: langOverride || null
+          language_override: langOverride || 'english'
         })
       });
 
@@ -725,8 +728,11 @@
       console.log('Tavus conversation created:', tavusConvId, 'lang:', langOverride || 'auto');
 
       // Load the conversation URL into the iframe
+      // Append ?name= to pre-fill the Tavus name prompt (skips the dialog)
       const frame = document.getElementById('tavusFrame');
-      frame.src = data.conversation_url;
+      const convUrl = new URL(data.conversation_url);
+      if (patientName) convUrl.searchParams.set('name', patientName);
+      frame.src = convUrl.toString();
 
       frame.onload = () => {
         document.getElementById('tavusLoading').classList.add('hidden');

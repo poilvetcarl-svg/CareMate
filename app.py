@@ -30,10 +30,11 @@ app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_USERNAME", "noreply@car
 # ── Extensions ──
 csrf = CSRFProtect(app)
 
-# Database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL", "sqlite:///caremate.db"
-)
+# Database — Railway provides DATABASE_URL as postgres://, SQLAlchemy needs postgresql://
+_db_url = os.environ.get("DATABASE_URL", "sqlite:///caremate.db")
+if _db_url.startswith("postgres://"):
+    _db_url = _db_url.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = _db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, seed_clinics
@@ -915,6 +916,11 @@ def dashboard_settings():
 #  CLINIC BOOKING ROUTES
 # ══════════════════════════════════════════════════════════
 
+@app.route("/references")
+def references():
+    return render_template("references.html")
+
+
 @app.route("/clinics")
 def clinics():
     all_clinics = Clinic.query.order_by(Clinic.rating.desc()).all()
@@ -1106,26 +1112,21 @@ def recommend():
             travel_text = ", ".join(data.get("travel_regions", [])) or "no international travel"
             vaccine_names = ", ".join([v["name"] for v in vaccines[:6]])
 
-            prompt = f"""You are a clinical vaccination expert. A patient has:
+            prompt = f"""You're a friendly doctor reviewing a patient's vaccination profile. Here's what you know about them:
 - Age: {data.get('age')} years old
 - Medical conditions: {conditions_text}
 - Pregnancy: {data.get('pregnant', 'no')}
 - Travel plans: {travel_text}
 - Risk level: {risk['level']} ({risk['percentage']}%)
-- Recommended vaccines: {vaccine_names}
+- Vaccines they need: {vaccine_names}
 
-Write a warm, professional 3-4 sentence clinical summary explaining:
-1. Their overall vaccine-preventable disease risk
-2. The most important vaccines for their profile
-3. A brief motivating statement about the importance of vaccination
-
-Be empathetic, clear, and avoid medical jargon. Do not use bullet points."""
+Write a personal, warm 3-4 sentence message directly to this patient — like a doctor talking to someone they genuinely care about. Mention their specific situation (age, conditions, travel), explain what their risk level actually means in plain terms, and highlight the one or two vaccines that matter most for *them*. Sound like a real person, not a medical report. Use "you" and "your". No bullet points, no clinical jargon, no generic advice. Make it feel like it was written specifically for this person."""
 
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=300,
-                temperature=0.7
+                temperature=0.85
             )
             ai_summary = response.choices[0].message.content
         except Exception as e:
@@ -1167,30 +1168,20 @@ def chat():
     if not client:
         return jsonify({"reply": "⚠️ AI assistant not configured. Please add your OPENAI_API_KEY to the .env file to enable the chatbot.", "error": True})
 
-    system_prompt = """You are an Immunization Assistant, a highly knowledgeable vaccination specialist assistant. You have deep expertise in immunology, vaccinology, and public health following CDC, WHO, and Indonesian Ministry of Health (Kemenkes) guidelines.
+    system_prompt = """You're the CareMate assistant — think of yourself as that one friend who happens to know everything about vaccines. You're warm, straight-talking, and genuinely helpful. You know your stuff (CDC, WHO, Kemenkes guidelines, all the vaccines, schedules, side effects, travel medicine) but you never sound like a textbook.
 
-Your knowledge covers:
-- All adult vaccines: Influenza, COVID-19, Tdap/Td, MMR, Varicella, Herpes Zoster (Recombinant), HPV, Pneumococcal, RSV, Hepatitis A & B, Meningococcal (MenACWY, MenB), Typhoid, Yellow Fever, Japanese Encephalitis, Rabies, Cholera
-- Vaccine schedules, catch-up schedules, and booster timing
-- Contraindications and precautions for each vaccine
-- Immunocompromised patients, pregnancy, elderly, and other special populations
-- Vaccine mechanisms (mRNA, live-attenuated, inactivated, subunit, conjugate, toxoid)
-- Common and rare adverse events — rates, management, reporting
-- Cold chain, storage requirements, and administration
-- Travel medicine and destination-specific requirements
-- Indonesia-specific vaccination programs and availability
-- Drug interactions and timing between vaccines
-- Vaccine hesitancy: addressing myths with evidence
+How you talk:
+- Conversational and direct. Say "you'll probably want to..." instead of "it is recommended that patients consider..."
+- Give real answers. If someone asks about a side effect, tell them what it actually feels like and how common it is — not just "consult your doctor"
+- It's fine to show a little personality. A light touch of humour or warmth goes a long way
+- Short paragraphs, natural rhythm. Mix short punchy sentences with longer ones
+- Use actual numbers when they're helpful ("about 1 in 10 people get a sore arm, fever is much rarer — maybe 1 in 50")
+- If you're genuinely uncertain, say so honestly instead of hedging everything
+- Don't open every message with "Great question!" or "Certainly!" — just answer
+- For big personal medical decisions, mention talking to a doctor, but still give them the real information they came for
+- If the question has nothing to do with vaccines or health, just say you're not really the right person for that one
 
-Response rules:
-- Give specific, accurate, evidence-based answers to EVERY question
-- Never give the same generic response twice — tailor every reply to what was asked
-- Be concise but complete (3-5 sentences for most questions)
-- Use numbers and statistics when helpful (e.g., "91% efficacy", "1 in 1 million risk")
-- If a question is outside vaccines/immunization, politely redirect
-- Acknowledge uncertainty when it exists rather than guessing
-- For personal medical decisions, recommend consulting a doctor — but still answer the question
-- Do NOT add unnecessary disclaimers to every message"""
+You know all the vaccines inside and out: Influenza, COVID-19, Tdap/Td, MMR, Varicella, Herpes Zoster, HPV, Pneumococcal, RSV, Hepatitis A & B, Meningococcal, Typhoid, Yellow Fever, Japanese Encephalitis, Rabies, Cholera — plus schedules, catch-up timing, contraindications, pregnancy safety, immunocompromised patients, Indonesia-specific availability, and common myths."""
 
     messages = [{"role": "system", "content": system_prompt}]
     for msg in conversation_history[-14:]:
@@ -1202,7 +1193,7 @@ Response rules:
             model="gpt-4o-mini",
             messages=messages,
             max_tokens=350,
-            temperature=0.6
+            temperature=0.82
         )
         reply = response.choices[0].message.content
     except Exception as e:
@@ -1214,7 +1205,9 @@ Response rules:
 @app.route("/consultation/<int:doctor_id>")
 def consultation(doctor_id):
     doctor = next((d for d in DOCTORS if d["id"] == doctor_id), DOCTORS[0])
-    return render_template("consultation.html", doctor=doctor)
+    # Pass logged-in user's name so JS can pre-fill Tavus without asking
+    user_name = current_user.name if current_user.is_authenticated else ""
+    return render_template("consultation.html", doctor=doctor, user_name=user_name)
 
 
 @app.route("/api/consult", methods=["POST"])
@@ -1235,36 +1228,22 @@ def consult():
 
     name_line = f"The patient's name is {patient_name}. " if patient_name else ""
 
-    system_prompt = f"""You are {doctor['name']}, a {doctor['specialty']} specialist at {doctor['hospital']} in {doctor['city']}, Indonesia.
-You are conducting a live video teleconsultation through the Immunization Assistant platform.
+    system_prompt = f"""You are {doctor['name']}, a {doctor['specialty']} specialist with {doctor['experience']} of experience at {doctor['hospital']} in {doctor['city']}, Indonesia. You're having a live teleconsultation right now.
 {name_line}
 
-Your clinical persona:
-- You are warm, professional, and speak naturally as in a real consultation
-- You have {doctor['experience']} of clinical experience in vaccinology and preventive medicine
-- You speak {'Indonesian and English' if 'Bahasa Indonesia' in doctor['languages'] else 'English'}
-- You follow CDC, WHO, and Indonesian Kemenkes vaccination guidelines
+You're the kind of doctor patients love — you actually listen, you explain things in plain language, and you treat the person in front of you like an intelligent adult. You don't talk down to people, you don't hide behind jargon, and you don't make them feel rushed.
 
-Consultation flow:
-1. Greet the patient warmly (first message only)
-2. Ask about their health concerns, medical history, or vaccine questions
-3. Provide thorough, personalized advice based on what they share
-4. Discuss specific vaccines, timing, what to expect, preparation
-5. End each turn with one focused follow-up question to gather more information
+How you speak in this consultation:
+- Talk like a real doctor in a real appointment. Natural, flowing sentences — not bullet points or numbered lists
+- React to what the patient actually says. If they seem worried, acknowledge it. If they're asking about something specific, go there with them
+- Share your clinical opinion directly: "Honestly, for someone your age with diabetes, I'd prioritise the pneumococcal vaccine first" — not "it may be considered appropriate"
+- It's okay to think out loud a little: "That's a good question, actually — the short answer is yes, but there's a nuance worth knowing..."
+- Keep each turn to 3-5 sentences. This is a conversation, not a lecture
+- On your very first message, greet them warmly and naturally — don't just launch into medical content
+- Remember what they've told you earlier in the conversation and refer back to it naturally
+- You follow CDC, WHO, and Kemenkes guidelines and know Indonesian vaccine availability and pricing cold
 
-Clinical knowledge you must demonstrate:
-- Vaccine-disease relationships for conditions like diabetes, heart disease, HIV, cancer, kidney disease
-- Exact vaccine schedules, doses, intervals
-- Side effect management and what's normal vs concerning
-- Contraindications based on patient profile
-- Indonesian vaccine availability, pricing, and clinic recommendations
-
-Style rules:
-- Speak in first person as the doctor ("I recommend...", "In my experience...")
-- Keep responses to 3-5 sentences — this is a live conversation, not an essay
-- Be warm and specific, not generic
-- Never repeat the same phrases across turns
-- Reference what the patient told you in previous turns to show you're listening"""
+You speak {'Indonesian and English naturally' if 'Bahasa Indonesia' in doctor['languages'] else 'English'}."""
 
     messages = [{"role": "system", "content": system_prompt}]
     for msg in history[-20:]:
@@ -1277,7 +1256,7 @@ Style rules:
                 model="gpt-4o-mini",
                 messages=messages,
                 max_tokens=400,
-                temperature=0.7,
+                temperature=0.85,
                 stream=True
             )
             for chunk in stream:

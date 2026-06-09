@@ -6,28 +6,25 @@
   <title>CareMate — Intelligent Vaccination Platform</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 </head>
 <body>
 
 <!-- ===== NAVBAR ===== -->
 <nav class="navbar" id="navbar">
   <div class="nav-container">
-    <a href="/" class="nav-logo">
-      <span class="logo-icon">💉</span>
-      <span class="logo-text">Care<span class="logo-accent">Mate</span></span>
-    </a>
+    <a href="/" class="nav-logo">Care<span class="logo-accent">Mate</span></a>
     <div class="nav-links">
       <a href="#assessment" class="nav-link">Assessment</a>
       <a href="#how-it-works" class="nav-link">How It Works</a>
-      <a href="/clinics" class="nav-link">📍 Clinics</a>
+      <a href="/clinics" class="nav-link">Clinics</a>
       <a href="/teleconsultation" class="nav-link">Doctors</a>
       {% if current_user.is_authenticated %}
-        <a href="/dashboard" class="nav-link" style="font-weight:700;color:var(--accent)">My Dashboard</a>
+        <a href="/dashboard" class="nav-link" style="font-weight:700;color:var(--coral)">Dashboard</a>
         <a href="/logout" class="nav-link" style="color:var(--text-muted)">Sign Out</a>
       {% else %}
         <a href="/login" class="nav-link">Sign In</a>
-        <a href="/register" class="nav-cta" style="text-decoration:none;padding:8px 18px;border-radius:20px">Sign Up Free</a>
+        <a href="/register" class="nav-cta">Sign Up Free</a>
       {% endif %}
     </div>
     <button class="menu-toggle" id="menuToggle">☰</button>
@@ -37,33 +34,32 @@
 <!-- ===== HERO ===== -->
 <section class="hero">
   <div class="hero-bg">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-    <div class="grid-overlay"></div>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
   </div>
-  <div class="hero-content">
+
+  <!-- LEFT: Text -->
+  <div class="hero-text">
     <div class="hero-badge">
       <span class="badge-dot"></span>
       AI-Powered · CDC/WHO Guidelines · Real-time Analysis
     </div>
     <h1 class="hero-title">
-      Your Personalized<br />
-      <span class="gradient-text">Vaccination Plan</span><br />
-      in Seconds
+      Your Smart<br/>
+      <span class="gradient-text">Vaccine Plan</span><br/>
+      in 60 Seconds
     </h1>
     <p class="hero-subtitle">
-      Enter your health profile and get instant AI-powered vaccine recommendations,
-      risk assessment, and expert teleconsultation — all in one place.
+      AI-driven vaccine recommendations tailored to your health profile, travel history,
+      and risk factors — backed by CDC &amp; WHO guidelines.
     </p>
     <div class="hero-actions">
       <button class="btn-primary" onclick="scrollToAssessment()">
-        Get My Vaccine Plan
-        <span class="btn-arrow">→</span>
+        Get My Vaccine Plan <span class="btn-arrow">→</span>
       </button>
       <a href="/teleconsultation" class="btn-secondary">
-        <span class="btn-icon">👨‍⚕️</span>
-        Talk to a Doctor
+        👨‍⚕️ Talk to a Doctor
       </a>
     </div>
     <div class="hero-stats">
@@ -83,77 +79,172 @@
       </div>
     </div>
   </div>
+
+  <!-- RIGHT: Dashboard mockup (no float cards) -->
+  <div class="hero-visual">
+    <div class="hero-mock">
+      <svg width="0" height="0" style="position:absolute">
+        <defs>
+          <linearGradient id="mockRingGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#FF6B6B"/>
+            <stop offset="100%" stop-color="#FF8E53"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="mock-header">
+        <span class="mock-title">Your Assessment</span>
+        <span class="mock-badge">✓ Complete</span>
+      </div>
+      <div class="mock-risk-ring">
+        <svg class="ring-svg" viewBox="0 0 110 110">
+          <circle class="ring-bg" cx="55" cy="55" r="46"/>
+          <circle class="ring-fill" cx="55" cy="55" r="46"/>
+        </svg>
+        <div class="ring-center">
+          <span class="ring-pct">68%</span>
+          <span class="ring-sub">Risk</span>
+        </div>
+      </div>
+      <div class="mock-vax-list">
+        <div class="mock-vax-item">
+          <div class="mvax-dot" style="background:#f87171"></div>
+          <span class="mvax-name">Hepatitis B</span>
+          <span class="mvax-chip chip-urgent">Urgent</span>
+        </div>
+        <div class="mock-vax-item">
+          <div class="mvax-dot" style="background:#fbbf24"></div>
+          <span class="mvax-name">Typhoid</span>
+          <span class="mvax-chip chip-soon">Due Soon</span>
+        </div>
+        <div class="mock-vax-item">
+          <div class="mvax-dot" style="background:#63E6BE"></div>
+          <span class="mvax-name">MMR</span>
+          <span class="mvax-chip chip-ok">Up to date</span>
+        </div>
+        <div class="mock-vax-item">
+          <div class="mvax-dot" style="background:#fbbf24"></div>
+          <span class="mvax-name">HPV</span>
+          <span class="mvax-chip chip-soon">Recommended</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </section>
 
-<!-- ===== VIDEO SECTION ===== -->
-<section class="video-section" id="how-it-works">
+<!-- ===== TRUST BAR ===== -->
+<section class="trust-section">
+  <p class="trust-label">Following guidelines from</p>
+  <div class="trust-logos">
+    <div class="trust-logo">🏥 CDC</div>
+    <div class="trust-logo">🌍 WHO</div>
+    <div class="trust-logo">🇮🇩 Kemenkes RI</div>
+    <div class="trust-logo">⚕️ PAPDI</div>
+    <div class="trust-logo">🔬 IDAI</div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="how-it-works-section" id="how-it-works">
   <div class="section-header">
     <div class="section-badge">How It Works</div>
-    <h2 class="section-title">Science-Backed. <span class="gradient-text">AI-Powered.</span></h2>
-    <p class="section-subtitle">Our recommendation engine combines CDC/WHO guidelines with advanced AI to give you clinically accurate, personalized vaccine advice.</p>
+    <h2 class="section-title">From Profile to <span class="gradient-text">Protection</span></h2>
+    <p class="section-subtitle">Four simple steps to your personalised vaccine plan — powered by CDC &amp; WHO guidelines and AI analysis.</p>
   </div>
-  <div class="video-grid">
-    <!-- TED-Ed "How do vaccines work?" — rb7TVW77ZCs -->
-    <div class="video-card" onclick="openVideoModal('rb7TVW77ZCs', 'How Vaccines Train Your Immune System')">
-      <div class="video-thumb">
-        <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600&q=80" alt="How vaccines work" class="video-bg-img" />
-        <div class="video-overlay">
-          <div class="play-btn">▶</div>
-          <div class="video-duration">5:12</div>
-        </div>
+  <div class="hiw-steps">
+
+    <div class="hiw-step reveal">
+      <div class="hiw-step-icon">
+        <span class="hiw-step-num">1</span>
       </div>
-      <div class="video-info">
-        <span class="video-tag">Science · TED-Ed</span>
-        <h3>How Vaccines Train Your Immune System</h3>
-        <p>Understand the science behind immunization and why it's the most powerful tool in preventive medicine.</p>
-      </div>
+      <h3 class="hiw-step-title">Fill Your Profile</h3>
+      <p class="hiw-step-desc">Tell us your age, sex, and existing health conditions. It takes under two minutes and is completely private.</p>
     </div>
-    <!-- Kurzgesagt "How The Immune System Actually Works" — 0h5Jd7sgQWY -->
-    <div class="video-card" onclick="openVideoModal('0h5Jd7sgQWY', 'How The Immune System Actually Works')">
-      <div class="video-thumb">
-        <img src="https://images.unsplash.com/photo-1576086213369-97a306d36557?w=600&q=80" alt="Immune system cells" class="video-bg-img" />
-        <div class="video-overlay">
-          <div class="play-btn">▶</div>
-          <div class="video-duration">8:05</div>
-        </div>
+
+    <div class="hiw-step reveal">
+      <div class="hiw-step-icon">
+        <span class="hiw-step-num">2</span>
       </div>
-      <div class="video-info">
-        <span class="video-tag">Science · Kurzgesagt</span>
-        <h3>How The Immune System Actually Works</h3>
-        <p>An animated deep-dive into how your body fights infection — and why vaccines are its most powerful trainer.</p>
-      </div>
+      <h3 class="hiw-step-title">AI Analysis</h3>
+      <p class="hiw-step-desc">Our engine cross-references your data against PAPDI 2025, CDC ACIP, and WHO guidelines to calculate your risk score and prioritise vaccines.</p>
     </div>
-    <!-- TED-Ed "The side effects of vaccines" — oKkD6VFm3IU -->
-    <div class="video-card" onclick="openVideoModal('oKkD6VFm3IU', 'The Side Effects of Vaccines – How Do They Happen?')">
-      <div class="video-thumb">
-        <img src="https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?w=600&q=80" alt="Vaccine science" class="video-bg-img" />
-        <div class="video-overlay">
-          <div class="play-btn">▶</div>
-          <div class="video-duration">5:18</div>
-        </div>
+
+    <div class="hiw-step reveal">
+      <div class="hiw-step-icon">
+        <span class="hiw-step-num">3</span>
       </div>
-      <div class="video-info">
-        <span class="video-tag">Health · TED-Ed</span>
-        <h3>The Side Effects of Vaccines – How Do They Happen?</h3>
-        <p>Understand what causes common vaccine side effects and why they're actually a sign your immune system is working.</p>
-      </div>
+      <h3 class="hiw-step-title">Book a Clinic</h3>
+      <p class="hiw-step-desc">Browse verified clinics near you, check live availability, and book your appointment — all in one place.</p>
     </div>
+
+    <div class="hiw-step reveal">
+      <div class="hiw-step-icon">
+        <span class="hiw-step-num">4</span>
+      </div>
+      <h3 class="hiw-step-title">Get Your Certificate</h3>
+      <p class="hiw-step-desc">Receive a digital vaccination certificate after each dose. Store your full history in your dashboard and share it instantly when needed.</p>
+    </div>
+
   </div>
 </section>
 
-<!-- VIDEO MODAL -->
-<div class="video-modal-overlay hidden" id="videoModal" onclick="closeVideoModal()">
-  <div class="video-modal-content" onclick="event.stopPropagation()">
-    <button class="video-modal-close" onclick="closeVideoModal()">✕</button>
-    <h3 class="video-modal-title" id="videoModalTitle"></h3>
-    <div class="video-responsive">
-      <iframe id="videoIframe" src="" frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen></iframe>
-    </div>
+<!-- ===== FEATURES ===== -->
+<section class="features-section">
+  <div class="section-header">
+    <div class="section-badge">Why CareMate</div>
+    <h2 class="section-title">Everything You Need to <span class="gradient-text">Stay Protected</span></h2>
+    <p class="section-subtitle">One platform for your complete vaccination journey — from risk assessment to certified records.</p>
   </div>
-</div>
+  <div class="features-grid">
 
+    <div class="feature-card reveal">
+      <div class="feature-icon fi-1">🧬</div>
+      <h4 class="feature-title">Personalised Risk Score</h4>
+      <p class="feature-desc">AI calculates your individual vulnerability based on age, sex, medical history, and travel plans — not generic one-size-fits-all advice.</p>
+    </div>
+
+    <div class="feature-card reveal">
+      <div class="feature-icon fi-2">📋</div>
+      <h4 class="feature-title">PAPDI 2025 Guidelines</h4>
+      <p class="feature-desc">All recommendations are grounded in the latest PAPDI, CDC ACIP, and WHO immunisation schedules — updated annually.</p>
+    </div>
+
+    <div class="feature-card reveal">
+      <div class="feature-icon fi-3">📍</div>
+      <h4 class="feature-title">Nearby Clinic Finder</h4>
+      <p class="feature-desc">Search verified clinics and hospitals in your area with live vaccine availability, pricing, and same-day booking.</p>
+    </div>
+
+    <div class="feature-card reveal">
+      <div class="feature-icon fi-4">👨‍⚕️</div>
+      <h4 class="feature-title">Teleconsultation</h4>
+      <p class="feature-desc">Connect with certified immunologists and general practitioners for video consultations — no commute required.</p>
+    </div>
+
+    <div class="feature-card reveal">
+      <div class="feature-icon fi-5">🏅</div>
+      <h4 class="feature-title">Digital Certificates</h4>
+      <p class="feature-desc">Generate and share QR-verified vaccination certificates for travel, school, or employment — stored securely in your account.</p>
+    </div>
+
+    <div class="feature-card reveal">
+      <div class="feature-icon fi-6">🔔</div>
+      <h4 class="feature-title">Smart Reminders</h4>
+      <p class="feature-desc">Automated reminders for upcoming doses via WhatsApp or email, so you never miss a booster or follow-up shot.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== CTA BAND ===== -->
+<section class="cta-band">
+  <h2 class="cta-band-title">Start Your Free Assessment Today</h2>
+  <p class="cta-band-sub">Takes less than 2 minutes. Clinically validated. Completely private.</p>
+  <div class="cta-input-wrap">
+    <input class="cta-input" type="email" placeholder="Enter your email to get started…" />
+    <button class="cta-btn" onclick="scrollToAssessment()">Get My Plan</button>
+  </div>
+</section>
 
 <!-- ===== ASSESSMENT FORM ===== -->
 <section class="assessment-section" id="assessment">
@@ -191,14 +282,9 @@
           <label class="form-label">Your Name <span class="required">*</span></label>
           <input type="text" id="patientNameInput" placeholder="e.g. Budi Santoso"
                  class="text-input"
-                 style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid rgba(124,58,237,0.2);
-                        background:rgba(124,58,237,0.04);font-size:15px;font-family:inherit;outline:none;
-                        color:#1e293b;transition:border-color .2s"
-                 onfocus="this.style.borderColor='#7c3aed'"
-                 onblur="this.style.borderColor='rgba(124,58,237,0.2)'" />
-          <p class="form-hint" style="font-size:12px;color:#94a3b8;margin-top:6px">
-            Your doctor will use this name to greet you during the consultation.
-          </p>
+                 onfocus="this.style.borderColor='var(--coral)'"
+                 onblur="this.style.borderColor='rgba(255,107,107,0.2)'" />
+          <p class="form-hint">Your doctor will use this name to greet you during the consultation.</p>
         </div>
 
         <div class="form-group">
@@ -388,7 +474,7 @@
 
       <!-- STEP 3: TRAVEL -->
       <div class="form-step hidden" id="step3">
-        <h3 class="step-title">Travel & Lifestyle</h3>
+        <h3 class="step-title">Travel &amp; Lifestyle</h3>
         <p class="step-desc">International travel can expose you to diseases not common in your home country.</p>
 
         <div class="form-group">
@@ -489,13 +575,13 @@
             <!-- Animated arc -->
             <path d="M 15 115 A 95 95 0 0 1 205 115" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round"
                   stroke-dasharray="298" stroke-dashoffset="298" id="gaugeArc" class="gauge-arc"/>
-            <!-- Score text embedded in SVG — no overlap possible -->
+            <!-- Score text -->
             <text x="110" y="92" text-anchor="middle" dominant-baseline="middle"
-                  font-size="42" font-weight="900" font-family="Inter, sans-serif"
-                  fill="#0f172a" id="riskScore">0%</text>
+                  font-size="42" font-weight="900" font-family="DM Sans, sans-serif"
+                  fill="#1A0A00" id="riskScore">0%</text>
             <text x="110" y="124" text-anchor="middle"
-                  font-size="11" font-family="Inter, sans-serif"
-                  fill="#94a3b8" letter-spacing="1">RISK SCORE</text>
+                  font-size="11" font-family="DM Sans, sans-serif"
+                  fill="#A07850" letter-spacing="1">RISK SCORE</text>
           </svg>
         </div>
         <div class="risk-factors-list" id="riskFactorsList"></div>
@@ -534,191 +620,11 @@
   </div>
 </section>
 
-<!-- ===== PARTNERS / TRUST ===== -->
-<section class="trust-section">
-  <p class="trust-label">Following guidelines from</p>
-  <div class="trust-logos">
-    <div class="trust-logo">🏥 CDC</div>
-    <div class="trust-logo">🌍 WHO</div>
-    <div class="trust-logo">🇮🇩 Kemenkes RI</div>
-    <div class="trust-logo">⚕️ PAPDI</div>
-    <div class="trust-logo">🔬 IDAI</div>
-  </div>
-</section>
-
-<!-- ===== REFERENCES & SOURCES ===== -->
-<section class="references-section" id="references">
-  <div class="section-header">
-    <div class="section-badge">Evidence Base</div>
-    <h2 class="section-title">References &amp; <span class="gradient-text">Sources</span></h2>
-    <p class="section-subtitle">CareMate's vaccine recommendations are derived exclusively from peer-reviewed guidelines and official public health authorities.</p>
-  </div>
-
-  <div class="references-grid">
-
-    <!-- PAPDI 2025 -->
-    <div class="ref-category">
-      <div class="ref-category-header ref-cat-papdi">
-        <span class="ref-cat-icon">⚕️</span>
-        <div>
-          <div class="ref-cat-title">PAPDI — Satgas Imunisasi Dewasa</div>
-          <div class="ref-cat-sub">Indonesian Society of Internal Medicine · 2025</div>
-        </div>
-      </div>
-      <div class="ref-items">
-        <div class="ref-item">
-          <div class="ref-item-icon">📋</div>
-          <div class="ref-item-body">
-            <div class="ref-item-title">Jadwal Imunisasi Dewasa — Satgas Imunisasi Dewasa PAPDI 2025</div>
-            <div class="ref-item-desc">Official adult immunization schedule for Indonesia. Primary source for condition-based recommendations including Herpes Zoster, RSV, Influenza, and Pneumococcal as priority vaccines for adults with chronic conditions.</div>
-            <div class="ref-item-tags"><span class="ref-tag">Herpes Zoster</span><span class="ref-tag">RSV</span><span class="ref-tag">Influenza</span><span class="ref-tag">Pneumococcal</span></div>
-          </div>
-        </div>
-        <div class="ref-item">
-          <div class="ref-item-icon">📗</div>
-          <div class="ref-item-body">
-            <div class="ref-item-title">Buku Saku Vaksinasi Dewasa — PAPDI 2025</div>
-            <div class="ref-item-desc">Pocket reference guide for adult vaccination in Indonesia. Provides clinical context, dosing schedules, and contraindications for all recommended adult vaccines including newly approved RSV and recombinant Herpes Zoster vaccines.</div>
-            <div class="ref-item-tags"><span class="ref-tag">Clinical Reference</span><span class="ref-tag">Dosing</span><span class="ref-tag">Contraindications</span></div>
-          </div>
-        </div>
-        <div class="ref-item">
-          <div class="ref-item-icon">🪪</div>
-          <div class="ref-item-body">
-            <div class="ref-item-title">Kartu Vaksinasi Dewasa — PAPDI 2025</div>
-            <div class="ref-item-desc">Adult vaccination card identifying the four vaccines prioritized for adults with comorbidities: Herpes Zoster (Recombinant), RSV, Influenza, and Pneumococcal. Basis for the "Vaccines to Prioritise Now" section in CareMate's output.</div>
-            <div class="ref-item-tags"><span class="ref-tag">Priority Vaccines</span><span class="ref-tag">Comorbidities</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CDC -->
-    <div class="ref-category">
-      <div class="ref-category-header ref-cat-cdc">
-        <span class="ref-cat-icon">🏥</span>
-        <div>
-          <div class="ref-cat-title">CDC — Advisory Committee on Immunization Practices (ACIP)</div>
-          <div class="ref-cat-sub">U.S. Centers for Disease Control and Prevention · 2022–2024</div>
-        </div>
-      </div>
-      <div class="ref-items">
-        <div class="ref-item">
-          <div class="ref-item-icon">📄</div>
-          <div class="ref-item-body">
-            <div class="ref-item-title">ACIP Recommended Adult Immunization Schedule — United States, 2024</div>
-            <div class="ref-item-desc">Annual age- and condition-based vaccination schedule covering all recommended vaccines for adults 19 years and older. Used for routine scheduling logic and catch-up recommendations.</div>
-            <div class="ref-item-tags"><span class="ref-tag">Adult Schedule</span><span class="ref-tag">Age Groups</span><span class="ref-tag">Catch-up</span></div>
-          </div>
-        </div>
-        <div class="ref-item">
-          <div class="ref-item-icon">📄</div>
-          <div class="ref-item-body">
-            <div class="ref-item-title">ACIP Recommendations — Herpes Zoster Vaccine (Shingrix), 2022</div>
-            <div class="ref-item-desc">Guidelines recommending recombinant zoster vaccine for adults ≥50 and immunocompromised adults ≥19. Informed the age-based and condition-based zoster recommendation thresholds in CareMate.</div>
-            <div class="ref-item-tags"><span class="ref-tag">Herpes Zoster</span><span class="ref-tag">Immunocompromised</span></div>
-          </div>
-        </div>
-        <div class="ref-item">
-          <div class="ref-item-icon">📄</div>
-          <div class="ref-item-body">
-            <div class="ref-item-title">ACIP Recommendations — RSV Vaccine for Older Adults, 2023</div>
-            <div class="ref-item-desc">First ACIP recommendations for RSV vaccines in adults ≥60 and high-risk younger adults. Used to define RSV eligibility criteria in CareMate's recommendation engine.</div>
-            <div class="ref-item-tags"><span class="ref-tag">RSV</span><span class="ref-tag">Adults ≥60</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- WHO -->
-    <div class="ref-category">
-      <div class="ref-category-header ref-cat-who">
-        <span class="ref-cat-icon">🌍</span>
-        <div>
-          <div class="ref-cat-title">WHO — World Health Organization</div>
-          <div class="ref-cat-sub">Position Papers &amp; Global Vaccine Action Plan · 2012–2024</div>
-        </div>
-      </div>
-      <div class="ref-items">
-        <div class="ref-item">
-          <div class="ref-item-icon">📄</div>
-          <div class="ref-item-body">
-            <div class="ref-item-title">WHO Position Paper — Influenza Vaccines, 2023</div>
-            <div class="ref-item-desc">Global recommendations for influenza vaccine use in adults, including priority groups and annual revaccination rationale. Basis for influenza as a universal annual priority in CareMate.</div>
-            <div class="ref-item-tags"><span class="ref-tag">Influenza</span><span class="ref-tag">Annual</span></div>
-          </div>
-        </div>
-        <div class="ref-item">
-          <div class="ref-item-icon">📄</div>
-          <div class="ref-item-body">
-            <div class="ref-item-title">WHO Position Paper — Herpes Zoster Vaccines, 2014 (updated 2022)</div>
-            <div class="ref-item-desc">Global guidance on zoster vaccine use, safety in immunocompromised patients, and priority populations. Supports PAPDI's condition-based recommendations in CareMate.</div>
-            <div class="ref-item-tags"><span class="ref-tag">Herpes Zoster</span><span class="ref-tag">Safety</span></div>
-          </div>
-        </div>
-        <div class="ref-item">
-          <div class="ref-item-icon">📄</div>
-          <div class="ref-item-body">
-            <div class="ref-item-title">WHO Position Paper — Pneumococcal Vaccines, 2019</div>
-            <div class="ref-item-desc">Guidance for PCV use in older adults and high-risk groups. Used to define pneumococcal eligibility for adults with diabetes, lung disease, heart disease, and immunocompromising conditions.</div>
-            <div class="ref-item-tags"><span class="ref-tag">Pneumococcal</span><span class="ref-tag">High-risk Adults</span></div>
-          </div>
-        </div>
-        <div class="ref-item">
-          <div class="ref-item-icon">📄</div>
-          <div class="ref-item-body">
-            <div class="ref-item-title">WHO Position Paper — RSV Vaccines, 2024</div>
-            <div class="ref-item-desc">First WHO global guidance on RSV vaccines for adults, providing evidence base for RSV as a priority vaccine in adults with underlying conditions.</div>
-            <div class="ref-item-tags"><span class="ref-tag">RSV</span><span class="ref-tag">New Recommendation</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Kemenkes & Other Indonesian -->
-    <div class="ref-category">
-      <div class="ref-category-header ref-cat-kemenkes">
-        <span class="ref-cat-icon">🇮🇩</span>
-        <div>
-          <div class="ref-cat-title">Kemenkes RI — Ministry of Health Indonesia</div>
-          <div class="ref-cat-sub">National Immunization Program &amp; Health Regulations · 2021–2024</div>
-        </div>
-      </div>
-      <div class="ref-items">
-        <div class="ref-item">
-          <div class="ref-item-icon">📄</div>
-          <div class="ref-item-body">
-            <div class="ref-item-title">Program Imunisasi Nasional Dewasa — Kemenkes RI, 2023</div>
-            <div class="ref-item-desc">Indonesian national immunization program guidelines for adults, including locally relevant vaccines and schedules adapted to Indonesia's epidemiological context.</div>
-            <div class="ref-item-tags"><span class="ref-tag">Indonesia</span><span class="ref-tag">National Program</span></div>
-          </div>
-        </div>
-        <div class="ref-item">
-          <div class="ref-item-icon">📄</div>
-          <div class="ref-item-body">
-            <div class="ref-item-title">BPOM RI — Vaccine Authorization &amp; Safety Surveillance, 2024</div>
-            <div class="ref-item-desc">Indonesian Food and Drug Authority authorizations for COVID-19, RSV, and Herpes Zoster vaccines in Indonesia. Ensures all vaccines recommended by CareMate are locally approved.</div>
-            <div class="ref-item-tags"><span class="ref-tag">Authorization</span><span class="ref-tag">Safety</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Disclaimer -->
-  <div class="ref-disclaimer">
-    <span class="ref-disc-icon">ℹ️</span>
-    <p>CareMate synthesizes these guidelines into personalized recommendations. It does <strong>not</strong> replace a consultation with a qualified healthcare provider. Always confirm your vaccination plan with your doctor.</p>
-  </div>
-</section>
-
 <!-- ===== FOOTER ===== -->
 <footer class="footer">
   <div class="footer-content">
     <div class="footer-brand">
-      <span class="logo-icon">💉</span>
-      <span class="logo-text">Care<span class="logo-accent">Mate</span></span>
+      <a href="/" class="nav-logo">Care<span class="logo-accent">Mate</span></a>
       <p>AI-powered preventive health for everyone.</p>
     </div>
     <div class="footer-links">
@@ -740,8 +646,8 @@
         <h5>For Business</h5>
         <a href="/corporate/register">🏢 Corporate Portal</a>
         <a href="/corporate/login">HR Dashboard</a>
-        <a href="#references">PAPDI 2025 Sources</a>
-        <a href="#references">CDC / WHO Guidelines</a>
+        <a href="/references">PAPDI 2025 Sources</a>
+        <a href="/references">CDC / WHO Guidelines</a>
       </div>
     </div>
   </div>
@@ -800,6 +706,49 @@
     <div id="modalContent"></div>
   </div>
 </div>
+
+<script>
+// ===== SCROLL REVEAL =====
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+document.querySelectorAll('.feature-card').forEach(el => revealObserver.observe(el));
+
+// ===== COUNTER ANIMATION =====
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      const target = parseInt(el.dataset.count);
+      let current = 0;
+      const step = Math.ceil(target / 60);
+      const timer = setInterval(() => {
+        current = Math.min(current + step, target);
+        el.textContent = current >= 1000 ? (current / 1000).toFixed(0) + 'k' : current;
+        if (current >= target) clearInterval(timer);
+      }, 25);
+      counterObserver.unobserve(el);
+    }
+  });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
+
+// ===== NAVBAR SCROLL =====
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
+});
+
+function scrollToAssessment() {
+  document.getElementById('assessment').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
