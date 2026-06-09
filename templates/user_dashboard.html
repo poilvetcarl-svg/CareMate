@@ -20,6 +20,7 @@
     <a href="/dashboard/reminders" class="dash-nav-item">🔔 Reminders</a>
     <a href="/clinics" class="dash-nav-item">📍 Book a Clinic</a>
     <a href="/#assessment" class="dash-nav-item">📋 New Assessment</a>
+    <a href="/dashboard/referrals" class="dash-nav-item">💰 Revenue</a>
   </nav>
   <div class="dash-sidebar-footer">
     <div class="dash-user-pill">
@@ -47,6 +48,24 @@
       <a href="/#assessment" class="btn-outline" style="padding:10px 20px;font-size:13px">📋 New Assessment</a>
     </div>
   </div>
+
+  <!-- Onboarding progress banner -->
+  {% set ob_steps = [current_user.date_of_birth and current_user.sex, assessments|length > 0, vaccination_records|length > 0 or bookings|length > 0] %}
+  {% set ob_done = ob_steps | select | list | length %}
+  {% if ob_done < 3 %}
+  <div style="background:linear-gradient(135deg,rgba(5,150,105,0.08),rgba(2,132,199,0.06));border:1px solid rgba(5,150,105,0.2);border-radius:16px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px">🚀 Complete your profile — {{ ob_done + 1 }}/4 steps done</div>
+      <div style="background:var(--bg-secondary);border-radius:20px;height:6px;margin-bottom:6px">
+        <div style="background:var(--accent);height:6px;border-radius:20px;width:{{ ((ob_done + 1) / 4 * 100)|int }}%"></div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted)">
+        {% if not current_user.date_of_birth or not current_user.sex %}Add your DOB & sex for better recommendations{% elif not assessments %}Run your first vaccine assessment{% else %}Log a vaccine or book a clinic{% endif %}
+      </div>
+    </div>
+    <a href="/onboarding" style="padding:9px 18px;border-radius:10px;background:var(--accent);color:white;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap">Continue Setup →</a>
+  </div>
+  {% endif %}
 
   <!-- Stat cards -->
   <div class="dash-stats">
@@ -105,7 +124,11 @@
               <div class="vt-next">Next dose: {{ rec.next_dose_date.strftime('%d %b %Y') }}</div>
               {% endif %}
             </div>
-            <div class="vt-badge">✓ Done</div>
+            <a href="/dashboard/certificate/{{ rec.id }}"
+               title="Download PDF Certificate"
+               style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;background:rgba(5,150,105,0.08);color:var(--accent);border:1px solid rgba(5,150,105,0.2);text-decoration:none;white-space:nowrap">
+              📄 Certificate
+            </a>
           </div>
           {% endfor %}
         </div>

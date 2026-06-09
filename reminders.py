@@ -73,17 +73,30 @@ def check_and_send_reminders(app):
 
             for reminder in due:
                 user = User.query.get(reminder.user_id)
-                if not user or not user.phone or not user.whatsapp_opt_in:
+                if not user:
                     continue
 
-                msg = build_reminder_message(
-                    reminder.vaccine_name,
-                    user.name,
-                    days
-                )
-                result = send_whatsapp(user.phone, msg)
+                sent_ok = False
 
-                if result["ok"]:
+                # Try WhatsApp first
+                if user.phone and user.whatsapp_opt_in:
+                    msg = build_reminder_message(reminder.vaccine_name, user.name, days)
+                    result = send_whatsapp(user.phone, msg)
+                    sent_ok = result["ok"]
+
+                # Fallback: email reminder
+                if not sent_ok and user.email:
+                    try:
+                        from flask import current_app
+                        fn = current_app.send_email_reminder
+                        sent_ok = fn(
+                            user.email, user.name,
+                            reminder.vaccine_name, reminder.reminder_date, days
+                        )
+                    except Exception as e:
+                        print(f"[Email fallback error] {e}")
+
+                if sent_ok:
                     from datetime import datetime
                     reminder.sent = True
                     reminder.sent_at = datetime.utcnow()

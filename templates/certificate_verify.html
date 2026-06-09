@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Verify Certificate — CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <style>
+    body { min-height:100vh; background:var(--bg-secondary); display:flex; align-items:center; justify-content:center; padding:24px; }
+    .verify-card { max-width:480px; width:100%; background:var(--bg-card); border:1px solid var(--border); border-radius:24px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.08); }
+    .verify-header { padding:28px 32px; text-align:center; }
+    .verify-body { padding:0 32px 32px; }
+    .info-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:14px; }
+    .info-row:last-child { border-bottom:none; }
+    .info-label { color:var(--text-muted); font-weight:600; }
+    .info-value { color:var(--text-primary); font-weight:700; }
+  </style>
+</head>
+<body>
+<div class="verify-card">
+  {% if record and user %}
+  <div class="verify-header" style="background:rgba(5,150,105,0.06);border-bottom:1px solid var(--border)">
+    <div style="font-size:48px;margin-bottom:8px">✅</div>
+    <div style="font-size:20px;font-weight:900;color:var(--accent)">Certificate Verified</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-top:4px">This vaccination record is authentic</div>
+  </div>
+  <div class="verify-body" style="margin-top:20px">
+    <div class="info-row">
+      <span class="info-label">Certificate ID</span>
+      <span class="info-value">CM-{{ '%06d' % record.id }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Name</span>
+      <span class="info-value">{{ user.name or 'Unknown' }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Vaccine</span>
+      <span class="info-value">{{ record.vaccine_name }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Dose</span>
+      <span class="info-value">Dose {{ record.dose_number }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Date Administered</span>
+      <span class="info-value">{{ record.date_given.strftime('%d %B %Y') }}</span>
+    </div>
+    {% if record.clinic_name %}
+    <div class="info-row">
+      <span class="info-label">Clinic</span>
+      <span class="info-value">{{ record.clinic_name }}</span>
+    </div>
+    {% endif %}
+    <div class="info-row">
+      <span class="info-label">Issued by</span>
+      <span class="info-value">CareMate Health Platform</span>
+    </div>
+    <div style="margin-top:20px;padding:12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:10px;font-size:12px;color:#92400e">
+      ⚠️ This certificate is based on self-reported data and does not replace an official government vaccination card.
+    </div>
+  </div>
+  {% else %}
+  <div class="verify-header" style="background:rgba(239,68,68,0.05);border-bottom:1px solid var(--border)">
+    <div style="font-size:48px;margin-bottom:8px">❌</div>
+    <div style="font-size:20px;font-weight:900;color:#dc2626">Certificate Not Found</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-top:4px">This certificate ID does not exist in our records.</div>
+  </div>
+  {% endif %}
+  <div style="padding:16px 32px;text-align:center;border-top:1px solid var(--border)">
+    <a href="/" style="font-size:13px;color:var(--accent);font-weight:700;text-decoration:none">💉 CareMate — caremate.id</a>
+  </div>
+</div>
+</body>
+</html>

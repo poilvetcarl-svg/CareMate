@@ -58,7 +58,10 @@
           {% endif %}
           {% if rec.notes %}<div style="font-size:12px;color:var(--text-muted);margin-top:3px">{{ rec.notes }}</div>{% endif %}
         </div>
-        <div class="vt-badge">✓ Done</div>
+        <a href="/dashboard/certificate/{{ rec.id }}"
+           style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;background:rgba(5,150,105,0.08);color:var(--accent);border:1px solid rgba(5,150,105,0.2);text-decoration:none;white-space:nowrap">
+          📄 Download Certificate
+        </a>
       </div>
       {% endfor %}
     </div>
@@ -86,6 +89,9 @@
         <label>Vaccine</label>
         <select name="vaccine_key" id="logVaccineKey" onchange="updateVaccineName(this)" required>
           <option value="">Select vaccine...</option>
+          {% for key, vac in vaccines.items() %}
+          <option value="{{ key }}" data-name="{{ vac.name }}">{{ vac.name }}</option>
+          {% endfor %}
         </select>
         <input type="hidden" name="vaccine_name" id="logVaccineName" />
       </div>

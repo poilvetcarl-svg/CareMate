@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>{{ 'Admin Referrals' if is_admin else 'My Bookings & Revenue' }} — CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
+</head>
+<body class="dash-body">
+
+{% if not is_admin %}
+<aside class="dash-sidebar">
+  <div class="dash-logo"><a href="/" class="nav-logo">💉 Care<span>Mate</span></a></div>
+  <nav class="dash-nav">
+    <a href="/dashboard" class="dash-nav-item">🏠 Overview</a>
+    <a href="/dashboard/history" class="dash-nav-item">💉 History</a>
+    <a href="/dashboard/reminders" class="dash-nav-item">🔔 Reminders</a>
+    <a href="/clinics" class="dash-nav-item">📍 Clinics</a>
+    <a href="/dashboard/referrals" class="dash-nav-item active">💰 Revenue</a>
+  </nav>
+  <div class="dash-sidebar-footer">
+    <div class="dash-user-pill">
+      <div class="dash-avatar">{{ current_user.name[0].upper() if current_user.name else 'U' }}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ current_user.name or 'User' }}</div>
+      </div>
+    </div>
+    <a href="/logout" class="dash-logout-btn">Sign Out</a>
+  </div>
+</aside>
+{% endif %}
+
+<main class="dash-main">
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-title">{{ '🔑 Admin — All Referrals' if is_admin else '💰 Booking Revenue' }}</h1>
+      <p class="dash-sub">{{ 'Platform-wide booking and referral fee overview.' if is_admin else 'Your clinic bookings and referral fees generated.' }}</p>
+    </div>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="dash-stats" style="grid-template-columns:repeat(3,1fr)">
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(5,150,105,0.1);color:var(--accent)">📍</div>
+      <div>
+        <div class="dash-stat-value">{{ bookings|length }}</div>
+        <div class="dash-stat-label">Total Bookings</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(124,58,237,0.1);color:#7c3aed">💵</div>
+      <div>
+        <div class="dash-stat-value">Rp {{ '{:,.0f}'.format(total_referral) }}</div>
+        <div class="dash-stat-label">Referral Revenue</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(2,132,199,0.1);color:#0284c7">🏥</div>
+      <div>
+        <div class="dash-stat-value">{{ clinic_stats|length }}</div>
+        <div class="dash-stat-label">Clinics Used</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-cols">
+    <!-- Per-clinic breakdown -->
+    <div class="dash-col-main">
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <div class="dash-card-title">🏥 Per-Clinic Breakdown</div>
+        </div>
+        {% if clinic_stats %}
+        {% for cname, stats in clinic_stats.items() | sort(attribute='1.revenue', reverse=True) %}
+        <div class="coverage-row">
+          <div class="coverage-label" style="width:200px">{{ cname }}</div>
+          <div class="coverage-bar-wrap">
+            <div class="coverage-bar" style="width:{{ [stats.revenue / [total_referral,1]|max * 100, 100]|min }}%"></div>
+          </div>
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary);width:120px;text-align:right">
+            Rp {{ '{:,.0f}'.format(stats.revenue) }}
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);width:70px;text-align:right">
+            {{ stats.bookings }} booking{{ 's' if stats.bookings != 1 }}
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="dash-empty">No bookings yet. <a href="/clinics" style="color:var(--accent)">Book your first →</a></div>
+        {% endif %}
+      </div>
+
+      <!-- Booking list -->
+      <div class="dash-card" style="margin-top:20px">
+        <div class="dash-card-header">
+          <div class="dash-card-title">📋 All Bookings</div>
+        </div>
+        {% if bookings %}
+        <div style="overflow-x:auto">
+          <table class="employee-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                {% if is_admin %}<th>User</th>{% endif %}
+                <th>Vaccine</th>
+                <th>Clinic</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Fee</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b in bookings %}
+              <tr>
+                <td style="font-weight:700;color:var(--accent);font-family:monospace">{{ b.confirmation_code }}</td>
+                {% if is_admin %}
+                <td>{{ b.user.name or b.user.email }}</td>
+                {% endif %}
+                <td>{{ b.vaccine_name }}</td>
+                <td>{{ b.clinic.name }} {{ b.clinic.branch or '' }}</td>
+                <td style="white-space:nowrap">{{ b.appointment_date.strftime('%d %b %Y') }}</td>
+                <td><div class="booking-status status-{{ b.status }}">{{ b.status }}</div></td>
+                <td style="font-weight:700">Rp {{ '{:,.0f}'.format(b.referral_fee or 0) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="dash-empty">No bookings yet.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right: info -->
+    <div class="dash-col-side">
+      <div class="dash-card">
+        <div class="dash-card-title" style="margin-bottom:14px">💡 How referrals work</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+          <p style="margin:0 0 10px">Every booking made through CareMate earns a <strong style="color:var(--accent)">Rp 25,000</strong> referral fee from the partner clinic.</p>
+          <p style="margin:0 0 10px">Clinics pay for premium placement and confirmed bookings — you get revenue for every patient you send their way.</p>
+          <p style="margin:0">Fees are tracked automatically and available for monthly payout.</p>
+        </div>
+        <div style="margin-top:16px;padding:12px;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.15);border-radius:10px;font-size:13px;color:var(--accent);font-weight:700">
+          Total earned: Rp {{ '{:,.0f}'.format(total_referral) }}
+        </div>
+      </div>
+
+      <div class="dash-card" style="margin-top:16px">
+        <div class="dash-card-title" style="margin-bottom:14px">🏥 Add more clinics</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">More clinic bookings = more referral revenue.</div>
+        <a href="/clinics" class="dash-action-btn" style="display:block;text-align:center">📍 Browse Clinics</a>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

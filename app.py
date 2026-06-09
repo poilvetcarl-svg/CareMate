@@ -19,6 +19,14 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "vacc-dev-secret-2024")
 CORS(app)
 
+# Flask-Mail (email reminders fallback)
+app.config["MAIL_SERVER"]   = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
+app.config["MAIL_PORT"]     = int(os.environ.get("MAIL_PORT", 587))
+app.config["MAIL_USE_TLS"]  = True
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME", "")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD", "")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_USERNAME", "noreply@caremate.id")
+
 # ── Extensions ──
 csrf = CSRFProtect(app)
 
@@ -30,6 +38,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, seed_clinics
 db.init_app(app)
+
+from flask_mail import Mail, Message as MailMessage
+mail = Mail(app)
 
 # Login manager
 login_manager = LoginManager(app)
@@ -776,7 +787,7 @@ def register():
         db.session.commit()
         login_user(user)
         flash("Welcome to CareMate! 🎉", "success")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("onboarding"))
 
     return render_template("auth.html", mode="register", page_title="Create Account")
 
@@ -885,7 +896,7 @@ def dashboard_history():
     records = VaccinationRecord.query.filter_by(user_id=current_user.id)\
         .order_by(VaccinationRecord.date_given.desc()).all()
     return render_template("dashboard_history.html", records=records,
-                           today=date.today())
+                           today=date.today(), vaccines=VACCINE_DATA["vaccines"])
 
 
 @app.route("/dashboard/settings", methods=["GET", "POST"])
@@ -1778,6 +1789,182 @@ def did_stream_stop():
     _did_active_streams.pop(stream_id, None)
     return jsonify({"status": "closed"})
 
+
+# ══════════════════════════════════════════════════════════
+#  VACCINE CERTIFICATE
+# ══════════════════════════════════════════════════════════
+
+@app.route("/dashboard/certificate/<int:record_id>")
+@login_required
+def download_certificate(record_id):
+    record = VaccinationRecord.query.filter_by(
+        id=record_id, user_id=current_user.id
+    ).first_or_404()
+    from certificate import generate_certificate_pdf
+    pdf_bytes = generate_certificate_pdf(record, current_user)
+    resp = Response(pdf_bytes, content_type="application/pdf")
+    safe_name = record.vaccine_name.replace(" ", "_").replace("/", "-")[:30]
+    resp.headers["Content-Disposition"] = (
+        f'attachment; filename="CareMate-Certificate-{safe_name}.pdf"'
+    )
+    return resp
+
+
+@app.route("/verify/<cert_id>")
+def verify_certificate(cert_id):
+    """Public verification page — anyone can scan the QR code to verify."""
+    try:
+        record_id = int(cert_id.replace("CM-", ""))
+    except ValueError:
+        return render_template("certificate_verify.html", record=None, user=None)
+    record = VaccinationRecord.query.get(record_id)
+    owner  = User.query.get(record.user_id) if record else None
+    return render_template("certificate_verify.html", record=record, user=owner)
+
+
+# ══════════════════════════════════════════════════════════
+#  ONBOARDING FLOW
+# ══════════════════════════════════════════════════════════
+
+def _onboarding_context(user):
+    has_profile    = bool(user.date_of_birth and user.sex)
+    has_assessment = Assessment.query.filter_by(user_id=user.id).first() is not None
+    has_vaccine    = (VaccinationRecord.query.filter_by(user_id=user.id).first() is not None or
+                      Booking.query.filter_by(user_id=user.id).first() is not None)
+    steps_done = sum([True, has_profile, has_assessment, has_vaccine])
+    progress   = int(steps_done / 4 * 100)
+    return dict(has_profile=has_profile, has_assessment=has_assessment,
+                has_vaccine=has_vaccine, steps_done=steps_done,
+                steps_total=4, progress=progress)
+
+
+@app.route("/onboarding")
+@login_required
+def onboarding():
+    ctx = _onboarding_context(current_user)
+    if ctx["progress"] == 100:
+        return redirect(url_for("dashboard"))
+    return render_template("onboarding.html", **ctx)
+
+
+@app.route("/onboarding/profile", methods=["POST"])
+@login_required
+def onboarding_profile():
+    dob_str = request.form.get("dob", "")
+    sex     = request.form.get("sex", "")
+    phone   = request.form.get("phone", "").strip() or None
+    wa_opt  = request.form.get("whatsapp_opt_in") == "on"
+
+    if dob_str:
+        try:
+            current_user.date_of_birth = datetime.strptime(dob_str, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+    if sex:
+        current_user.sex = sex
+    current_user.phone = phone
+    current_user.whatsapp_opt_in = wa_opt
+    db.session.commit()
+
+    ctx = _onboarding_context(current_user)
+    if ctx["has_assessment"]:
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("onboarding"))
+
+
+# ══════════════════════════════════════════════════════════
+#  REFERRAL / REVENUE TRACKING
+# ══════════════════════════════════════════════════════════
+
+@app.route("/dashboard/referrals")
+@login_required
+def referral_dashboard():
+    """Personal referral tracking — bookings made, estimated revenue."""
+    bookings = Booking.query.filter_by(user_id=current_user.id)\
+        .order_by(Booking.appointment_date.desc()).all()
+    total_referral = sum(b.referral_fee or 0 for b in bookings)
+
+    # Per-clinic breakdown
+    clinic_stats = {}
+    for b in bookings:
+        cname = b.clinic.name + " " + (b.clinic.branch or "")
+        if cname not in clinic_stats:
+            clinic_stats[cname] = {"bookings": 0, "revenue": 0}
+        clinic_stats[cname]["bookings"] += 1
+        clinic_stats[cname]["revenue"]  += b.referral_fee or 0
+
+    return render_template("referral_dashboard.html",
+                           bookings=bookings,
+                           total_referral=total_referral,
+                           clinic_stats=clinic_stats)
+
+
+@app.route("/admin/referrals")
+def admin_referrals():
+    """Admin-level view: all bookings and referral revenue across all users."""
+    # Simple admin check via secret param — replace with proper admin auth in prod
+    if request.args.get("key") != os.environ.get("ADMIN_KEY", "caremate-admin"):
+        return "Unauthorised", 403
+
+    all_bookings = Booking.query.order_by(Booking.created_at.desc()).all()
+    total = sum(b.referral_fee or 0 for b in all_bookings)
+
+    # Per-clinic breakdown
+    clinic_stats = {}
+    for b in all_bookings:
+        key = b.clinic.name + " " + (b.clinic.branch or "")
+        if key not in clinic_stats:
+            clinic_stats[key] = {"bookings": 0, "revenue": 0, "confirmed": 0}
+        clinic_stats[key]["bookings"] += 1
+        clinic_stats[key]["revenue"]  += b.referral_fee or 0
+        if b.status == "confirmed":
+            clinic_stats[key]["confirmed"] += 1
+
+    return render_template("referral_dashboard.html",
+                           bookings=all_bookings,
+                           total_referral=total,
+                           clinic_stats=clinic_stats,
+                           is_admin=True)
+
+
+# ══════════════════════════════════════════════════════════
+#  EMAIL REMINDER SEND (manual trigger for testing)
+# ══════════════════════════════════════════════════════════
+
+def send_email_reminder(to_email, user_name, vaccine_name, reminder_date, days_until):
+    """Send an HTML vaccination reminder email. No-ops gracefully if MAIL not configured."""
+    if not app.config.get("MAIL_USERNAME"):
+        print(f"[Email MOCK] → {to_email} | {vaccine_name} in {days_until} days")
+        return True
+    try:
+        html = render_template(
+            "email/reminder.html",
+            user_name=user_name,
+            vaccine_name=vaccine_name,
+            reminder_date=reminder_date.strftime("%d %B %Y"),
+            days_until=days_until
+        )
+        subject = {0: f"⏰ Hari Ini — Jadwal Vaksin {vaccine_name}",
+                   1: f"🔔 Besok — Vaksin {vaccine_name}",
+                  }.get(days_until, f"📅 {days_until} Hari Lagi — Vaksin {vaccine_name}")
+
+        msg = MailMessage(subject=subject, recipients=[to_email], html=html)
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"[Email ERROR] {e}")
+        return False
+
+
+# Expose email helper to reminders module
+app.send_email_reminder = send_email_reminder
+
+
+# Exempt all /api/* routes from CSRF — they're called via fetch() with JSON,
+# not HTML form submissions. Must be done after all routes are registered.
+for _rule in app.url_map.iter_rules():
+    if _rule.rule.startswith('/api/'):
+        csrf.exempt(app.view_functions[_rule.endpoint])
 
 if __name__ == "__main__":
     from reminders import start_scheduler
