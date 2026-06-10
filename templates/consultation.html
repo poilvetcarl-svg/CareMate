@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27%23FF6B6B%27/%3E%3Ctext x=%2750%27 y=%2772%27 font-size=%2762%27 font-weight=%27900%27 font-family=%27Arial%27 fill=%27white%27 text-anchor=%27middle%27%3EC%3C/text%3E%3C/svg%3E" />
   <title>Consultation with {{ doctor.name }} — CareMate</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -456,15 +457,27 @@
       </div>
     </div>
 
-    <!-- Fallback when Tavus not configured -->
-    <div class="tavus-fallback" id="tavusFallback">
-      <div class="fb-avatar"></div>
-      <h3>{{ doctor.name }}</h3>
-      <p>{{ doctor.specialty }}<br>{{ doctor.hospital }}, {{ doctor.city }}</p>
-      <p style="margin-top:8px">Configure TAVUS_API_KEY and TAVUS_REPLICA_ID in .env to enable live AI video consultation.</p>
-      <button class="fb-configure-btn" onclick="window.open('https://platform.tavus.io','_blank')">
-        Get Tavus API Key →
-      </button>
+    <!-- Fallback: static video loop + text chat still works -->
+    <div class="tavus-fallback" id="tavusFallback" style="display:none;position:relative;overflow:hidden;">
+      <video id="fallbackVideo" autoplay loop muted playsinline
+             style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.85;">
+        <source src="{{ doctor.photo }}" type="video/mp4" />
+      </video>
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 60%);"></div>
+      <div style="position:relative;z-index:2;text-align:center;padding:24px;">
+        <h3 style="color:white;font-size:20px;font-weight:800;margin-bottom:6px;">{{ doctor.name }}</h3>
+        <p style="color:rgba(255,255,255,0.7);font-size:13px;">{{ doctor.specialty }}</p>
+        <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">{{ doctor.hospital }}, {{ doctor.city }}</p>
+        <div style="margin-top:16px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:10px 16px;">
+          <p style="color:rgba(255,255,255,0.8);font-size:12px;line-height:1.6;">
+            💬 Video stream unavailable — use the <strong>Text Chat</strong> on the right.<br>
+            The AI doctor will still respond and speak to you.
+          </p>
+        </div>
+        <button onclick="initTavus()" style="margin-top:12px;background:rgba(124,58,237,0.3);border:1px solid rgba(124,58,237,0.5);color:white;padding:8px 20px;border-radius:20px;font-size:13px;cursor:pointer;">
+          🔄 Retry Video
+        </button>
+      </div>
     </div>
 
     <!-- Language-switch overlay (shown briefly while restarting) -->
@@ -687,16 +700,40 @@
     }
   });
 
+  // ── TAVUS FALLBACK HELPER ──
+  function showTavusFallback() {
+    document.getElementById('tavusLoading').classList.add('hidden');
+    document.getElementById('langSwitchBanner').classList.remove('visible');
+    document.getElementById('tavusFrame').style.display = 'none';
+    document.getElementById('tavusBg').style.display = 'none';
+    document.getElementById('tavusFallback').style.display = 'flex';
+  }
+
+  // ── LISTEN FOR WEBRTC / DAILY.CO ERRORS FROM TAVUS IFRAME ──
+  window.addEventListener('message', (e) => {
+    if (!e.data) return;
+    const d = typeof e.data === 'string' ? (() => { try { return JSON.parse(e.data); } catch { return {}; } })() : e.data;
+    const type = (d.type || d.event || '').toLowerCase();
+    const isError = type.includes('error') || type.includes('left') || type.includes('disconnected') || type.includes('connection-lost');
+    if (isError) {
+      console.warn('Tavus iframe event — falling back:', d);
+      showTavusFallback();
+    }
+  });
+
   // ── TAVUS CVI INIT ──
   async function initTavus(langOverride) {
+    // Reset fallback state on retry
+    document.getElementById('tavusFallback').style.display = 'none';
+    document.getElementById('tavusLoading').classList.remove('hidden');
+
     try {
       // Check if Tavus is configured server-side
       const check = await fetch('/api/tavus/enabled');
       const { enabled } = await check.json();
 
       if (!enabled) {
-        document.getElementById('tavusLoading').classList.add('hidden');
-        document.getElementById('tavusFallback').style.display = 'flex';
+        showTavusFallback();
         return;
       }
 
@@ -719,43 +756,36 @@
       });
 
       const data = await r.json();
-
-      if (!data.conversation_url) {
-        throw new Error(data.error || JSON.stringify(data));
-      }
+      if (!data.conversation_url) throw new Error(data.error || JSON.stringify(data));
 
       tavusConvId = data.conversation_id;
       console.log('Tavus conversation created:', tavusConvId, 'lang:', langOverride || 'auto');
 
-      // Load the conversation URL into the iframe
-      // Append ?name= to pre-fill the Tavus name prompt (skips the dialog)
       const frame = document.getElementById('tavusFrame');
       const convUrl = new URL(data.conversation_url);
       if (patientName) convUrl.searchParams.set('name', patientName);
       frame.src = convUrl.toString();
+      frame.style.display = 'block';
 
       frame.onload = () => {
         document.getElementById('tavusLoading').classList.add('hidden');
         document.getElementById('langSwitchBanner').classList.remove('visible');
         document.getElementById('tavusBg').style.display = 'none';
-        frame.style.display = 'block';
         console.log('Tavus CVI iframe loaded ✓');
       };
 
-      // Fallback: hide loading after 15s
+      // Hard timeout — if loading spinner still showing after 20s, fall back gracefully
       setTimeout(() => {
         if (!document.getElementById('tavusLoading').classList.contains('hidden')) {
-          document.getElementById('tavusLoading').classList.add('hidden');
-          frame.style.display = 'block';
+          console.warn('Tavus load timeout — switching to fallback mode');
+          showTavusFallback();
         }
         document.getElementById('langSwitchBanner').classList.remove('visible');
-      }, 15000);
+      }, 20000);
 
     } catch (err) {
       console.warn('Tavus init error:', err);
-      document.getElementById('tavusLoading').classList.add('hidden');
-      document.getElementById('langSwitchBanner').classList.remove('visible');
-      document.getElementById('tavusFallback').style.display = 'flex';
+      showTavusFallback();
     }
   }
 

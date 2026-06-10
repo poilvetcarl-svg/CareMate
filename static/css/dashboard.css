@@ -603,7 +603,7 @@
 .clinics-hero {
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
-  padding: 32px 0 24px;
+  padding: 110px 0 24px;   /* clears the fixed navbar */
 }
 
 .clinics-hero-inner {

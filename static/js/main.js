@@ -616,13 +616,11 @@ function scrollToAssessment() {
 function initChatbot() {
   const widget = document.getElementById('chatbotWidget');
   if (!widget) return;
-  // Start collapsed on mobile
-  if (window.innerWidth < 640) {
-    widget.classList.add('collapsed');
-    chatOpen = false;
-    const btn = document.getElementById('chatToggleBtn');
-    if (btn) btn.textContent = '▲';
-  }
+  // Start collapsed everywhere — the assistant shouldn't cover page content uninvited
+  widget.classList.add('collapsed');
+  chatOpen = false;
+  const btn = document.getElementById('chatToggleBtn');
+  if (btn) btn.textContent = '▲';
 }
 
 function toggleChat() {

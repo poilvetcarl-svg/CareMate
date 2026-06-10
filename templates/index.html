@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27%23FF6B6B%27/%3E%3Ctext x=%2750%27 y=%2772%27 font-size=%2762%27 font-weight=%27900%27 font-family=%27Arial%27 fill=%27white%27 text-anchor=%27middle%27%3EC%3C/text%3E%3C/svg%3E" />
   <title>CareMate — Intelligent Vaccination Platform</title>
+  <meta name="description" content="AI-driven vaccine recommendations tailored to your health profile, travel plans, and risk factors — backed by PAPDI 2025, CDC and WHO guidelines." />
+  <meta property="og:title" content="CareMate — Intelligent Vaccination Platform" />
+  <meta property="og:description" content="Get your personalised vaccine plan in 60 seconds, book a clinic, and talk to certified doctors — all in one place." />
+  <meta property="og:type" content="website" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -64,18 +69,18 @@
     </div>
     <div class="hero-stats">
       <div class="stat">
-        <span class="stat-num" data-count="15000">0</span><span class="stat-suffix">+</span>
+        <div class="stat-value"><span class="stat-num" data-count="15000">0</span><span class="stat-suffix">+</span></div>
         <span class="stat-label">Assessments Done</span>
       </div>
       <div class="stat-divider"></div>
       <div class="stat">
-        <span class="stat-num" data-count="13">0</span>
+        <div class="stat-value"><span class="stat-num" data-count="13">0</span></div>
         <span class="stat-label">Vaccines Covered</span>
       </div>
       <div class="stat-divider"></div>
       <div class="stat">
-        <span class="stat-num" data-count="98">0</span><span class="stat-suffix">%</span>
-        <span class="stat-label">Accuracy Rate</span>
+        <div class="stat-value"><span class="stat-num" data-count="60">0</span><span class="stat-suffix">s</span></div>
+        <span class="stat-label">Average Assessment</span>
       </div>
     </div>
   </div>
