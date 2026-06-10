@@ -12,12 +12,49 @@ import string
 import random
 from datetime import date, datetime
 from dotenv import load_dotenv
+import logging
+import time
 
 load_dotenv()
+
+APP_VERSION = "1.0.0"
+
+# ── Structured logging ──
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s :: %(message)s',
+)
+logger = logging.getLogger("caremate")
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "vacc-dev-secret-2024")
 CORS(app)
+
+# ── Rate limiting — protects the OpenAI/Tavus-backed endpoints from abuse ──
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],                      # only opt-in limits below
+    storage_uri="memory://",
+    headers_enabled=True,                   # X-RateLimit-* response headers
+)
+
+
+@app.before_request
+def _start_timer():
+    request._start_time = time.perf_counter()
+
+
+@app.after_request
+def _log_request(response):
+    # Skip static assets to keep logs signal-dense
+    if not request.path.startswith("/static"):
+        duration_ms = (time.perf_counter() - getattr(request, "_start_time", time.perf_counter())) * 1000
+        logger.info("%s %s → %s (%.1fms)", request.method, request.path,
+                    response.status_code, duration_ms)
+    return response
 
 # Flask-Mail (email reminders fallback)
 app.config["MAIL_SERVER"]   = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
@@ -736,6 +773,25 @@ def index():
     return render_template("index.html", current_user=current_user)
 
 
+@app.route("/health")
+def health():
+    """Liveness/readiness probe for load balancers and uptime monitors."""
+    from sqlalchemy import text as _sql_text
+    try:
+        db.session.execute(_sql_text("SELECT 1"))
+        db_status = "ok"
+    except Exception:
+        db_status = "error"
+    status_code = 200 if db_status == "ok" else 503
+    return jsonify({
+        "status": "ok" if db_status == "ok" else "degraded",
+        "version": APP_VERSION,
+        "database": db_status,
+        "ai_configured": bool(client),
+        "video_configured": TAVUS_ENABLED,
+    }), status_code
+
+
 # ══════════════════════════════════════════════════════════
 #  AUTH ROUTES
 # ══════════════════════════════════════════════════════════
@@ -1099,13 +1155,48 @@ def corporate_send_all():
     return redirect(url_for("corporate_dashboard"))
 
 
+VALID_REGIONS = {"Southeast Asia", "South Asia", "East Asia", "Sub-Saharan Africa",
+                 "Latin America", "South America", "Middle East", "Europe", "North America"}
+
+
+def _validate_assessment(data):
+    """Validate the assessment payload. Returns an error string or None."""
+    if not isinstance(data, dict):
+        return "Request body must be a JSON object"
+    try:
+        age = int(data.get("age", 0))
+    except (TypeError, ValueError):
+        return "Age must be a number"
+    if not 18 <= age <= 120:
+        return "Age must be between 18 and 120"
+    valid_conditions = set(VACCINE_DATA["risk_factors"].keys()) | {"none"}
+    conditions = data.get("conditions", [])
+    if not isinstance(conditions, list) or any(c not in valid_conditions for c in conditions):
+        return "Unknown condition key"
+    regions = data.get("travel_regions", [])
+    if not isinstance(regions, list) or any(r not in VALID_REGIONS for r in regions):
+        return "Unknown travel region"
+    return None
+
+
 @app.route("/api/recommend", methods=["POST"])
+@limiter.limit("20 per minute")
 def recommend():
     data = request.json
+    error = _validate_assessment(data)
+    if error:
+        return jsonify({"error": error}), 400
     risk = calculate_risk_score(data)
     vaccines = get_recommended_vaccines(data)
 
-    ai_summary = ""
+    # Deterministic fallback — used when no AI key is configured or the call fails
+    fallback_summary = (
+        f"Based on your health profile, we have identified {len(vaccines)} vaccines "
+        f"recommended for you. Your {risk['level'].lower()} classification indicates that "
+        f"timely vaccination is important for protecting your health. Please consult with "
+        f"a healthcare provider to discuss your personalized immunization schedule."
+    )
+    ai_summary = fallback_summary
     if client:
         try:
             conditions_text = ", ".join(data.get("conditions", [])) or "none reported"
@@ -1128,9 +1219,10 @@ Write a personal, warm 3-4 sentence message directly to this patient — like a 
                 max_tokens=300,
                 temperature=0.85
             )
-            ai_summary = response.choices[0].message.content
-        except Exception as e:
-            ai_summary = f"Based on your health profile, we have identified {len(vaccines)} vaccines recommended for you. Your {risk['level'].lower()} classification indicates that timely vaccination is important for protecting your health. Please consult with a healthcare provider to discuss your personalized immunization schedule."
+            ai_summary = response.choices[0].message.content or fallback_summary
+        except Exception:
+            logger.warning("AI summary generation failed — using fallback", exc_info=True)
+            ai_summary = fallback_summary
 
     # Persist assessment if a user is logged in
     if current_user.is_authenticated:
@@ -1160,6 +1252,7 @@ Write a personal, warm 3-4 sentence message directly to this patient — like a 
 
 
 @app.route("/api/chat", methods=["POST"])
+@limiter.limit("15 per minute")
 def chat():
     data = request.json
     user_message = data.get("message", "")
@@ -1211,6 +1304,7 @@ def consultation(doctor_id):
 
 
 @app.route("/api/consult", methods=["POST"])
+@limiter.limit("20 per minute")
 def consult():
     """Streaming AI doctor consultation endpoint."""
     data = request.json
@@ -1292,6 +1386,7 @@ def get_doctors():
 
 
 @app.route("/api/tts", methods=["POST"])
+@limiter.limit("30 per minute")
 def tts():
     """OpenAI Text-to-Speech — returns MP3 audio bytes."""
     if not client:
@@ -1338,6 +1433,7 @@ def tavus_enabled():
     return jsonify({"enabled": TAVUS_ENABLED})
 
 @app.route("/api/tavus/conversation", methods=["POST"])
+@limiter.limit("5 per minute")
 def tavus_create_conversation():
     """Create a Tavus CVI conversation for the selected doctor."""
     if not TAVUS_ENABLED:
@@ -1530,6 +1626,7 @@ def tavus_end_conversation(conversation_id):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/prescription", methods=["POST"])
+@limiter.limit("5 per minute")
 def generate_prescription():
     """Generate a clinical vaccination prescription from the consultation history."""
     from datetime import date as _date

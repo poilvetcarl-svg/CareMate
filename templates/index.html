@@ -11,9 +11,11 @@
   <meta property="og:type" content="website" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 </head>
 <body>
+<a href="#main" class="skip-link">Skip to main content</a>
 
 <!-- ===== NAVBAR ===== -->
 <nav class="navbar" id="navbar">
@@ -32,13 +34,14 @@
         <a href="/register" class="nav-cta">Sign Up Free</a>
       {% endif %}
     </div>
-    <button class="menu-toggle" id="menuToggle">☰</button>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open navigation menu">☰</button>
   </div>
 </nav>
 
+<main id="main">
 <!-- ===== HERO ===== -->
 <section class="hero">
-  <div class="hero-bg">
+  <div class="hero-bg" aria-hidden="true">
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
@@ -83,7 +86,7 @@
 
   <!-- RIGHT: Dashboard mockup (no float cards) -->
   <div class="hero-visual">
-    <div class="hero-mock">
+    <div class="hero-mock" aria-hidden="true">
       <svg width="0" height="0" style="position:absolute">
         <defs>
           <linearGradient id="mockRingGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -621,6 +624,8 @@
   </div>
 </section>
 
+</main>
+
 <!-- ===== FOOTER ===== -->
 <footer class="footer">
   <div class="footer-content">
@@ -666,7 +671,7 @@
       <span>CareMate Assistant</span>
       <span class="chatbot-status">Online · Ask me anything</span>
     </div>
-    <button class="chatbot-close-btn" id="chatToggleBtn">▼</button>
+    <button class="chatbot-close-btn" id="chatToggleBtn" aria-label="Toggle chat window">▼</button>
   </div>
   <div class="chatbot-body" id="chatbotBody">
     <div class="chat-messages" id="chatMessages">
@@ -684,7 +689,7 @@
     <div class="chat-input-area">
       <input type="text" id="chatInput" placeholder="Ask about vaccines..." class="chat-input"
              onkeypress="if(event.key==='Enter') sendMessage()" />
-      <button class="chat-send-btn" onclick="sendMessage()">➤</button>
+      <button class="chat-send-btn" onclick="sendMessage()" aria-label="Send message">➤</button>
     </div>
   </div>
 </div>
@@ -703,7 +708,7 @@
 <!-- Vaccine detail modal -->
 <div class="modal-overlay hidden" id="vaccineModal" onclick="closeModal()">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <button class="modal-close" onclick="closeModal()">✕</button>
+    <button class="modal-close" onclick="closeModal()" aria-label="Close dialog">✕</button>
     <div id="modalContent"></div>
   </div>
 </div>

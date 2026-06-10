@@ -129,7 +129,7 @@
       <div class="doctor-card-top">
         <div class="doctor-photo-wrap">
           <!-- Tavus avatar video (auto-plays, muted, loops) -->
-          <video class="doctor-photo" autoplay muted loop playsinline
+          <video class="doctor-photo" autoplay muted loop playsinline aria-label="Doctor introduction video" preload="metadata"
                  style="object-fit:cover;object-position:top;">
             <source src="{{ doctor.photo }}" type="video/mp4">
           </video>
@@ -267,7 +267,7 @@
       <span>CareMate Assistant</span>
       <span class="chatbot-status">Online · Ask me anything</span>
     </div>
-    <button class="chatbot-close-btn" id="chatToggleBtn">▼</button>
+    <button class="chatbot-close-btn" id="chatToggleBtn" aria-label="Toggle chat window">▼</button>
   </div>
   <div class="chatbot-body" id="chatbotBody">
     <div class="chat-messages" id="chatMessages">
@@ -280,7 +280,7 @@
     <div class="chat-input-area">
       <input type="text" id="chatInput" placeholder="Ask about teleconsultation..." class="chat-input"
              onkeypress="if(event.key==='Enter') sendMessage()" />
-      <button class="chat-send-btn" onclick="sendMessage()">➤</button>
+      <button class="chat-send-btn" onclick="sendMessage()" aria-label="Send message">➤</button>
     </div>
   </div>
 </div>
