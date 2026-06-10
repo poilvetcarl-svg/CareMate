@@ -214,8 +214,9 @@ body {
 .ring-svg { width: 160px; height: 160px; transform: rotate(-90deg); }
 .ring-bg { fill: none; stroke: #FFF0ED; stroke-width: 14; }
 .ring-fill {
+  /* r=46 → circumference = 2π×46 ≈ 289. Show 68%: offset = 289 × (1 − 0.68) ≈ 92.5 */
   fill: none; stroke: url(#mockRingGrad); stroke-width: 14;
-  stroke-linecap: round; stroke-dasharray: 440; stroke-dashoffset: 160;
+  stroke-linecap: round; stroke-dasharray: 289; stroke-dashoffset: 92.5;
   transition: stroke-dashoffset 1.5s ease;
 }
 .ring-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
