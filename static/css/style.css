@@ -252,7 +252,8 @@ body {
 .trust-logo {
   background: white; border: 1px solid rgba(255,107,107,0.15);
   padding: 8px 20px; border-radius: 100px; font-size: 13px; font-weight: 700; color: var(--text-secondary);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: var(--transition); cursor: default;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: var(--transition);
+  text-decoration: none; cursor: pointer;
 }
 .trust-logo:hover { border-color: var(--coral); color: var(--coral); transform: translateY(-2px); }
 
