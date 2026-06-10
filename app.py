@@ -68,7 +68,9 @@ app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_USERNAME", "noreply@car
 csrf = CSRFProtect(app)
 
 # Database — Railway provides DATABASE_URL as postgres://, SQLAlchemy needs postgresql://
-_db_url = os.environ.get("DATABASE_URL", "sqlite:///caremate.db")
+# On Vercel the filesystem is read-only except /tmp, so default SQLite there.
+_default_sqlite = "sqlite:////tmp/caremate.db" if os.environ.get("VERCEL") else "sqlite:///caremate.db"
+_db_url = os.environ.get("DATABASE_URL", _default_sqlite)
 if _db_url.startswith("postgres://"):
     _db_url = _db_url.replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = _db_url
