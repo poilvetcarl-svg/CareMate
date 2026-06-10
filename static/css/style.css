@@ -86,7 +86,9 @@ body {
 .nav-logo {
   font-size: 22px; font-weight: 900; color: var(--text-primary);
   text-decoration: none; letter-spacing: -0.5px;
+  display: inline-flex; align-items: center;
 }
+.nav-logo-icon { height: 32px; width: auto; display: block; margin-right: 9px; }
 .logo-accent { color: var(--coral); }
 .nav-links { display: flex; align-items: center; gap: 4px; }
 .nav-link {
@@ -153,7 +155,8 @@ body {
   letter-spacing: -2.5px; margin-bottom: 24px; color: var(--text-primary);
 }
 .gradient-text {
-  background: linear-gradient(135deg, var(--coral), var(--orange), var(--yellow));
+  /* No yellow — it disappears against the warm page background */
+  background: linear-gradient(135deg, var(--coral-dark), var(--coral), var(--orange));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 .hero-subtitle {
