@@ -444,6 +444,10 @@
       allowfullscreen
     ></iframe>
 
+    <!-- D-ID streaming avatar — used when Tavus is unavailable -->
+    <video id="didVideo" autoplay playsinline
+           style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;background:#060610;"></video>
+
     <!-- Connecting / loading overlay -->
     <div class="tavus-loading" id="tavusLoading">
       <div class="tavus-loading-avatar"></div>
@@ -475,7 +479,7 @@
             The AI doctor will still respond and speak to you.
           </p>
         </div>
-        <button onclick="initTavus()" style="margin-top:12px;background:rgba(124,58,237,0.3);border:1px solid rgba(124,58,237,0.5);color:white;padding:8px 20px;border-radius:20px;font-size:13px;cursor:pointer;">
+        <button onclick="didFailoverAttempted=false;initTavus()" style="margin-top:12px;background:rgba(124,58,237,0.3);border:1px solid rgba(124,58,237,0.5);color:white;padding:8px 20px;border-radius:20px;font-size:13px;cursor:pointer;">
           🔄 Retry Video
         </button>
       </div>
@@ -640,6 +644,7 @@
   let currentAudio    = null;
   let recognition     = null;
   let tavusConvId     = null;   // active Tavus conversation ID
+  let lastReplyText   = null;   // last doctor reply, voiced by D-ID once it connects
   let currentLang     = 'english';  // default — English first
 
   // ── INIT ──
@@ -693,21 +698,39 @@
     } catch(e) {}
   }
 
-  // End Tavus session when leaving the page
+  // End Tavus / D-ID sessions when leaving the page
   window.addEventListener('beforeunload', () => {
     if (tavusConvId) {
       navigator.sendBeacon(`/api/tavus/conversation/${tavusConvId}`,
         new Blob([JSON.stringify({})], { type: 'application/json' }));
     }
+    if (didStreamId) {
+      navigator.sendBeacon('/api/did/stream/stop',
+        new Blob([JSON.stringify({ stream_id: didStreamId, session_id: didSessionId })], { type: 'application/json' }));
+    }
   });
 
-  // ── TAVUS FALLBACK HELPER ──
-  function showTavusFallback() {
+  // ── STATIC FALLBACK (last resort: looping video + text chat + TTS) ──
+  function showStaticFallback() {
     document.getElementById('tavusLoading').classList.add('hidden');
     document.getElementById('langSwitchBanner').classList.remove('visible');
     document.getElementById('tavusFrame').style.display = 'none';
+    document.getElementById('didVideo').style.display = 'none';
     document.getElementById('tavusBg').style.display = 'none';
     document.getElementById('tavusFallback').style.display = 'flex';
+  }
+
+  // ── VIDEO FAILOVER CHAIN: Tavus → D-ID streaming avatar → static ──
+  let didFailoverAttempted = false;
+  function failoverVideo(reason) {
+    if (didActive) return;                 // D-ID already running — nothing to do
+    if (didFailoverAttempted) { showStaticFallback(); return; }
+    didFailoverAttempted = true;
+    console.warn('Video failover:', reason);
+    initDidStream().catch(err => {
+      console.warn('D-ID stream failed:', err);
+      showStaticFallback();
+    });
   }
 
   // ── LISTEN FOR WEBRTC / DAILY.CO ERRORS FROM TAVUS IFRAME ──
@@ -716,11 +739,93 @@
     const d = typeof e.data === 'string' ? (() => { try { return JSON.parse(e.data); } catch { return {}; } })() : e.data;
     const type = (d.type || d.event || '').toLowerCase();
     const isError = type.includes('error') || type.includes('left') || type.includes('disconnected') || type.includes('connection-lost');
-    if (isError) {
-      console.warn('Tavus iframe event — falling back:', d);
-      showTavusFallback();
-    }
+    if (isError) failoverVideo('Tavus iframe event: ' + type);
   });
+
+  // ── D-ID STREAMING AVATAR ──
+  let didStreamId = null, didSessionId = null, didPC = null, didActive = false;
+
+  function didVoiceId() {
+    if (currentLang === 'indonesian') return DOCTOR_GENDER === 'male' ? 'id-ID-ArdiNeural' : 'id-ID-GadisNeural';
+    return DOCTOR_GENDER === 'male' ? 'en-US-GuyNeural' : 'en-US-JennyNeural';
+  }
+
+  async function initDidStream() {
+    const check = await fetch('/api/did/enabled');
+    if (!(await check.json()).enabled) throw new Error('D-ID not configured');
+
+    const r = await fetch('/api/did/stream/start', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ doctor_id: DOCTOR_ID })
+    });
+    const d = await r.json();
+    if (!d.id) throw new Error(d.error || d.message || 'stream start failed');
+    didStreamId = d.id; didSessionId = d.session_id;
+
+    didPC = new RTCPeerConnection({ iceServers: d.ice_servers || [] });
+
+    didPC.ontrack = (ev) => {
+      const video = document.getElementById('didVideo');
+      if (video.srcObject !== ev.streams[0]) {
+        video.srcObject = ev.streams[0];
+        video.style.display = 'block';
+        document.getElementById('tavusFrame').style.display = 'none';
+        document.getElementById('tavusFallback').style.display = 'none';
+        document.getElementById('tavusLoading').classList.add('hidden');
+        document.getElementById('tavusBg').style.display = 'none';
+        didActive = true;
+        console.log('D-ID avatar stream connected ✓');
+        // Unmuted autoplay is often blocked — retry on the first user gesture
+        video.play().catch(() => {
+          const resume = () => { video.play().catch(() => {}); document.removeEventListener('click', resume); };
+          document.addEventListener('click', resume);
+        });
+        // Voice the most recent doctor reply that TTS hasn't covered yet
+        if (lastReplyText) { didTalk(lastReplyText); lastReplyText = null; }
+      }
+    };
+
+    didPC.onicecandidate = (ev) => {
+      if (!ev.candidate) return;
+      fetch('/api/did/stream/ice', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stream_id: didStreamId, session_id: didSessionId,
+          candidate: ev.candidate.candidate,
+          sdpMid: ev.candidate.sdpMid, sdpMLineIndex: ev.candidate.sdpMLineIndex
+        })
+      }).catch(() => {});
+    };
+
+    didPC.onconnectionstatechange = () => {
+      if (['failed', 'closed'].includes(didPC.connectionState) && didActive) {
+        didActive = false;
+        showStaticFallback();
+      }
+    };
+
+    await didPC.setRemoteDescription(d.offer);
+    const answer = await didPC.createAnswer();
+    await didPC.setLocalDescription(answer);
+    const sdpResp = await fetch('/api/did/stream/sdp', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stream_id: didStreamId, session_id: didSessionId, answer })
+    });
+    if (!sdpResp.ok) throw new Error('SDP exchange failed');
+  }
+
+  async function didTalk(text) {
+    if (!didActive || !text) return;
+    try {
+      await fetch('/api/did/stream/talk', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stream_id: didStreamId, session_id: didSessionId,
+          text: text, voice_id: didVoiceId()
+        })
+      });
+    } catch (e) { console.warn('didTalk failed:', e); }
+  }
 
   // ── TAVUS CVI INIT ──
   async function initTavus(langOverride) {
@@ -734,7 +839,7 @@
       const { enabled } = await check.json();
 
       if (!enabled) {
-        showTavusFallback();
+        failoverVideo('Tavus not configured');
         return;
       }
 
@@ -778,15 +883,13 @@
       // Hard timeout — if loading spinner still showing after 20s, fall back gracefully
       setTimeout(() => {
         if (!document.getElementById('tavusLoading').classList.contains('hidden')) {
-          console.warn('Tavus load timeout — switching to fallback mode');
-          showTavusFallback();
+          failoverVideo('Tavus load timeout');
         }
         document.getElementById('langSwitchBanner').classList.remove('visible');
       }, 20000);
 
     } catch (err) {
-      console.warn('Tavus init error:', err);
-      showTavusFallback();
+      failoverVideo('Tavus init error: ' + err.message);
     }
   }
 
@@ -798,6 +901,9 @@
     // Update button states immediately
     document.getElementById('btnLangID').classList.toggle('active', lang === 'indonesian');
     document.getElementById('btnLangEN').classList.toggle('active', lang === 'english');
+
+    // D-ID avatar mode: voice follows currentLang automatically — no restart needed
+    if (didActive) return;
 
     // Show switch banner
     const banner = document.getElementById('langSwitchBanner');
@@ -925,7 +1031,8 @@
       }
 
       consultHistory.push({ role: 'assistant', content: fullReply });
-      speakText(fullReply);
+      if (didActive) { didTalk(fullReply); }
+      else { lastReplyText = fullReply; speakText(fullReply); }
       if (consultHistory.length >= 4) updateSummary();
 
     } catch (e) {
@@ -1201,6 +1308,20 @@
         console.log('Tavus conversation ended');
       } catch(e) { console.warn('Could not end Tavus conversation:', e); }
       tavusConvId = null;
+    }
+
+    // End D-ID stream
+    if (didStreamId) {
+      try {
+        didActive = false;
+        if (didPC) { didPC.close(); didPC = null; }
+        await fetch('/api/did/stream/stop', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stream_id: didStreamId, session_id: didSessionId })
+        });
+        console.log('D-ID stream ended');
+      } catch(e) {}
+      didStreamId = null;
     }
 
     document.getElementById('endModal').classList.remove('hidden');

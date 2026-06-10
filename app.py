@@ -329,8 +329,8 @@ _TAVUS_VIDEO_MALE   = "https://cdn.replica.tavus.io/39476/8558b349.mp4"    # Raj
 _TAVUS_VIDEO_FEMALE = "https://cdn.replica.tavus.io/20310/f5d5455f_normalized.mp4"  # Olivia - Doctor (phoenix-3)
 
 DOCTORS = [
-    {"id": 1, "name": "Dr. Budi Santoso", "specialty": "Internal Medicine & Infectious Disease", "hospital": "RS Pondok Indah", "city": "Jakarta Selatan", "lat": -6.2615, "lng": 106.7890, "rating": 4.9, "reviews": 312, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "15 years", "slots": ["09:00", "10:30", "14:00", "15:30"], "gender": "male", "tts_voice": "onyx"},
-    {"id": 2, "name": "Dr. Sari Dewi, Sp.PD", "specialty": "Vaccinology & Travel Medicine", "hospital": "RSUP Cipto Mangunkusumo", "city": "Jakarta Pusat", "lat": -6.1924, "lng": 106.8455, "rating": 4.8, "reviews": 487, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English", "Dutch"], "photo": _TAVUS_VIDEO_FEMALE, "experience": "18 years", "slots": ["08:00", "11:00", "13:00"], "gender": "female", "tts_voice": "nova"},
+    {"id": 1, "did_photo": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=512&q=80&auto=format&fit=crop", "name": "Dr. Budi Santoso", "specialty": "Internal Medicine & Infectious Disease", "hospital": "RS Pondok Indah", "city": "Jakarta Selatan", "lat": -6.2615, "lng": 106.7890, "rating": 4.9, "reviews": 312, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "15 years", "slots": ["09:00", "10:30", "14:00", "15:30"], "gender": "male", "tts_voice": "onyx"},
+    {"id": 2, "did_photo": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=512&q=80&auto=format&fit=crop", "name": "Dr. Sari Dewi, Sp.PD", "specialty": "Vaccinology & Travel Medicine", "hospital": "RSUP Cipto Mangunkusumo", "city": "Jakarta Pusat", "lat": -6.1924, "lng": 106.8455, "rating": 4.8, "reviews": 487, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English", "Dutch"], "photo": _TAVUS_VIDEO_FEMALE, "experience": "18 years", "slots": ["08:00", "11:00", "13:00"], "gender": "female", "tts_voice": "nova"},
     {"id": 3, "name": "Dr. Ahmad Fauzi, Sp.A", "specialty": "Pediatric & Adult Immunization", "hospital": "RS Siloam Hospitals", "city": "Tangerang", "lat": -6.2388, "lng": 106.6402, "rating": 4.7, "reviews": 256, "fee": "Rp 200.000", "available": False, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "12 years", "slots": ["10:00", "14:30", "16:00"], "gender": "male", "tts_voice": "echo"},
     {"id": 4, "name": "Dr. Maya Kusuma, M.D.", "specialty": "Family Medicine & Preventive Health", "hospital": "Klinik Pratama SehatKu", "city": "Bekasi", "lat": -6.2349, "lng": 106.9896, "rating": 4.6, "reviews": 198, "fee": "Rp 150.000", "available": False, "languages": ["Bahasa Indonesia"], "photo": _TAVUS_VIDEO_FEMALE, "experience": "8 years", "slots": ["09:30", "11:30", "15:00", "17:00"], "gender": "female", "tts_voice": "shimmer"},
     {"id": 5, "name": "Dr. Hendro Wibowo, Sp.PD", "specialty": "Internal Medicine & Immunology", "hospital": "RS Medistra", "city": "Jakarta Selatan", "lat": -6.2297, "lng": 106.8261, "rating": 4.9, "reviews": 541, "fee": "Rp 350.000", "available": False, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "22 years", "slots": ["Next week"], "gender": "male", "tts_voice": "onyx"},
@@ -1782,7 +1782,7 @@ def did_stream_start():
         resp = http_req.post(
             "https://api.d-id.com/talks/streams",
             headers=_did_headers(),
-            json={"source_url": doctor["photo"]},
+            json={"source_url": doctor.get("did_photo") or doctor["photo"]},
             timeout=15
         )
         result = resp.json()
