@@ -674,8 +674,8 @@ body {
 .chatbot-header {
   display: flex; align-items: center; gap: 12px;
   padding: 16px 20px; cursor: pointer;
-  background: linear-gradient(135deg, rgba(255,107,107,0.1), rgba(255,142,83,0.08));
-  border-bottom: 1px solid rgba(255,107,107,0.1);
+  background: linear-gradient(135deg, #FFE9E3, #FFF0E6);
+  border-bottom: 1px solid rgba(255,107,107,0.15);
 }
 .chatbot-avatar { width: 40px; height: 40px; background: rgba(255,107,107,0.12); border: 1px solid rgba(255,107,107,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; object-fit: cover; flex-shrink: 0; }
 .chatbot-title { flex: 1; }
