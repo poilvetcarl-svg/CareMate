@@ -619,16 +619,12 @@ function initChatbot() {
   // Start collapsed everywhere — the assistant shouldn't cover page content uninvited
   widget.classList.add('collapsed');
   chatOpen = false;
-  const btn = document.getElementById('chatToggleBtn');
-  if (btn) btn.textContent = '▲';
 }
 
 function toggleChat() {
   const widget = document.getElementById('chatbotWidget');
-  const btn = document.getElementById('chatToggleBtn');
   chatOpen = !chatOpen;
   widget?.classList.toggle('collapsed', !chatOpen);
-  if (btn) btn.textContent = chatOpen ? '▼' : '▲';
 }
 
 async function sendMessage() {
