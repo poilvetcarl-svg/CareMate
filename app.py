@@ -1113,6 +1113,17 @@ def dashboard():
     family = [{"child": c, "schedule": compute_child_schedule(c)} for c in children]
     lab_results = LabResult.query.filter_by(user_id=current_user.id)\
         .order_by(LabResult.date_taken.desc(), LabResult.created_at.desc()).all()
+    # Heal rows saved before a test existed in the reference table: re-match + re-flag
+    _healed = False
+    for lab in lab_results:
+        if not lab.test_key:
+            k = match_lab_test(lab.test_name)
+            if k:
+                lab.test_key = k
+                lab.flag = flag_lab_value(k, lab.value)
+                _healed = True
+    if _healed:
+        db.session.commit()
 
     return render_template(
         "user_dashboard.html",

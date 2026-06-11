@@ -1,21 +1,322 @@
 {
-  "note": "Standard adult reference ranges for common panels. Flags are informational only — never a diagnosis.",
+  "note": "Standard adult reference ranges for common panels. Flags are informational only — never a diagnosis. 'explains' is plain-language education, not medical advice.",
   "tests": {
-    "hba1c":            { "name": "HbA1c",               "unit": "%",      "low": 4.0,  "high": 5.7,  "aliases": ["a1c", "hemoglobin a1c", "glycated hemoglobin"] },
-    "fasting_glucose":  { "name": "Fasting Glucose",     "unit": "mg/dL",  "low": 70,   "high": 100,  "aliases": ["glucose", "gula darah puasa", "glukosa puasa", "glukosa", "gdp", "blood sugar", "fasting blood glucose"] },
-    "total_cholesterol":{ "name": "Total Cholesterol",   "unit": "mg/dL",  "low": 0,    "high": 200,  "aliases": ["cholesterol", "kolesterol total"] },
-    "ldl":              { "name": "LDL Cholesterol",     "unit": "mg/dL",  "low": 0,    "high": 130,  "aliases": ["ldl-c", "kolesterol ldl"] },
-    "hdl":              { "name": "HDL Cholesterol",     "unit": "mg/dL",  "low": 40,   "high": 100,  "aliases": ["hdl-c", "kolesterol hdl"] },
-    "triglycerides":    { "name": "Triglycerides",       "unit": "mg/dL",  "low": 0,    "high": 150,  "aliases": ["trigliserida"] },
-    "systolic_bp":      { "name": "Blood Pressure (Systolic)",  "unit": "mmHg", "low": 90, "high": 120, "aliases": ["systolic", "sistolik"] },
-    "diastolic_bp":     { "name": "Blood Pressure (Diastolic)", "unit": "mmHg", "low": 60, "high": 80,  "aliases": ["diastolic", "diastolik"] },
-    "creatinine":       { "name": "Creatinine",          "unit": "mg/dL",  "low": 0.6,  "high": 1.3,  "aliases": ["kreatinin"] },
-    "egfr":             { "name": "eGFR",                "unit": "mL/min", "low": 90,   "high": 200,  "aliases": ["gfr"] },
-    "uric_acid":        { "name": "Uric Acid",           "unit": "mg/dL",  "low": 2.5,  "high": 7.0,  "aliases": ["asam urat"] },
-    "alt":              { "name": "ALT (SGPT)",          "unit": "U/L",    "low": 0,    "high": 40,   "aliases": ["sgpt"] },
-    "ast":              { "name": "AST (SGOT)",          "unit": "U/L",    "low": 0,    "high": 40,   "aliases": ["sgot"] },
-    "hemoglobin":       { "name": "Hemoglobin",          "unit": "g/dL",   "low": 12.0, "high": 17.5, "aliases": ["hb", "haemoglobin"] },
-    "vitamin_d":        { "name": "Vitamin D (25-OH)",   "unit": "ng/mL",  "low": 30,   "high": 100,  "aliases": ["25-oh vitamin d", "vit d"] },
-    "tsh":              { "name": "TSH",                 "unit": "µIU/mL", "low": 0.4,  "high": 4.5,  "aliases": ["thyroid stimulating hormone"] }
+    "hba1c": {
+      "name": "HbA1c",
+      "unit": "%",
+      "low": 4.0,
+      "high": 5.7,
+      "aliases": [
+        "a1c",
+        "hemoglobin a1c",
+        "glycated hemoglobin"
+      ],
+      "explains": "Your average blood sugar over the past 2-3 months. Higher means a greater risk of diabetes."
+    },
+    "fasting_glucose": {
+      "name": "Fasting Glucose",
+      "unit": "mg/dL",
+      "low": 70,
+      "high": 100,
+      "aliases": [
+        "glucose",
+        "gula darah puasa",
+        "glukosa puasa",
+        "glukosa",
+        "gdp",
+        "blood sugar",
+        "fasting blood glucose"
+      ],
+      "explains": "Blood sugar after fasting. A snapshot of how your body handles glucose."
+    },
+    "total_cholesterol": {
+      "name": "Total Cholesterol",
+      "unit": "mg/dL",
+      "low": 0,
+      "high": 200,
+      "aliases": [
+        "cholesterol",
+        "kolesterol total"
+      ],
+      "explains": "All the cholesterol in your blood. High levels raise heart-disease risk over time."
+    },
+    "ldl": {
+      "name": "LDL Cholesterol",
+      "unit": "mg/dL",
+      "low": 0,
+      "high": 130,
+      "aliases": [
+        "ldl-c",
+        "kolesterol ldl"
+      ],
+      "explains": "The 'bad' cholesterol that builds up in arteries. Lower is better."
+    },
+    "hdl": {
+      "name": "HDL Cholesterol",
+      "unit": "mg/dL",
+      "low": 40,
+      "high": 100,
+      "aliases": [
+        "hdl-c",
+        "kolesterol hdl"
+      ],
+      "explains": "The 'good' cholesterol that clears arteries. Here, higher is better."
+    },
+    "triglycerides": {
+      "name": "Triglycerides",
+      "unit": "mg/dL",
+      "low": 0,
+      "high": 150,
+      "aliases": [
+        "trigliserida"
+      ],
+      "explains": "A fat in your blood. High levels often track with diet, weight and heart risk."
+    },
+    "systolic_bp": {
+      "name": "Blood Pressure (Systolic)",
+      "unit": "mmHg",
+      "low": 90,
+      "high": 120,
+      "aliases": [
+        "systolic",
+        "sistolik"
+      ],
+      "explains": "The top blood-pressure number — pressure when your heart beats."
+    },
+    "diastolic_bp": {
+      "name": "Blood Pressure (Diastolic)",
+      "unit": "mmHg",
+      "low": 60,
+      "high": 80,
+      "aliases": [
+        "diastolic",
+        "diastolik"
+      ],
+      "explains": "The bottom blood-pressure number — pressure when your heart rests."
+    },
+    "creatinine": {
+      "name": "Creatinine",
+      "unit": "mg/dL",
+      "low": 0.6,
+      "high": 1.3,
+      "aliases": [
+        "kreatinin"
+      ],
+      "explains": "A waste product your kidneys filter. High levels can signal reduced kidney function."
+    },
+    "egfr": {
+      "name": "eGFR",
+      "unit": "mL/min",
+      "low": 90,
+      "high": 200,
+      "aliases": [
+        "gfr"
+      ],
+      "explains": "How well your kidneys filter blood. Lower means weaker kidney function."
+    },
+    "uric_acid": {
+      "name": "Uric Acid",
+      "unit": "mg/dL",
+      "low": 2.5,
+      "high": 7.0,
+      "aliases": [
+        "asam urat"
+      ],
+      "explains": "A waste product; high levels can cause gout and kidney stones."
+    },
+    "alt": {
+      "name": "ALT (SGPT)",
+      "unit": "U/L",
+      "low": 0,
+      "high": 40,
+      "aliases": [
+        "sgpt"
+      ],
+      "explains": "A liver enzyme. Raised levels can indicate liver stress or inflammation."
+    },
+    "ast": {
+      "name": "AST (SGOT)",
+      "unit": "U/L",
+      "low": 0,
+      "high": 40,
+      "aliases": [
+        "sgot"
+      ],
+      "explains": "A liver and muscle enzyme. Often checked alongside ALT for liver health."
+    },
+    "hemoglobin": {
+      "name": "Hemoglobin",
+      "unit": "g/dL",
+      "low": 12.0,
+      "high": 17.5,
+      "aliases": [
+        "hb",
+        "haemoglobin",
+        "hemoglobin (hb)"
+      ],
+      "explains": "The protein carrying oxygen in your blood. Low means anaemia; high can mean dehydration."
+    },
+    "vitamin_d": {
+      "name": "Vitamin D (25-OH)",
+      "unit": "ng/mL",
+      "low": 30,
+      "high": 100,
+      "aliases": [
+        "25-oh vitamin d",
+        "vit d"
+      ],
+      "explains": "Vitamin D level. Low is very common and affects bones and immunity."
+    },
+    "tsh": {
+      "name": "TSH",
+      "unit": "µIU/mL",
+      "low": 0.4,
+      "high": 4.5,
+      "aliases": [
+        "thyroid stimulating hormone"
+      ],
+      "explains": "Thyroid signal hormone. High suggests an underactive thyroid, low an overactive one."
+    },
+    "hematocrit": {
+      "name": "Hematocrit",
+      "unit": "%",
+      "low": 36,
+      "high": 50,
+      "aliases": [
+        "haematocrit",
+        "hct",
+        "hematokrit"
+      ],
+      "explains": "The share of your blood made of red cells. Low can mean anaemia, high dehydration."
+    },
+    "rbc": {
+      "name": "Red Blood Cells (Erythrocytes)",
+      "unit": "10^6/uL",
+      "low": 4.2,
+      "high": 5.9,
+      "aliases": [
+        "erythrocytes",
+        "eritrosit",
+        "red blood cell",
+        "red blood cell count"
+      ],
+      "explains": "The cells that carry oxygen. Counted to screen for anaemia or other blood conditions."
+    },
+    "mcv": {
+      "name": "MCV (Red Cell Size)",
+      "unit": "fL",
+      "low": 80,
+      "high": 100,
+      "aliases": [
+        "mean corpuscular volume"
+      ],
+      "explains": "The average size of your red blood cells — helps classify the type of anaemia."
+    },
+    "mch": {
+      "name": "MCH (Hemoglobin per Cell)",
+      "unit": "pg",
+      "low": 27,
+      "high": 33,
+      "aliases": [
+        "mean corpuscular hemoglobin"
+      ],
+      "explains": "Average amount of oxygen-carrying protein per red cell."
+    },
+    "mchc": {
+      "name": "MCHC (Hemoglobin Concentration)",
+      "unit": "g/dL",
+      "low": 32,
+      "high": 36,
+      "aliases": [
+        "mean corpuscular hemoglobin concentration"
+      ],
+      "explains": "How concentrated the hemoglobin is inside red cells."
+    },
+    "platelets": {
+      "name": "Platelets (Thrombocytes)",
+      "unit": "10^3/uL",
+      "low": 150,
+      "high": 400,
+      "aliases": [
+        "thrombocytes",
+        "trombosit",
+        "platelet count"
+      ],
+      "explains": "Cells that help blood clot. Low raises bleeding risk; very high can raise clotting risk — relevant in dengue too."
+    },
+    "wbc": {
+      "name": "White Blood Cells (Leukocytes)",
+      "unit": "10^3/uL",
+      "low": 4.0,
+      "high": 11.0,
+      "aliases": [
+        "leukocytes",
+        "leukosit",
+        "white blood cell",
+        "white blood cell count"
+      ],
+      "explains": "Your immune cells. High often means infection; low can mean a weakened immune system."
+    },
+    "neutrophils": {
+      "name": "Neutrophils",
+      "unit": "%",
+      "low": 40,
+      "high": 75,
+      "aliases": [
+        "neutrophil",
+        "neutrofil",
+        "neutrophyl",
+        "neutrophils"
+      ],
+      "explains": "The immune cells that fight bacterial infection. The largest share of white cells."
+    },
+    "lymphocytes": {
+      "name": "Lymphocytes",
+      "unit": "%",
+      "low": 20,
+      "high": 45,
+      "aliases": [
+        "lymphocyte",
+        "limfosit"
+      ],
+      "explains": "Immune cells that fight viruses and build long-term immunity."
+    },
+    "monocytes": {
+      "name": "Monocytes",
+      "unit": "%",
+      "low": 2,
+      "high": 10,
+      "aliases": [
+        "monocyte",
+        "monosit"
+      ],
+      "explains": "Immune cells that clean up infection and debris."
+    },
+    "eosinophils": {
+      "name": "Eosinophils",
+      "unit": "%",
+      "low": 0,
+      "high": 6,
+      "aliases": [
+        "eosinophil",
+        "eosinofil",
+        "eosinophyl",
+        "eosinophils"
+      ],
+      "explains": "Immune cells linked to allergies and parasitic infections."
+    },
+    "basophils": {
+      "name": "Basophils",
+      "unit": "%",
+      "low": 0,
+      "high": 2,
+      "aliases": [
+        "basophil",
+        "basofil",
+        "basophyl",
+        "basophils"
+      ],
+      "explains": "The rarest white cells, involved in allergic reactions."
+    }
   }
 }
