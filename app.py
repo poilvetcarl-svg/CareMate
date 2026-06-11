@@ -891,6 +891,88 @@ def login():
     return render_template("auth.html", mode="login", page_title="Sign In")
 
 
+# ── GOOGLE SIGN-IN (OAuth 2.0, no extra dependencies) ──
+GOOGLE_CLIENT_ID     = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+GOOGLE_OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+
+
+@app.context_processor
+def _inject_oauth_flag():
+    return {"google_oauth_enabled": GOOGLE_OAUTH_ENABLED}
+
+
+def _google_redirect_uri():
+    # Behind Vercel's proxy the request scheme is http — force https there
+    scheme = "https" if os.environ.get("VERCEL") else request.scheme
+    return url_for("google_callback", _external=True, _scheme=scheme)
+
+
+@app.route("/auth/google")
+def google_login():
+    if not GOOGLE_OAUTH_ENABLED:
+        flash("Google sign-in isn't configured yet.", "error")
+        return redirect(url_for("login"))
+    state = _gen_code(24)
+    session["oauth_state"] = state
+    params = {
+        "client_id": GOOGLE_CLIENT_ID,
+        "redirect_uri": _google_redirect_uri(),
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": state,
+        "prompt": "select_account",
+    }
+    from urllib.parse import urlencode
+    return redirect("https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params))
+
+
+@app.route("/auth/google/callback")
+def google_callback():
+    if not GOOGLE_OAUTH_ENABLED:
+        return redirect(url_for("login"))
+    if request.args.get("state") != session.pop("oauth_state", None):
+        flash("Sign-in session expired — please try again.", "error")
+        return redirect(url_for("login"))
+    code = request.args.get("code")
+    if not code:
+        flash("Google sign-in was cancelled.", "error")
+        return redirect(url_for("login"))
+
+    try:
+        token_resp = http_req.post("https://oauth2.googleapis.com/token", data={
+            "code": code,
+            "client_id": GOOGLE_CLIENT_ID,
+            "client_secret": GOOGLE_CLIENT_SECRET,
+            "redirect_uri": _google_redirect_uri(),
+            "grant_type": "authorization_code",
+        }, timeout=10).json()
+        userinfo = http_req.get(
+            "https://openidconnect.googleapis.com/v1/userinfo",
+            headers={"Authorization": f"Bearer {token_resp['access_token']}"},
+            timeout=10).json()
+        email = userinfo["email"].strip().lower()
+        name = userinfo.get("name") or email.split("@")[0]
+    except Exception:
+        logger.warning("Google OAuth exchange failed", exc_info=True)
+        flash("Google sign-in failed — please try again or use email.", "error")
+        return redirect(url_for("login"))
+
+    user = User.query.filter_by(email=email).first()
+    is_new = user is None
+    if is_new:
+        user = User(email=email, name=name)
+        # OAuth accounts have no usable password; they can set one via reset later
+        user.set_password(_gen_code(32))
+        db.session.add(user)
+        db.session.commit()
+    login_user(user)
+    if is_new:
+        flash("Welcome to CareMate! 🎉", "success")
+        return redirect(url_for("onboarding"))
+    return redirect(url_for("dashboard"))
+
+
 # ── PASSWORD RESET ──
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 

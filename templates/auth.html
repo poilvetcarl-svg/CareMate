@@ -68,6 +68,13 @@
     <!-- ── LOGIN ── -->
     <div class="auth-title">Welcome back</div>
     <div class="auth-sub">Sign in to view your vaccination history and reminders.</div>
+    {% if google_oauth_enabled %}
+    <a href="/auth/google" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;border-radius:12px;border:1.5px solid rgba(0,0,0,0.12);background:white;font-size:14.5px;font-weight:700;color:#3c4043;text-decoration:none;margin-bottom:18px">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.7 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.4 6.9-17.7z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-7.9-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.6l-7.7-6c-2.1 1.4-4.8 2.3-7.5 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>
+      Continue with Google
+    </a>
+    <div class="section-divider" style="margin-bottom:18px">or use email</div>
+    {% endif %}
     <form method="POST" action="/login">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-row">
@@ -126,6 +133,13 @@
     <!-- ── REGISTER ── -->
     <div class="auth-title">Create your account</div>
     <div class="auth-sub">Free — takes 30 seconds. No credit card needed.</div>
+    {% if google_oauth_enabled %}
+    <a href="/auth/google" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;border-radius:12px;border:1.5px solid rgba(0,0,0,0.12);background:white;font-size:14.5px;font-weight:700;color:#3c4043;text-decoration:none;margin-bottom:18px">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.7 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.4 6.9-17.7z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-7.9-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.6l-7.7-6c-2.1 1.4-4.8 2.3-7.5 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>
+      Continue with Google
+    </a>
+    <div class="section-divider" style="margin-bottom:18px">or use email</div>
+    {% endif %}
     <form method="POST" action="/register">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-row-2">
