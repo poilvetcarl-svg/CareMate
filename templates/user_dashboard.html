@@ -103,6 +103,89 @@
 
     <!-- Left: Vaccination timeline -->
     <div class="dash-col-main">
+
+      <!-- MY FAMILY — pediatric immunization (IDAI 2024) -->
+      <div class="dash-card" style="margin-bottom:20px">
+        <div class="dash-card-header">
+          <div class="dash-card-title">My Family</div>
+          <button class="dash-action-btn" onclick="document.getElementById('addChildForm').classList.toggle('hidden')">+ Add Child</button>
+        </div>
+
+        <form id="addChildForm" class="hidden" method="POST" action="/family/add-child"
+              style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
+            <div class="form-row" style="margin:0">
+              <label>Child's name</label>
+              <input type="text" name="name" placeholder="e.g. Putri" required />
+            </div>
+            <div class="form-row" style="margin:0">
+              <label>Date of birth</label>
+              <input type="date" name="date_of_birth" required max="{{ today.isoformat() }}" />
+            </div>
+            <div class="form-row" style="margin:0">
+              <label>Sex</label>
+              <select name="sex"><option value="">—</option><option value="female">Girl</option><option value="male">Boy</option></select>
+            </div>
+            <button type="submit" class="dash-action-btn" style="height:42px">Add</button>
+          </div>
+          <div style="font-size:11.5px;color:var(--text-muted);margin-top:8px">
+            We'll generate the full IDAI 2024 immunization schedule and remind you before each dose.
+          </div>
+        </form>
+
+        {% if family %}
+        {% for f in family %}
+        <div style="border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="font-size:15px;font-weight:800">{{ f.child.name }}</div>
+            <span style="font-size:11px;font-weight:700;background:var(--bg-secondary);border:1px solid var(--border);border-radius:20px;padding:2px 10px;color:var(--text-muted)">{{ f.child.age_label }}</span>
+            <span style="font-size:11px;color:var(--text-muted)">{{ f.schedule.done_count }}/{{ f.schedule.total }} doses done</span>
+            {% if f.schedule.overdue %}
+            <span style="font-size:11px;font-weight:700;background:rgba(239,68,68,0.1);color:#dc2626;border-radius:20px;padding:2px 10px">{{ f.schedule.overdue|length }} overdue</span>
+            {% endif %}
+            <form method="POST" action="/family/delete-child/{{ f.child.id }}" style="margin-left:auto"
+                  onsubmit="return confirm('Remove {{ f.child.name }} and their records?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" style="background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer">Remove</button>
+            </form>
+          </div>
+
+          <!-- progress bar -->
+          <div style="height:6px;background:var(--bg-secondary);border-radius:3px;overflow:hidden;margin-bottom:12px">
+            <div style="height:100%;width:{{ (f.schedule.done_count / f.schedule.total * 100)|int }}%;background:linear-gradient(90deg,#FF6B6B,#FF8E53)"></div>
+          </div>
+
+          {% for d in f.schedule.next_up %}
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border)">
+            <span style="width:9px;height:9px;border-radius:50%;flex-shrink:0;background:{{ '#dc2626' if d.status == 'overdue' else ('#f59e0b' if d.status == 'due' else '#94a3b8') }}"></span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:700">{{ d.name }} <span style="font-weight:500;color:var(--text-muted)">· dose {{ d.dose }}</span></div>
+              <div style="font-size:11.5px;color:{{ '#dc2626' if d.status == 'overdue' else 'var(--text-muted)' }}">
+                {{ 'Overdue — was due' if d.status == 'overdue' else 'Due' }} {{ d.due_date.strftime('%d %b %Y') }}
+                {% if d.notes %} · {{ d.notes }}{% endif %}
+              </div>
+            </div>
+            <form method="POST" action="/family/record-dose">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="child_id" value="{{ f.child.id }}">
+              <input type="hidden" name="vaccine_key" value="{{ d.key }}">
+              <input type="hidden" name="vaccine_name" value="{{ d.name }}">
+              <input type="hidden" name="dose_number" value="{{ d.dose }}">
+              <button type="submit" class="dash-action-btn" style="font-size:11px;padding:5px 12px">✓ Mark done</button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="dash-empty" style="padding:20px 0">
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px">Track your children's immunizations</div>
+          <div style="font-size:13px;color:var(--text-muted)">Add a child to get their complete IDAI 2024 schedule — every dose from birth to 18, with reminders before each one.</div>
+        </div>
+        {% endif %}
+      </div>
+
       <div class="dash-card">
         <div class="dash-card-header">
           <div class="dash-card-title">💉 Vaccination History</div>

@@ -76,7 +76,7 @@ if _db_url.startswith("postgres://"):
 app.config["SQLALCHEMY_DATABASE_URI"] = _db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, seed_clinics
+from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, seed_clinics
 db.init_app(app)
 
 from flask_mail import Mail, Message as MailMessage
@@ -105,7 +105,8 @@ with app.app_context():
     # Lightweight migration: add clinic columns introduced after the first schema
     from sqlalchemy import text as _sql_text
     for _ddl in ("ALTER TABLE clinic ADD COLUMN website VARCHAR(200)",
-                 "ALTER TABLE clinic ADD COLUMN home_service BOOLEAN DEFAULT 0"):
+                 "ALTER TABLE clinic ADD COLUMN home_service BOOLEAN DEFAULT 0",
+                 "ALTER TABLE vaccination_record ADD COLUMN child_id INTEGER"):
         try:
             db.session.execute(_sql_text(_ddl))
             db.session.commit()
@@ -959,6 +960,9 @@ def dashboard():
     bookings = Booking.query.filter_by(user_id=current_user.id)\
         .order_by(Booking.appointment_date.desc()).all()
 
+    children = Child.query.filter_by(user_id=current_user.id).order_by(Child.date_of_birth.desc()).all()
+    family = [{"child": c, "schedule": compute_child_schedule(c)} for c in children]
+
     return render_template(
         "user_dashboard.html",
         vaccination_records=vaccination_records,
@@ -967,8 +971,142 @@ def dashboard():
         last_assessment=last_assessment,
         bookings=bookings,
         today=today,
-        vaccines=VACCINE_DATA["vaccines"]
+        vaccines=VACCINE_DATA["vaccines"],
+        family=family
     )
+
+
+# ══════════════════════════════════════════════════════════
+#  FAMILY — PEDIATRIC IMMUNIZATION (IDAI 2024)
+# ══════════════════════════════════════════════════════════
+
+with open(os.path.join(os.path.dirname(__file__), "data", "pediatric_schedule.json")) as _f:
+    PEDIATRIC_SCHEDULE = json.load(_f)
+
+
+def compute_child_schedule(child):
+    """Build the child's IDAI schedule with a status per dose.
+
+    Statuses: done | overdue | due (within 30 days) | upcoming
+    Returns dict with the full timeline plus convenience slices for the UI.
+    """
+    from datetime import timedelta
+    today = date.today()
+    given = {(r.vaccine_key, r.dose_number) for r in
+             VaccinationRecord.query.filter_by(child_id=child.id).all()}
+
+    timeline = []
+    for d in PEDIATRIC_SCHEDULE["doses"]:
+        if d.get("sex") and child.sex and d["sex"] != child.sex:
+            continue
+        # due date = DOB shifted by due_month months
+        m = child.date_of_birth.month - 1 + d["due_month"]
+        due = child.date_of_birth.replace(
+            year=child.date_of_birth.year + m // 12,
+            month=m % 12 + 1,
+            day=min(child.date_of_birth.day, 28))
+        if (d["key"], d["dose"]) in given:
+            status = "done"
+        elif due < today - timedelta(days=30):
+            status = "overdue"
+        elif due <= today + timedelta(days=30):
+            status = "due"
+        else:
+            status = "upcoming"
+        timeline.append({**d, "due_date": due, "status": status})
+
+    timeline.sort(key=lambda x: x["due_date"])
+    pending = [t for t in timeline if t["status"] != "done"]
+    return {
+        "timeline": timeline,
+        "overdue":  [t for t in timeline if t["status"] == "overdue"],
+        "due":      [t for t in timeline if t["status"] == "due"],
+        "next_up":  pending[:3],
+        "done_count": sum(1 for t in timeline if t["status"] == "done"),
+        "total": len(timeline),
+    }
+
+
+@app.route("/family/add-child", methods=["POST"])
+@login_required
+def add_child():
+    name = request.form.get("name", "").strip()
+    dob_str = request.form.get("date_of_birth", "")
+    sex = request.form.get("sex", "")
+    try:
+        dob = datetime.strptime(dob_str, "%Y-%m-%d").date()
+    except ValueError:
+        flash("Please provide a valid date of birth.", "error")
+        return redirect(url_for("dashboard"))
+    if not name or dob > date.today():
+        flash("Please provide your child's name and a valid date of birth.", "error")
+        return redirect(url_for("dashboard"))
+
+    child = Child(user_id=current_user.id, name=name, date_of_birth=dob, sex=sex or None)
+    db.session.add(child)
+    db.session.commit()
+
+    # Schedule a WhatsApp/email reminder for the next pending dose
+    _ensure_child_reminder(child)
+    flash(f"{name} added — full IDAI immunization schedule generated.", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/family/record-dose", methods=["POST"])
+@login_required
+def record_child_dose():
+    child = Child.query.filter_by(id=request.form.get("child_id", type=int),
+                                  user_id=current_user.id).first()
+    if not child:
+        flash("Child not found.", "error")
+        return redirect(url_for("dashboard"))
+    rec = VaccinationRecord(
+        user_id=current_user.id, child_id=child.id,
+        vaccine_key=request.form.get("vaccine_key", ""),
+        vaccine_name=request.form.get("vaccine_name", ""),
+        dose_number=request.form.get("dose_number", 1, type=int),
+        date_given=date.today())
+    db.session.add(rec)
+    db.session.commit()
+    _ensure_child_reminder(child)
+    flash(f"Recorded {rec.vaccine_name} dose {rec.dose_number} for {child.name}.", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/family/delete-child/<int:child_id>", methods=["POST"])
+@login_required
+def delete_child(child_id):
+    child = Child.query.filter_by(id=child_id, user_id=current_user.id).first()
+    if child:
+        VaccinationRecord.query.filter_by(child_id=child.id).delete()
+        db.session.delete(child)
+        db.session.commit()
+        flash("Child profile removed.", "success")
+    return redirect(url_for("dashboard"))
+
+
+def _ensure_child_reminder(child):
+    """Keep exactly one pending reminder per child: the next non-done dose."""
+    from datetime import timedelta
+    schedule = compute_child_schedule(child)
+    pending = schedule["overdue"] + schedule["due"] + \
+              [t for t in schedule["timeline"] if t["status"] == "upcoming"]
+    if not pending:
+        return
+    nxt = pending[0]
+    tag = f"[child:{child.id}]"
+    # Replace any previous unsent reminder for this child
+    VaccineReminder.query.filter_by(user_id=child.user_id, sent=False)\
+        .filter(VaccineReminder.message.like(f"%{tag}%")).delete(synchronize_session=False)
+    remind_on = max(nxt["due_date"] - timedelta(days=7), date.today())
+    db.session.add(VaccineReminder(
+        user_id=child.user_id,
+        vaccine_key=nxt["key"],
+        vaccine_name=f"{nxt['name']} (dose {nxt['dose']}) — {child.name}",
+        reminder_date=remind_on,
+        message=f"{tag} {child.name}'s {nxt['name']} dose {nxt['dose']} is due on {nxt['due_date'].strftime('%d %b %Y')} (IDAI schedule).",
+        channel="whatsapp" if child.parent.whatsapp_opt_in else "email"))
+    db.session.commit()
 
 
 @app.route("/dashboard/log-vaccine", methods=["POST"])

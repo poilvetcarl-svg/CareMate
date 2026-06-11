@@ -70,10 +70,37 @@ class Assessment(db.Model):
     created_at           = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+# ── CHILD (family immunization tracking) ─────────────────────────────────────
+class Child(db.Model):
+    id            = db.Column(db.Integer, primary_key=True)
+    user_id       = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name          = db.Column(db.String(100), nullable=False)
+    date_of_birth = db.Column(db.Date, nullable=False)
+    sex           = db.Column(db.String(10))   # male | female
+    created_at    = db.Column(db.DateTime, default=datetime.utcnow)
+
+    parent  = db.relationship('User', backref=db.backref('children', lazy=True, cascade='all, delete-orphan'))
+    records = db.relationship('VaccinationRecord', backref='child', lazy=True)
+
+    @property
+    def age_months(self):
+        today = date.today()
+        return (today.year - self.date_of_birth.year) * 12 + (today.month - self.date_of_birth.month) \
+               - (1 if today.day < self.date_of_birth.day else 0)
+
+    @property
+    def age_label(self):
+        m = self.age_months
+        if m < 1:  return "newborn"
+        if m < 24: return f"{m} mo"
+        return f"{m // 12} yr"
+
+
 # ── VACCINATION RECORD ────────────────────────────────────────────────────────
 class VaccinationRecord(db.Model):
     id             = db.Column(db.Integer, primary_key=True)
     user_id        = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    child_id       = db.Column(db.Integer, db.ForeignKey('child.id'), nullable=True)  # set when the dose belongs to a child
     vaccine_key    = db.Column(db.String(50),  nullable=False)
     vaccine_name   = db.Column(db.String(120), nullable=False)
     date_given     = db.Column(db.Date,        nullable=False)
