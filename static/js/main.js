@@ -241,6 +241,9 @@ function renderResults(result) {
   // Vaccines
   renderVaccines(result.vaccines);
 
+  // Preventive screenings / health checks
+  renderScreenings(result.screenings || []);
+
   // Vaccine count
   const countEl = document.getElementById('vaccineCount');
   if (countEl) countEl.textContent = result.vaccines.length;
@@ -261,6 +264,47 @@ function renderResults(result) {
 
   // Inject "Discuss with a Doctor" section above CTA
   renderDoctorOffer(result);
+}
+
+// ===== PREVENTIVE SCREENINGS =====
+function renderScreenings(screenings) {
+  document.getElementById('screeningsSection')?.remove();
+  if (!screenings.length) return;
+
+  const badge = p => {
+    const map = {
+      high:        ['HIGH PRIORITY', 'rgba(239,68,68,0.1)',  '#dc2626'],
+      routine:     ['ROUTINE',       'rgba(5,150,105,0.1)',  '#059669'],
+      recommended: ['DISCUSS',       'rgba(2,132,199,0.1)',  '#0284c7'],
+    };
+    const [label, bg, color] = map[p] || map.routine;
+    return `<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:${bg};color:${color};white-space:nowrap">${label}</span>`;
+  };
+
+  const rows = screenings.map(s => `
+    <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid rgba(255,107,107,0.1);background:white">
+      <div style="width:40px;height:40px;border-radius:10px;background:#FFF8F5;border:1px solid rgba(255,107,107,0.12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${s.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+          <span style="font-size:14px;font-weight:700;color:#1A0A00">${s.name}</span>
+          ${badge(s.priority)}
+        </div>
+        <div style="font-size:12px;color:#6B4423;line-height:1.5;margin-bottom:4px">${s.why}</div>
+        <div style="font-size:11px;color:#A07850">${s.reasons[0]} · ${s.frequency} · ${s.sources.join(', ')}</div>
+      </div>
+    </div>`).join('');
+
+  const html = `
+  <div id="screeningsSection" class="vaccines-section" style="margin-top:32px">
+    <h3 class="vaccines-title">
+      Recommended Health Checks
+      <span class="vaccines-count">${screenings.length}</span>
+    </h3>
+    <div style="border:1px solid rgba(255,107,107,0.12);border-radius:14px;overflow:hidden">${rows}</div>
+  </div>`;
+
+  const vaccinesSection = document.querySelector('.vaccines-section:not(#screeningsSection)');
+  if (vaccinesSection) vaccinesSection.insertAdjacentHTML('afterend', html);
 }
 
 // ===== DOCTOR OFFER (shown after results) =====
@@ -294,9 +338,9 @@ function renderDoctorOffer(result) {
     </div>
   </div>`;
 
-  const vaccinesSection = document.querySelector('.vaccines-section');
-  if (vaccinesSection) {
-    vaccinesSection.insertAdjacentHTML('afterend', html);
+  const anchor = document.getElementById('screeningsSection') || document.querySelector('.vaccines-section');
+  if (anchor) {
+    anchor.insertAdjacentHTML('afterend', html);
   }
 }
 

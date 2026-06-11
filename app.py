@@ -780,6 +780,59 @@ def get_recommended_vaccines(data):
     return recommended
 
 
+# ── PREVENTIVE SCREENINGS ENGINE ──
+with open(os.path.join(os.path.dirname(__file__), "data", "screenings.json")) as _f:
+    SCREENING_DATA = json.load(_f)
+
+
+def get_recommended_screenings(data):
+    """Guideline-backed health checks for this profile — same inputs as the vaccine engine."""
+    age = int(data.get("age", 30))
+    sex = data.get("sex", "")
+    conditions = set(data.get("conditions", []))
+    results = []
+
+    for s in SCREENING_DATA["screenings"]:
+        # Sex gating
+        if s.get("sex", "any") != "any" and s["sex"] != sex:
+            continue
+        # Hard condition requirement (e.g. lung CT only for smokers)
+        if s.get("require_conditions") and not (set(s["require_conditions"]) & conditions):
+            continue
+        # Profile that already has the condition doesn't need the screening for it
+        if s.get("exclude_conditions") and (set(s["exclude_conditions"]) & conditions):
+            continue
+        # Age gating — risk conditions can lower the entry age
+        age_min = s["age_min"]
+        boosted = bool(s.get("conditions_boost") and (set(s["conditions_boost"]) & conditions))
+        if boosted and s.get("conditions_min_age") is not None:
+            age_min = s["conditions_min_age"]
+        if not (age_min <= age <= s["age_max"]):
+            continue
+
+        reasons = []
+        if s.get("require_conditions"):
+            trigger = (set(s["require_conditions"]) & conditions)
+            labels = [VACCINE_DATA["risk_factors"].get(c, {}).get("label", c) for c in trigger]
+            reasons.append(f"Because of {', '.join(labels)}")
+        elif boosted:
+            trigger = set(s["conditions_boost"]) & conditions
+            labels = [VACCINE_DATA["risk_factors"].get(c, {}).get("label", c) for c in trigger]
+            reasons.append(f"Earlier than usual due to {', '.join(labels)}")
+        else:
+            reasons.append(f"Recommended at your age ({age})")
+
+        results.append({
+            "key": s["key"], "name": s["name"], "why": s["why"],
+            "frequency": s["frequency"], "priority": s["priority"],
+            "icon": s["icon"], "sources": s["sources"], "reasons": reasons,
+        })
+
+    order = {"high": 0, "routine": 1, "recommended": 2}
+    results.sort(key=lambda x: order.get(x["priority"], 3))
+    return results
+
+
 @app.route("/")
 def index():
     return render_template("index.html", current_user=current_user)
@@ -1410,6 +1463,7 @@ def recommend():
         return jsonify({"error": error}), 400
     risk = calculate_risk_score(data)
     vaccines = get_recommended_vaccines(data)
+    screenings = get_recommended_screenings(data)
 
     # Deterministic fallback — used when no AI key is configured or the call fails
     fallback_summary = (
@@ -1424,6 +1478,7 @@ def recommend():
             conditions_text = ", ".join(data.get("conditions", [])) or "none reported"
             travel_text = ", ".join(data.get("travel_regions", [])) or "no international travel"
             vaccine_names = ", ".join([v["name"] for v in vaccines[:6]])
+            screening_names = ", ".join([s["name"] for s in screenings[:4]]) or "none specific"
 
             prompt = f"""You're a friendly doctor reviewing a patient's vaccination profile. Here's what you know about them:
 - Age: {data.get('age')} years old
@@ -1432,6 +1487,7 @@ def recommend():
 - Travel plans: {travel_text}
 - Risk level: {risk['level']} ({risk['percentage']}%)
 - Vaccines they need: {vaccine_names}
+- Health checks due at their age: {screening_names}
 
 Write a personal, warm 3-4 sentence message directly to this patient — like a doctor talking to someone they genuinely care about. Mention their specific situation (age, conditions, travel), explain what their risk level actually means in plain terms, and highlight the one or two vaccines that matter most for *them*. Sound like a real person, not a medical report. Use "you" and "your". No bullet points, no clinical jargon, no generic advice. Make it feel like it was written specifically for this person."""
 
@@ -1468,6 +1524,7 @@ Write a personal, warm 3-4 sentence message directly to this patient — like a 
     return jsonify({
         "risk": risk,
         "vaccines": vaccines,
+        "screenings": screenings,
         "ai_summary": ai_summary,
         "total_vaccines": len(vaccines)
     })

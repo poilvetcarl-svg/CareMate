@@ -1,0 +1,182 @@
+{
+  "source_note": "Screening recommendations follow USPSTF (2021-2024 updates), WHO PEN, and Kemenkes PTM guidance.",
+  "screenings": [
+    {
+      "key": "blood_pressure",
+      "name": "Blood Pressure Check",
+      "why": "Hypertension is symptomless and the single largest risk factor for stroke and heart disease.",
+      "frequency": "Every year",
+      "age_min": 18, "age_max": 120,
+      "sex": "any",
+      "conditions_boost": ["diabetes", "kidney_disease", "heart_disease", "obesity"],
+      "priority": "routine",
+      "icon": "🩺",
+      "sources": ["USPSTF", "WHO PEN", "Kemenkes PTM"]
+    },
+    {
+      "key": "lipid_panel",
+      "name": "Cholesterol (Lipid Panel)",
+      "why": "Detects high LDL cholesterol early, when diet or statins can still prevent heart attacks.",
+      "frequency": "Every 4-6 years; yearly if abnormal or diabetic",
+      "age_min": 35, "age_max": 75,
+      "sex": "any",
+      "conditions_boost": ["diabetes", "heart_disease", "obesity", "smoking"],
+      "conditions_min_age": 20,
+      "priority": "routine",
+      "icon": "🫀",
+      "sources": ["USPSTF", "AHA"]
+    },
+    {
+      "key": "diabetes_screen",
+      "name": "Blood Sugar (HbA1c / Fasting Glucose)",
+      "why": "Type 2 diabetes develops silently for years; early detection prevents organ damage.",
+      "frequency": "Every 3 years; yearly if pre-diabetic",
+      "age_min": 35, "age_max": 70,
+      "sex": "any",
+      "conditions_boost": ["obesity", "heart_disease"],
+      "conditions_min_age": 18,
+      "exclude_conditions": ["diabetes"],
+      "priority": "routine",
+      "icon": "🩸",
+      "sources": ["USPSTF", "ADA", "PERKENI"]
+    },
+    {
+      "key": "cervical_cancer",
+      "name": "Cervical Cancer Screening (Pap / HPV test)",
+      "why": "Cervical cancer is among the most preventable cancers — Indonesia has one of the highest burdens in Asia.",
+      "frequency": "Pap every 3 years, or HPV test every 5 years (age 30+)",
+      "age_min": 21, "age_max": 65,
+      "sex": "female",
+      "priority": "high",
+      "icon": "🎗️",
+      "sources": ["USPSTF", "WHO", "Kemenkes"]
+    },
+    {
+      "key": "breast_cancer",
+      "name": "Mammogram (Breast Cancer Screening)",
+      "why": "Biennial mammography from age 40 significantly reduces breast cancer mortality.",
+      "frequency": "Every 2 years",
+      "age_min": 40, "age_max": 74,
+      "sex": "female",
+      "priority": "high",
+      "icon": "🎗️",
+      "sources": ["USPSTF 2024"]
+    },
+    {
+      "key": "colorectal_cancer",
+      "name": "Colorectal Cancer Screening",
+      "why": "Colonoscopy or annual FIT stool test detects cancer at its most curable stage.",
+      "frequency": "Colonoscopy every 10 years, or FIT yearly",
+      "age_min": 45, "age_max": 75,
+      "sex": "any",
+      "priority": "high",
+      "icon": "🎗️",
+      "sources": ["USPSTF 2021"]
+    },
+    {
+      "key": "lung_cancer",
+      "name": "Lung Cancer Screening (Low-dose CT)",
+      "why": "For smokers and former smokers, annual low-dose CT catches lung cancer early enough to treat.",
+      "frequency": "Every year while smoking history applies",
+      "age_min": 50, "age_max": 80,
+      "sex": "any",
+      "require_conditions": ["smoking"],
+      "priority": "high",
+      "icon": "🫁",
+      "sources": ["USPSTF 2021"]
+    },
+    {
+      "key": "hepatitis_screen",
+      "name": "Hepatitis B & C Screening",
+      "why": "Indonesia is a high-prevalence region; most carriers don't know. One blood test, once.",
+      "frequency": "At least once as an adult",
+      "age_min": 18, "age_max": 79,
+      "sex": "any",
+      "conditions_boost": ["liver_disease"],
+      "priority": "routine",
+      "icon": "🧪",
+      "sources": ["USPSTF", "WHO", "Kemenkes"]
+    },
+    {
+      "key": "hiv_screen",
+      "name": "HIV Screening",
+      "why": "Recommended at least once for all adults — modern treatment makes early detection life-saving.",
+      "frequency": "At least once; yearly if at risk",
+      "age_min": 18, "age_max": 65,
+      "sex": "any",
+      "priority": "routine",
+      "icon": "🧪",
+      "sources": ["USPSTF", "WHO"]
+    },
+    {
+      "key": "osteoporosis",
+      "name": "Bone Density Scan (DEXA)",
+      "why": "Osteoporosis screening prevents the hip fractures that often end independent living.",
+      "frequency": "Once at 65, then per result",
+      "age_min": 65, "age_max": 120,
+      "sex": "female",
+      "priority": "routine",
+      "icon": "🦴",
+      "sources": ["USPSTF"]
+    },
+    {
+      "key": "prostate",
+      "name": "Prostate Check (PSA — discuss with doctor)",
+      "why": "PSA screening is a personal decision; discuss benefits and harms with your doctor.",
+      "frequency": "Shared decision with your doctor",
+      "age_min": 55, "age_max": 69,
+      "sex": "male",
+      "priority": "recommended",
+      "icon": "🩺",
+      "sources": ["USPSTF"]
+    },
+    {
+      "key": "eye_exam_diabetic",
+      "name": "Diabetic Eye Exam (Retinopathy)",
+      "why": "Diabetes is the leading cause of preventable blindness — annual retina checks catch it in time.",
+      "frequency": "Every year",
+      "age_min": 18, "age_max": 120,
+      "sex": "any",
+      "require_conditions": ["diabetes"],
+      "priority": "high",
+      "icon": "👁️",
+      "sources": ["ADA", "PERKENI"]
+    },
+    {
+      "key": "kidney_function",
+      "name": "Kidney Function (eGFR + Urine Albumin)",
+      "why": "Diabetes and hypertension silently damage kidneys; early detection slows progression dramatically.",
+      "frequency": "Every year",
+      "age_min": 18, "age_max": 120,
+      "sex": "any",
+      "require_conditions": ["diabetes", "heart_disease", "kidney_disease"],
+      "priority": "high",
+      "icon": "🫘",
+      "sources": ["KDIGO", "ADA"]
+    },
+    {
+      "key": "tb_screen",
+      "name": "Tuberculosis Screening",
+      "why": "Indonesia has the world's second-highest TB burden; screening matters for immunocompromised patients.",
+      "frequency": "Per doctor's advice",
+      "age_min": 18, "age_max": 120,
+      "sex": "any",
+      "require_conditions": ["hiv", "immunocompromised", "diabetes"],
+      "priority": "high",
+      "icon": "🫁",
+      "sources": ["WHO", "Kemenkes TBC"]
+    },
+    {
+      "key": "aaa_screen",
+      "name": "Abdominal Aortic Aneurysm Ultrasound",
+      "why": "One-time ultrasound for men 65+ who have ever smoked — a ruptured aneurysm is usually fatal.",
+      "frequency": "Once",
+      "age_min": 65, "age_max": 75,
+      "sex": "male",
+      "require_conditions": ["smoking"],
+      "priority": "recommended",
+      "icon": "🩺",
+      "sources": ["USPSTF"]
+    }
+  ]
+}
