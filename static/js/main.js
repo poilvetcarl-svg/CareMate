@@ -271,40 +271,50 @@ function renderScreenings(screenings) {
   document.getElementById('screeningsSection')?.remove();
   if (!screenings.length) return;
 
-  const badge = p => {
-    const map = {
-      high:        ['HIGH PRIORITY', 'rgba(239,68,68,0.1)',  '#dc2626'],
-      routine:     ['ROUTINE',       'rgba(5,150,105,0.1)',  '#059669'],
-      recommended: ['DISCUSS',       'rgba(2,132,199,0.1)',  '#0284c7'],
-    };
-    const [label, bg, color] = map[p] || map.routine;
-    return `<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:${bg};color:${color};white-space:nowrap">${label}</span>`;
-  };
+  // Top 3 are what the user should actually act on; the rest stays one click away
+  const top = screenings.slice(0, 3);
+  const rest = screenings.slice(3);
 
-  const rows = screenings.map(s => `
-    <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid rgba(255,107,107,0.1);background:white">
-      <div style="width:40px;height:40px;border-radius:10px;background:#FFF8F5;border:1px solid rgba(255,107,107,0.12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${s.icon}</div>
+  const row = (s, highlight) => `
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:${highlight ? '14px 16px' : '11px 16px'};border-bottom:1px solid rgba(255,107,107,0.1);background:white">
+      <div style="width:36px;height:36px;border-radius:10px;background:#FFF8F5;border:1px solid rgba(255,107,107,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${s.icon}</div>
       <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
           <span style="font-size:14px;font-weight:700;color:#1A0A00">${s.name}</span>
-          ${badge(s.priority)}
+          <span style="font-size:11px;color:#A07850">${s.frequency}</span>
         </div>
-        <div style="font-size:12px;color:#6B4423;line-height:1.5;margin-bottom:4px">${s.why}</div>
-        <div style="font-size:11px;color:#A07850">${s.reasons[0]} · ${s.frequency} · ${s.sources.join(', ')}</div>
+        <div style="font-size:12px;color:#6B4423;line-height:1.5;margin-top:2px">${s.why}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+
+  const restHtml = rest.length ? `
+    <div id="moreScreenings" style="display:none">${rest.map(s => row(s, false)).join('')}</div>
+    <button onclick="toggleMoreScreenings(this)" style="width:100%;padding:12px;background:#FFF8F5;border:none;border-top:1px solid rgba(255,107,107,0.1);font-size:13px;font-weight:700;color:var(--coral-dark,#E55555);cursor:pointer;font-family:inherit">
+      Show ${rest.length} more checks ▾
+    </button>` : '';
 
   const html = `
   <div id="screeningsSection" class="vaccines-section" style="margin-top:32px">
     <h3 class="vaccines-title">
-      Recommended Health Checks
+      Health Checks for Your Age
       <span class="vaccines-count">${screenings.length}</span>
     </h3>
-    <div style="border:1px solid rgba(255,107,107,0.12);border-radius:14px;overflow:hidden">${rows}</div>
+    <p style="font-size:13px;color:#6B4423;margin:-12px 0 16px">Start with these ${top.length} — they matter most for your profile.</p>
+    <div style="border:1px solid rgba(255,107,107,0.12);border-radius:14px;overflow:hidden">
+      ${top.map(s => row(s, true)).join('')}
+      ${restHtml}
+    </div>
   </div>`;
 
   const vaccinesSection = document.querySelector('.vaccines-section:not(#screeningsSection)');
   if (vaccinesSection) vaccinesSection.insertAdjacentHTML('afterend', html);
+}
+
+function toggleMoreScreenings(btn) {
+  const more = document.getElementById('moreScreenings');
+  const open = more.style.display !== 'none';
+  more.style.display = open ? 'none' : '';
+  btn.innerHTML = open ? `Show ${more.children.length} more checks ▾` : 'Show less ▴';
 }
 
 // ===== DOCTOR OFFER (shown after results) =====
@@ -328,7 +338,7 @@ function renderDoctorOffer(result) {
       <h3 style="font-size:19px;font-weight:800;color:#1e293b;margin:0">Talk to a Doctor About Your Results</h3>
     </div>
     <p style="font-size:14px;color:#64748b;margin:0 0 22px;line-height:1.6">
-      Your AI doctor already knows your <strong>${riskLevel} risk</strong> profile and
+      Your AI doctor already knows your <strong>${riskLevel}</strong> profile and
       your ${result.vaccines.length} recommended vaccines.
       Start a live video consultation — no need to repeat yourself.
     </p>
@@ -563,18 +573,30 @@ function renderVaccines(vaccines) {
   }
 
   if (others.length > 0) {
+    // Collapsed by default — most people only need to act on the priority list
     const section = document.createElement('div');
     section.className = 'vr-section';
     section.innerHTML = `
-      <div class="vr-section-header vr-section-other">
+      <div class="vr-section-header vr-section-other" style="cursor:pointer;border-radius:10px"
+           onclick="toggleOtherVaccines(this)">
         <span class="vr-section-dot vr-dot-other"></span>
         OTHER RECOMMENDED VACCINES
         <span class="vr-section-count">${others.length}</span>
+        <svg class="vr-other-arrow" style="margin-left:8px;transition:transform .25s" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
       </div>
-      <div class="vr-rows">${buildRows(others)}</div>
+      <div class="vr-rows" style="display:none">${buildRows(others)}</div>
     `;
     grid.appendChild(section);
   }
+}
+
+function toggleOtherVaccines(header) {
+  const rows = header.nextElementSibling;
+  const arrow = header.querySelector('.vr-other-arrow');
+  const open = rows.style.display !== 'none';
+  rows.style.display = open ? 'none' : '';
+  header.style.borderRadius = open ? '10px' : '10px 10px 0 0';
+  if (arrow) arrow.style.transform = open ? '' : 'rotate(180deg)';
 }
 
 function toggleVrExpand(expandId, rowMain) {
