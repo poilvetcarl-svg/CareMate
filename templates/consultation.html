@@ -683,7 +683,7 @@
       const level  = risk.prevention_label || risk.level || '';
       const color  = pScore >= 63 ? '#2ed573' : pScore >= 36 ? '#ffa502' : '#ff4757';
 
-      document.getElementById('rfScore').textContent  = pScore + '/100';
+      document.getElementById('rfScore').textContent  = pScore;
       document.getElementById('rfScore').style.color  = color;
       document.getElementById('rfLevel').textContent  = level;
       document.getElementById('rfLevel').style.color  = color;
