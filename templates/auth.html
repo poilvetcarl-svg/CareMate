@@ -77,6 +77,9 @@
       <div class="form-row">
         <label>Password</label>
         <input type="password" name="password" placeholder="••••••••" required />
+        <div style="text-align:right;margin-top:6px">
+          <a href="/forgot-password" style="font-size:12.5px;color:var(--accent);font-weight:600;text-decoration:none">Forgot password?</a>
+        </div>
       </div>
       <button type="submit" class="auth-btn">Sign In →</button>
     </form>
@@ -85,6 +88,39 @@
     <div style="text-align:center">
       <a href="/corporate/login" style="font-size:13px;color:var(--accent);font-weight:700;text-decoration:none">🏢 Sign in as a Company / HR Admin</a>
     </div>
+
+    {% elif mode == 'forgot' %}
+    <!-- ── FORGOT PASSWORD ── -->
+    <div class="auth-title">Reset your password</div>
+    <div class="auth-sub">Enter your email and we'll send you a link to choose a new password.</div>
+    <form method="POST" action="/forgot-password">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-row">
+        <label>Email address</label>
+        <input type="email" name="email" placeholder="you@example.com" required autofocus />
+      </div>
+      <button type="submit" class="auth-btn">Send Reset Link →</button>
+    </form>
+    <div style="text-align:center;margin-top:18px">
+      <a href="/login" style="font-size:13px;color:var(--accent);font-weight:700;text-decoration:none">← Back to sign in</a>
+    </div>
+
+    {% elif mode == 'reset' %}
+    <!-- ── CHOOSE NEW PASSWORD ── -->
+    <div class="auth-title">Choose a new password</div>
+    <div class="auth-sub">Minimum 8 characters. You'll be signed in with it from now on.</div>
+    <form method="POST" action="/reset-password/{{ reset_token }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-row">
+        <label>New password</label>
+        <input type="password" name="password" placeholder="••••••••" minlength="8" required autofocus />
+      </div>
+      <div class="form-row">
+        <label>Confirm new password</label>
+        <input type="password" name="confirm_password" placeholder="••••••••" minlength="8" required />
+      </div>
+      <button type="submit" class="auth-btn">Update Password →</button>
+    </form>
 
     {% else %}
     <!-- ── REGISTER ── -->

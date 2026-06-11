@@ -34,8 +34,8 @@
 <!-- ── HERO ── -->
 <div class="clinics-hero">
   <div class="clinics-hero-inner">
-    <h1 class="clinics-title">Find a Vaccination Clinic</h1>
-    <p class="clinics-subtitle">{{ clinics|length }} partner clinics across Jakarta. Book instantly, get reminded automatically.</p>
+    <h1 class="clinics-title">Get Vaccinated, Your Way</h1>
+    <p class="clinics-subtitle">Choose how you'd like to receive your vaccination.</p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in messages %}
@@ -43,8 +43,23 @@
       {% endfor %}
     {% endwith %}
 
-    <div class="clinics-filters">
-      <input type="text" class="filter-input" id="searchInput" placeholder="🔍  Search clinic name or network..." oninput="filterClinics()" />
+    <!-- MODE CHOOSER -->
+    <div class="vax-mode-chooser" id="modeChooser">
+      <button class="vax-mode-card" onclick="chooseMode('clinic')">
+        <span class="vax-mode-title">Visit a Vaccination Point</span>
+        <span class="vax-mode-desc">See hospitals and clinics around you, sorted by distance. Book a visit or go straight to their website.</span>
+        <span class="vax-mode-cta">Find clinics near me →</span>
+      </button>
+      <button class="vax-mode-card" onclick="chooseMode('home')">
+        <span class="vax-mode-title">Home Vaccination</span>
+        <span class="vax-mode-desc">A certified nurse or doctor comes to you. Ideal for families, elderly patients, or busy schedules.</span>
+        <span class="vax-mode-cta">See home services →</span>
+      </button>
+    </div>
+
+    <div class="clinics-filters hidden" id="clinicsFilters">
+      <button class="filter-input" id="modeSwitchBtn" onclick="resetMode()" style="max-width:200px;cursor:pointer;font-weight:700;color:var(--coral)">← Change mode</button>
+      <input type="text" class="filter-input" id="searchInput" placeholder="Search clinic name or network..." oninput="filterClinics()" />
       <select class="filter-input" id="vaccineFilter" onchange="filterClinics()" style="max-width:220px">
         <option value="">All vaccines</option>
         {% for key, vac in vaccines.items() %}
@@ -52,6 +67,7 @@
         {% endfor %}
       </select>
     </div>
+    <p class="clinics-subtitle hidden" id="geoStatus" style="margin-top:10px;font-size:13px"></p>
   </div>
 </div>
 
@@ -59,14 +75,18 @@
 <div class="clinics-grid" id="clinicsGrid">
   {% for clinic in clinics %}
   {% set voffered = clinic.vaccines_offered | from_json %}
-  <div class="clinic-card" data-name="{{ clinic.name }} {{ clinic.branch }} {{ clinic.network }}" data-vaccines="{{ clinic.vaccines_offered }}">
+  <div class="clinic-card" data-name="{{ clinic.name }} {{ clinic.branch }} {{ clinic.network }}" data-vaccines="{{ clinic.vaccines_offered }}"
+       data-home="{{ 'true' if clinic.home_service else 'false' }}" data-lat="{{ clinic.latitude }}" data-lng="{{ clinic.longitude }}" style="display:none">
     <div class="clinic-card-top">
       <div class="clinic-logo">{{ clinic.logo or '🏥' }}</div>
       <div style="flex:1">
         <div class="clinic-name">{{ clinic.name }}</div>
         <div class="clinic-branch">{{ clinic.branch }}</div>
       </div>
-      <div class="clinic-rating">⭐ {{ clinic.rating }}</div>
+      <div style="text-align:right">
+        <div class="clinic-rating">⭐ {{ clinic.rating }}</div>
+        <div class="clinic-distance" style="font-size:11px;font-weight:700;color:var(--coral);margin-top:4px"></div>
+      </div>
     </div>
 
     <div class="clinic-meta">
@@ -86,12 +106,20 @@
     </div>
 
     <div class="clinic-actions">
-      {% if current_user.is_authenticated %}
-      <button class="btn-book" onclick="openBookingModal({{ clinic.id }}, '{{ clinic.name }} {{ clinic.branch }}')">📅 Book Appointment</button>
+      {% if clinic.home_service %}
+      <a class="btn-book" href="{{ clinic.website }}" target="_blank" rel="noopener">Book on {{ clinic.network }} →</a>
+      <a class="btn-directions" href="https://wa.me/{{ clinic.phone | replace('+','') }}" target="_blank" rel="noopener">WhatsApp</a>
       {% else %}
-      <a href="/login" class="btn-book">📅 Sign in to Book</a>
+      {% if current_user.is_authenticated %}
+      <button class="btn-book" onclick="openBookingModal({{ clinic.id }}, '{{ clinic.name }} {{ clinic.branch }}')">Book Appointment</button>
+      {% else %}
+      <a href="/login" class="btn-book">Sign in to Book</a>
       {% endif %}
-      <a class="btn-directions" href="https://www.google.com/maps/search/?api=1&query={{ clinic.latitude }},{{ clinic.longitude }}" target="_blank" rel="noopener">🗺 Map</a>
+      {% if clinic.website %}
+      <a class="btn-directions" href="{{ clinic.website }}" target="_blank" rel="noopener">Website</a>
+      {% endif %}
+      <a class="btn-directions" href="https://www.google.com/maps/search/?api=1&query={{ clinic.latitude }},{{ clinic.longitude }}" target="_blank" rel="noopener">Map</a>
+      {% endif %}
     </div>
   </div>
   {% endfor %}
@@ -187,14 +215,77 @@ document.getElementById('bookingModal').addEventListener('click', function(e) {
   if (e.target === this) closeBookingModal();
 });
 
+// ── MODE: 'clinic' (visit a point) or 'home' (at-home service) ──
+let currentMode = null;
+
+function chooseMode(mode) {
+  currentMode = mode;
+  document.getElementById('modeChooser').classList.add('hidden');
+  document.getElementById('clinicsFilters').classList.remove('hidden');
+  document.querySelector('.clinics-title').textContent =
+    mode === 'home' ? 'Home Vaccination Services' : 'Vaccination Points Near You';
+  document.querySelector('.clinics-subtitle').textContent =
+    mode === 'home'
+      ? 'These providers send a certified nurse or doctor to your home. Book directly on their website.'
+      : 'Hospitals and clinics offering vaccination. Allow location access to sort by distance.';
+  filterClinics();
+  if (mode === 'clinic') requestLocation();
+}
+
+function resetMode() {
+  currentMode = null;
+  document.getElementById('modeChooser').classList.remove('hidden');
+  document.getElementById('clinicsFilters').classList.add('hidden');
+  document.getElementById('geoStatus').classList.add('hidden');
+  document.querySelector('.clinics-title').textContent = 'Get Vaccinated, Your Way';
+  document.querySelector('.clinics-subtitle').textContent = "Choose how you'd like to receive your vaccination.";
+  document.querySelectorAll('.clinic-card').forEach(c => c.style.display = 'none');
+}
+
 function filterClinics() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
+  const q = (document.getElementById('searchInput').value || '').toLowerCase();
   const vax = document.getElementById('vaccineFilter').value;
   document.querySelectorAll('.clinic-card').forEach(card => {
+    const modeMatch = currentMode && (card.dataset.home === (currentMode === 'home' ? 'true' : 'false'));
     const nameMatch = !q || card.dataset.name.toLowerCase().includes(q);
     const vaxMatch  = !vax || (card.dataset.vaccines && card.dataset.vaccines.includes(vax));
-    card.style.display = (nameMatch && vaxMatch) ? '' : 'none';
+    card.style.display = (modeMatch && nameMatch && vaxMatch) ? '' : 'none';
   });
+}
+
+// ── GEOLOCATION: sort visitable clinics by distance ──
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371, toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function requestLocation() {
+  const status = document.getElementById('geoStatus');
+  status.classList.remove('hidden');
+  if (!navigator.geolocation) { status.textContent = 'Location not supported by this browser.'; return; }
+  status.textContent = 'Locating you to sort clinics by distance…';
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: uLat, longitude: uLng } = pos.coords;
+    const grid = document.getElementById('clinicsGrid');
+    const cards = [...document.querySelectorAll('.clinic-card')];
+    cards.forEach(card => {
+      const lat = parseFloat(card.dataset.lat), lng = parseFloat(card.dataset.lng);
+      if (isNaN(lat)) return;
+      const km = haversineKm(uLat, uLng, lat, lng);
+      card.dataset.distance = km;
+      const lbl = card.querySelector('.clinic-distance');
+      if (lbl && card.dataset.home === 'false') lbl.textContent = km < 1 ? Math.round(km*1000) + ' m away' : km.toFixed(1) + ' km away';
+    });
+    cards.sort((a, b) => (parseFloat(a.dataset.distance) || 1e9) - (parseFloat(b.dataset.distance) || 1e9))
+         .forEach(c => grid.appendChild(c));
+    status.textContent = 'Sorted by distance from your location.';
+    setTimeout(() => status.classList.add('hidden'), 4000);
+  }, () => {
+    status.textContent = 'Location access denied — showing all clinics unsorted.';
+    setTimeout(() => status.classList.add('hidden'), 4000);
+  }, { timeout: 10000 });
 }
 </script>
 </body>

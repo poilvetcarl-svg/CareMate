@@ -160,6 +160,8 @@ class Clinic(db.Model):
     rating           = db.Column(db.Float, default=4.5)
     logo             = db.Column(db.String(20))   # emoji or brand code
     network          = db.Column(db.String(60))   # e.g. "Prodia", "Kimia Farma"
+    website          = db.Column(db.String(200))  # official site, opened directly from the card
+    home_service     = db.Column(db.Boolean, default=False)  # offers at-home vaccination
 
     bookings = db.relationship('Booking', backref='clinic', lazy=True)
 
@@ -185,48 +187,70 @@ SEED_CLINICS = [
          city="Jakarta", phone="+62215210476", latitude=-6.2088, longitude=106.8228,
          vaccines_offered='["influenza","pneumococcal","zoster","rsv","hepatitis_b","hepatitis_a","typhoid","covid19","hpv","tdap","meningococcal"]',
          price_range="Rp 150.000 – 850.000", opening_hours="Sen–Sab 07:00–21:00", rating=4.7,
-         logo="🔬", network="Prodia"),
+         logo="🔬", network="Prodia", website="https://www.prodia.co.id"),
     dict(name="Prodia", branch="Kemang", address="Jl. Kemang Raya No. 2, Jakarta Selatan",
          city="Jakarta", phone="+62217196619", latitude=-6.2608, longitude=106.8144,
          vaccines_offered='["influenza","pneumococcal","zoster","rsv","hepatitis_b","hepatitis_a","typhoid","covid19","hpv","tdap"]',
          price_range="Rp 150.000 – 850.000", opening_hours="Sen–Sab 07:00–20:00", rating=4.6,
-         logo="🔬", network="Prodia"),
+         logo="🔬", network="Prodia", website="https://www.prodia.co.id"),
     dict(name="Kimia Farma", branch="Melawai", address="Jl. Melawai III No.5, Kebayoran Baru, Jakarta Selatan",
          city="Jakarta", phone="+62217203131", latitude=-6.2434, longitude=106.7974,
          vaccines_offered='["influenza","hepatitis_b","typhoid","covid19","tdap","mmr","varicella"]',
          price_range="Rp 85.000 – 650.000", opening_hours="Sen–Min 08:00–22:00", rating=4.3,
-         logo="💊", network="Kimia Farma"),
+         logo="💊", network="Kimia Farma", website="https://www.kimiafarma.co.id"),
     dict(name="Kimia Farma", branch="Tebet", address="Jl. Dr. Saharjo No.45, Tebet, Jakarta Selatan",
          city="Jakarta", phone="+62218290234", latitude=-6.2408, longitude=106.8510,
          vaccines_offered='["influenza","hepatitis_b","typhoid","covid19","tdap","mmr"]',
          price_range="Rp 85.000 – 650.000", opening_hours="Sen–Min 08:00–21:00", rating=4.2,
-         logo="💊", network="Kimia Farma"),
+         logo="💊", network="Kimia Farma", website="https://www.kimiafarma.co.id"),
     dict(name="RS Pondok Indah", branch="Pondok Indah", address="Jl. Metro Duta Kav. UE, Pondok Indah, Jakarta Selatan",
          city="Jakarta", phone="+62217657525", latitude=-6.2847, longitude=106.7889,
          vaccines_offered='["influenza","pneumococcal","zoster","rsv","hepatitis_b","hepatitis_a","typhoid","covid19","hpv","tdap","meningococcal","yellow_fever","japanese_encephalitis"]',
          price_range="Rp 250.000 – 1.500.000", opening_hours="Sen–Min 07:00–21:00", rating=4.8,
-         logo="🏥", network="RSPI"),
+         logo="🏥", network="RSPI", website="https://www.rspondokindah.co.id"),
     dict(name="Siloam Hospitals", branch="Semanggi", address="Jl. Jend. Sudirman Kav. 76, Jakarta Selatan",
          city="Jakarta", phone="+622129662000", latitude=-6.2237, longitude=106.8097,
          vaccines_offered='["influenza","pneumococcal","zoster","rsv","hepatitis_b","hepatitis_a","typhoid","covid19","hpv","tdap","meningococcal","yellow_fever"]',
          price_range="Rp 200.000 – 1.200.000", opening_hours="Sen–Min 07:00–20:00", rating=4.7,
-         logo="🏥", network="Siloam"),
+         logo="🏥", network="Siloam", website="https://www.siloamhospitals.com"),
     dict(name="Pramita Lab", branch="Kuningan", address="Jl. HR Rasuna Said Kav. C11-14, Kuningan, Jakarta Selatan",
          city="Jakarta", phone="+622152963939", latitude=-6.2271, longitude=106.8375,
          vaccines_offered='["influenza","hepatitis_b","hepatitis_a","typhoid","covid19","tdap","mmr","varicella"]',
          price_range="Rp 100.000 – 750.000", opening_hours="Sen–Sab 07:00–20:00", rating=4.4,
-         logo="🧪", network="Pramita"),
+         logo="🧪", network="Pramita", website="https://pramita.co.id"),
     dict(name="Klinik Vaksin Satgas PAPDI", branch="FKUI", address="Jl. Diponegoro No.71, Kenari, Jakarta Pusat",
          city="Jakarta", phone="+622131930216", latitude=-6.1960, longitude=106.8450,
          vaccines_offered='["influenza","pneumococcal","zoster","rsv","hepatitis_b","hepatitis_a","typhoid","covid19","hpv","tdap","meningococcal"]',
          price_range="Rp 120.000 – 900.000", opening_hours="Sen–Jum 08:00–16:00", rating=4.9,
-         logo="⚕️", network="PAPDI"),
+         logo="⚕️", network="PAPDI", website="https://www.papdi.or.id"),
+    # ── At-home vaccination providers (verified real services, Jabodetabek) ──
+    dict(name="Halodoc Homecare", branch="Jabodetabek-wide", address="Service area: Jakarta, Bogor, Depok, Tangerang, Bekasi",
+         city="Jakarta", phone="+628880999226", latitude=-6.2088, longitude=106.8456,
+         vaccines_offered='["influenza","pneumococcal","zoster","hepatitis_b","hepatitis_a","typhoid","hpv","tdap","mmr","varicella"]',
+         price_range="Rp 300.000 – 2.500.000", opening_hours="Sen–Min 06:00–22:00", rating=4.8,
+         logo="🏠", network="Halodoc", website="https://www.halodoc.com/kesehatan/layanan-vaksinasi-halodoc", home_service=True),
+    dict(name="Kavacare", branch="Home Vaccination", address="Service area: Jabodetabek",
+         city="Jakarta", phone="+628111446777", latitude=-6.2297, longitude=106.8253,
+         vaccines_offered='["influenza","pneumococcal","hepatitis_b","hepatitis_a","typhoid","tdap","mmr","varicella"]',
+         price_range="Rp 350.000 – 2.000.000", opening_hours="Sen–Min 07:00–21:00", rating=4.7,
+         logo="🏠", network="Kavacare", website="https://www.kavacare.id/vaksinasi-di-rumah/", home_service=True),
+    dict(name="Vaxine Care", branch="Home Service Jakarta", address="Service area: Jakarta & surroundings",
+         city="Jakarta", phone="+6281388883993", latitude=-6.2441, longitude=106.8006,
+         vaccines_offered='["influenza","pneumococcal","zoster","hepatitis_b","hepatitis_a","typhoid","hpv","tdap"]',
+         price_range="Rp 250.000 – 1.800.000", opening_hours="Sen–Min 08:00–20:00", rating=4.6,
+         logo="🏠", network="Vaxine Care", website="https://vaxinecare.com", home_service=True),
 ]
 
 def seed_clinics():
-    """Call once to populate clinic table."""
-    if Clinic.query.count() == 0:
-        for c in SEED_CLINICS:
+    """Upsert seed data: refresh existing rows by (name, branch), insert new ones."""
+    changed = False
+    for c in SEED_CLINICS:
+        row = Clinic.query.filter_by(name=c["name"], branch=c["branch"]).first()
+        if row:
+            for k, v in c.items():
+                setattr(row, k, v)
+        else:
             db.session.add(Clinic(**c))
+        changed = True
+    if changed:
         db.session.commit()
-        print(f"[DB] Seeded {len(SEED_CLINICS)} clinics.")

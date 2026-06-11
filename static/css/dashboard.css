@@ -864,3 +864,25 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── VACCINATION MODE CHOOSER ── */
+.vax-mode-chooser {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  max-width: 720px; margin: 28px auto 0;
+}
+.vax-mode-card {
+  display: flex; flex-direction: column; gap: 8px; text-align: left;
+  background: white; border: 2px solid rgba(255,107,107,0.18); border-radius: 20px;
+  padding: 26px 24px; cursor: pointer; font-family: inherit;
+  transition: all 0.25s ease;
+}
+.vax-mode-card:hover {
+  border-color: var(--coral); transform: translateY(-3px);
+  box-shadow: 0 14px 36px rgba(255,107,107,0.16);
+}
+.vax-mode-title { font-size: 18px; font-weight: 800; color: var(--text-primary); }
+.vax-mode-desc  { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+.vax-mode-cta   { font-size: 14px; font-weight: 700; color: var(--coral); margin-top: 6px; }
+@media (max-width: 640px) {
+  .vax-mode-chooser { grid-template-columns: 1fr; }
+}

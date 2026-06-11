@@ -102,6 +102,15 @@ def _gen_code(n=8):
 # Initialise DB + seed clinics on first run
 with app.app_context():
     db.create_all()
+    # Lightweight migration: add clinic columns introduced after the first schema
+    from sqlalchemy import text as _sql_text
+    for _ddl in ("ALTER TABLE clinic ADD COLUMN website VARCHAR(200)",
+                 "ALTER TABLE clinic ADD COLUMN home_service BOOLEAN DEFAULT 0"):
+        try:
+            db.session.execute(_sql_text(_ddl))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()   # column already exists
     seed_clinics()
 
 _api_key = os.environ.get("OPENAI_API_KEY", "")
@@ -812,6 +821,79 @@ def login():
             return redirect(next_page or url_for("dashboard"))
         flash("Invalid email or password.", "error")
     return render_template("auth.html", mode="login", page_title="Sign In")
+
+
+# ── PASSWORD RESET ──
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+
+def _reset_serializer():
+    return URLSafeTimedSerializer(app.secret_key, salt="password-reset")
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        user = User.query.filter_by(email=email).first()
+        if user:
+            token = _reset_serializer().dumps(user.email)
+            reset_url = url_for("reset_password", token=token, _external=True)
+            sent = False
+            if app.config.get("MAIL_USERNAME"):
+                try:
+                    msg = MailMessage(
+                        subject="Reset your CareMate password",
+                        recipients=[user.email],
+                        body=(f"Hi {user.name or 'there'},\n\n"
+                              f"Someone requested a password reset for your CareMate account. "
+                              f"Use the link below within 1 hour:\n\n{reset_url}\n\n"
+                              f"If this wasn't you, you can safely ignore this email."))
+                    mail.send(msg)
+                    sent = True
+                except Exception:
+                    logger.warning("Reset email failed for %s", email, exc_info=True)
+            if not sent:
+                # No SMTP configured — surface the link in server logs for the operator
+                logger.info("Password reset link for %s: %s", email, reset_url)
+        # Same message whether or not the account exists — prevents email enumeration
+        flash("If an account exists with that email, we've sent a password reset link.", "success")
+        return redirect(url_for("login"))
+    return render_template("auth.html", mode="forgot", page_title="Reset Password")
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
+    try:
+        email = _reset_serializer().loads(token, max_age=3600)
+    except SignatureExpired:
+        flash("That reset link has expired — please request a new one.", "error")
+        return redirect(url_for("forgot_password"))
+    except BadSignature:
+        flash("Invalid reset link.", "error")
+        return redirect(url_for("forgot_password"))
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        flash("Invalid reset link.", "error")
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm  = request.form.get("confirm_password", "")
+        if len(password) < 8:
+            flash("Password must be at least 8 characters.", "error")
+        elif password != confirm:
+            flash("Passwords don't match.", "error")
+        else:
+            user.set_password(password)
+            db.session.commit()
+            flash("Password updated — you can sign in now.", "success")
+            return redirect(url_for("login"))
+    return render_template("auth.html", mode="reset", page_title="Choose New Password", reset_token=token)
 
 
 @app.route("/register", methods=["GET", "POST"])
