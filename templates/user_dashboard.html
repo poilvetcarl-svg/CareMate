@@ -186,6 +186,82 @@
         {% endif %}
       </div>
 
+      <!-- LAB RESULTS — photo upload or manual entry -->
+      <div class="dash-card" style="margin-bottom:20px">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Lab Results</div>
+          <div style="display:flex;gap:8px">
+            <form method="POST" action="/labs/upload" enctype="multipart/form-data" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="file" name="lab_photo" id="labPhotoInput" accept="image/jpeg,image/png,image/webp"
+                     style="display:none" onchange="this.form.submit()">
+              <button type="button" class="dash-action-btn" onclick="document.getElementById('labPhotoInput').click()">📷 Upload Photo</button>
+            </form>
+            <button class="dash-action-btn" onclick="document.getElementById('addLabForm').classList.toggle('hidden')">+ Add Manually</button>
+          </div>
+        </div>
+
+        <form id="addLabForm" class="hidden" method="POST" action="/labs/add"
+              style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div style="display:grid;grid-template-columns:1.4fr 0.8fr 0.9fr auto;gap:10px;align-items:end">
+            <div class="form-row" style="margin:0">
+              <label>Test</label>
+              <select name="test_key" onchange="syncLabUnit(this)">
+                <option value="">Other / custom…</option>
+                {% for key, ref in lab_reference.items() %}
+                <option value="{{ key }}" data-unit="{{ ref.unit }}">{{ ref.name }}</option>
+                {% endfor %}
+              </select>
+              <input type="text" name="test_name" id="labCustomName" placeholder="Test name" style="margin-top:6px" />
+            </div>
+            <div class="form-row" style="margin:0">
+              <label>Value</label>
+              <input type="number" step="any" name="value" required placeholder="e.g. 5.4" />
+              <input type="text" name="unit" id="labUnit" placeholder="unit" style="margin-top:6px" />
+            </div>
+            <div class="form-row" style="margin:0">
+              <label>Date taken</label>
+              <input type="date" name="date_taken" max="{{ today.isoformat() }}" value="{{ today.isoformat() }}" />
+            </div>
+            <button type="submit" class="dash-action-btn" style="height:42px">Save</button>
+          </div>
+        </form>
+
+        {% if lab_results %}
+        <div>
+          {% for lab in lab_results %}
+          <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div style="flex:1;min-width:0">
+              <span style="font-size:13.5px;font-weight:700">{{ lab.test_name }}</span>
+              <span style="font-size:13px;color:var(--text-muted);margin-left:6px">{{ lab.value }} {{ lab.unit }}</span>
+            </div>
+            {% if lab.flag == 'high' %}
+            <span style="font-size:10.5px;font-weight:700;padding:2px 10px;border-radius:20px;background:rgba(239,68,68,0.1);color:#dc2626">HIGH</span>
+            {% elif lab.flag == 'low' %}
+            <span style="font-size:10.5px;font-weight:700;padding:2px 10px;border-radius:20px;background:rgba(245,158,11,0.12);color:#d97706">LOW</span>
+            {% elif lab.flag == 'normal' %}
+            <span style="font-size:10.5px;font-weight:700;padding:2px 10px;border-radius:20px;background:rgba(16,185,129,0.1);color:#059669">NORMAL</span>
+            {% endif %}
+            <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">{{ lab.date_taken.strftime('%d %b %Y') }}{% if lab.source == 'photo' %} · 📷{% endif %}</span>
+            <form method="POST" action="/labs/delete/{{ lab.id }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" style="background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer" title="Delete">✕</button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:10px">
+          Flags compare against standard adult reference ranges — they are not a diagnosis. Discuss abnormal values with your doctor.
+        </p>
+        {% else %}
+        <div class="dash-empty" style="padding:20px 0">
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px">Track your lab values</div>
+          <div style="font-size:13px;color:var(--text-muted)">Snap a photo of any lab report — we'll read the values — or type them in. Photos are processed in memory and never stored.</div>
+        </div>
+        {% endif %}
+      </div>
+
       <div class="dash-card">
         <div class="dash-card-header">
           <div class="dash-card-title">💉 Vaccination History</div>
@@ -379,6 +455,20 @@
 </div>
 
 <script>
+function syncLabUnit(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const unitEl = document.getElementById('labUnit');
+  const nameEl = document.getElementById('labCustomName');
+  if (opt.value) {
+    unitEl.value = opt.dataset.unit || '';
+    nameEl.style.display = 'none';
+    nameEl.required = false;
+  } else {
+    unitEl.value = '';
+    nameEl.style.display = '';
+    nameEl.required = true;
+  }
+}
 function openLogModal() { document.getElementById('logModal').classList.remove('hidden'); }
 function closeLogModal() { document.getElementById('logModal').classList.add('hidden'); }
 function updateVaccineName(sel) {

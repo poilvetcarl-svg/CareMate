@@ -1,0 +1,21 @@
+{
+  "note": "Standard adult reference ranges for common panels. Flags are informational only — never a diagnosis.",
+  "tests": {
+    "hba1c":            { "name": "HbA1c",               "unit": "%",      "low": 4.0,  "high": 5.7,  "aliases": ["a1c", "hemoglobin a1c", "glycated hemoglobin"] },
+    "fasting_glucose":  { "name": "Fasting Glucose",     "unit": "mg/dL",  "low": 70,   "high": 100,  "aliases": ["glucose", "gula darah puasa", "glukosa puasa", "glukosa", "gdp", "blood sugar", "fasting blood glucose"] },
+    "total_cholesterol":{ "name": "Total Cholesterol",   "unit": "mg/dL",  "low": 0,    "high": 200,  "aliases": ["cholesterol", "kolesterol total"] },
+    "ldl":              { "name": "LDL Cholesterol",     "unit": "mg/dL",  "low": 0,    "high": 130,  "aliases": ["ldl-c", "kolesterol ldl"] },
+    "hdl":              { "name": "HDL Cholesterol",     "unit": "mg/dL",  "low": 40,   "high": 100,  "aliases": ["hdl-c", "kolesterol hdl"] },
+    "triglycerides":    { "name": "Triglycerides",       "unit": "mg/dL",  "low": 0,    "high": 150,  "aliases": ["trigliserida"] },
+    "systolic_bp":      { "name": "Blood Pressure (Systolic)",  "unit": "mmHg", "low": 90, "high": 120, "aliases": ["systolic", "sistolik"] },
+    "diastolic_bp":     { "name": "Blood Pressure (Diastolic)", "unit": "mmHg", "low": 60, "high": 80,  "aliases": ["diastolic", "diastolik"] },
+    "creatinine":       { "name": "Creatinine",          "unit": "mg/dL",  "low": 0.6,  "high": 1.3,  "aliases": ["kreatinin"] },
+    "egfr":             { "name": "eGFR",                "unit": "mL/min", "low": 90,   "high": 200,  "aliases": ["gfr"] },
+    "uric_acid":        { "name": "Uric Acid",           "unit": "mg/dL",  "low": 2.5,  "high": 7.0,  "aliases": ["asam urat"] },
+    "alt":              { "name": "ALT (SGPT)",          "unit": "U/L",    "low": 0,    "high": 40,   "aliases": ["sgpt"] },
+    "ast":              { "name": "AST (SGOT)",          "unit": "U/L",    "low": 0,    "high": 40,   "aliases": ["sgot"] },
+    "hemoglobin":       { "name": "Hemoglobin",          "unit": "g/dL",   "low": 12.0, "high": 17.5, "aliases": ["hb", "haemoglobin"] },
+    "vitamin_d":        { "name": "Vitamin D (25-OH)",   "unit": "ng/mL",  "low": 30,   "high": 100,  "aliases": ["25-oh vitamin d", "vit d"] },
+    "tsh":              { "name": "TSH",                 "unit": "µIU/mL", "low": 0.4,  "high": 4.5,  "aliases": ["thyroid stimulating hormone"] }
+  }
+}

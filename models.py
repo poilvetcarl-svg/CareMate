@@ -96,6 +96,22 @@ class Child(db.Model):
         return f"{m // 12} yr"
 
 
+# ── LAB RESULT (photo-extracted or manually entered) ─────────────────────────
+class LabResult(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    test_key   = db.Column(db.String(50))            # matches lab_reference.json, or None for custom
+    test_name  = db.Column(db.String(120), nullable=False)
+    value      = db.Column(db.Float, nullable=False)
+    unit       = db.Column(db.String(30))
+    flag       = db.Column(db.String(10), default='unknown')   # normal | high | low | unknown
+    date_taken = db.Column(db.Date, default=date.today)
+    source     = db.Column(db.String(10), default='manual')    # manual | photo
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('lab_results', lazy=True, cascade='all, delete-orphan'))
+
+
 # ── VACCINATION RECORD ────────────────────────────────────────────────────────
 class VaccinationRecord(db.Model):
     id             = db.Column(db.Integer, primary_key=True)

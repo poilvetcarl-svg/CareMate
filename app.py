@@ -76,7 +76,7 @@ if _db_url.startswith("postgres://"):
 app.config["SQLALCHEMY_DATABASE_URI"] = _db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, seed_clinics
+from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, seed_clinics
 db.init_app(app)
 
 from flask_mail import Mail, Message as MailMessage
@@ -1027,6 +1027,8 @@ def dashboard():
 
     children = Child.query.filter_by(user_id=current_user.id).order_by(Child.date_of_birth.desc()).all()
     family = [{"child": c, "schedule": compute_child_schedule(c)} for c in children]
+    lab_results = LabResult.query.filter_by(user_id=current_user.id)\
+        .order_by(LabResult.date_taken.desc(), LabResult.created_at.desc()).all()
 
     return render_template(
         "user_dashboard.html",
@@ -1037,8 +1039,146 @@ def dashboard():
         bookings=bookings,
         today=today,
         vaccines=VACCINE_DATA["vaccines"],
-        family=family
+        family=family,
+        lab_results=lab_results,
+        lab_reference=LAB_REFERENCE
     )
+
+
+# ══════════════════════════════════════════════════════════
+#  LAB RESULTS — photo extraction + manual entry
+# ══════════════════════════════════════════════════════════
+
+with open(os.path.join(os.path.dirname(__file__), "data", "lab_reference.json")) as _f:
+    LAB_REFERENCE = json.load(_f)["tests"]
+
+
+def match_lab_test(name):
+    """Match a free-text test name to a known reference key, or None."""
+    n = name.strip().lower()
+    for key, ref in LAB_REFERENCE.items():
+        if n == key or n == ref["name"].lower() or n in [a.lower() for a in ref.get("aliases", [])]:
+            return key
+    return None
+
+
+def flag_lab_value(test_key, value):
+    """normal | high | low | unknown — informational only, never a diagnosis."""
+    ref = LAB_REFERENCE.get(test_key)
+    if not ref:
+        return "unknown"
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return "unknown"
+    if v < ref["low"]:
+        return "low"
+    if v > ref["high"]:
+        return "high"
+    return "normal"
+
+
+@app.route("/labs/add", methods=["POST"])
+@login_required
+def add_lab_result():
+    test_name = request.form.get("test_name", "").strip()
+    try:
+        value = float(request.form.get("value", ""))
+    except ValueError:
+        flash("Please enter a numeric value.", "error")
+        return redirect(url_for("dashboard"))
+    date_s = request.form.get("date_taken", "")
+    try:
+        taken = datetime.strptime(date_s, "%Y-%m-%d").date() if date_s else date.today()
+    except ValueError:
+        taken = date.today()
+
+    key = request.form.get("test_key") or match_lab_test(test_name)
+    ref = LAB_REFERENCE.get(key)
+    db.session.add(LabResult(
+        user_id=current_user.id, test_key=key,
+        test_name=ref["name"] if ref else test_name,
+        value=value, unit=request.form.get("unit") or (ref["unit"] if ref else ""),
+        flag=flag_lab_value(key, value), date_taken=taken, source="manual"))
+    db.session.commit()
+    flash("Lab result saved.", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/labs/upload", methods=["POST"])
+@login_required
+def upload_lab_photo():
+    if not client:
+        flash("AI extraction needs an OpenAI key — you can still add results manually.", "error")
+        return redirect(url_for("dashboard"))
+    f = request.files.get("lab_photo")
+    if not f or not f.filename:
+        flash("Please choose a photo of your lab report.", "error")
+        return redirect(url_for("dashboard"))
+    ext = f.filename.rsplit(".", 1)[-1].lower()
+    if ext not in ("jpg", "jpeg", "png", "webp"):
+        flash("Please upload a JPG, PNG or WebP photo.", "error")
+        return redirect(url_for("dashboard"))
+
+    # Processed in memory only — the image itself is never stored
+    img_b64 = base64.b64encode(f.read()).decode()
+    mime = "image/png" if ext == "png" else ("image/webp" if ext == "webp" else "image/jpeg")
+
+    prompt = (
+        "This is a photo of a medical lab report. Extract every test result you can read. "
+        "Return ONLY a JSON array, no other text: "
+        '[{"name": "test name in English", "value": numeric value only, "unit": "unit as printed"}] '
+        "Skip reference ranges, dates and patient details. If a value is unreadable, skip it."
+    )
+    try:
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{img_b64}"}},
+            ]}],
+            max_tokens=900, temperature=0)
+        raw = resp.choices[0].message.content.strip()
+        raw = raw[raw.index("["):raw.rindex("]") + 1]   # tolerate stray prose/code fences
+        rows = json.loads(raw)
+    except Exception:
+        logger.warning("Lab photo extraction failed", exc_info=True)
+        flash("Couldn't read that photo — try a sharper, well-lit picture, or add values manually.", "error")
+        return redirect(url_for("dashboard"))
+
+    saved = 0
+    for r in rows[:25]:
+        try:
+            value = float(r["value"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        name = str(r.get("name", "")).strip()[:120]
+        if not name:
+            continue
+        key = match_lab_test(name)
+        ref = LAB_REFERENCE.get(key)
+        db.session.add(LabResult(
+            user_id=current_user.id, test_key=key,
+            test_name=ref["name"] if ref else name,
+            value=value, unit=str(r.get("unit", ""))[:30] or (ref["unit"] if ref else ""),
+            flag=flag_lab_value(key, value), source="photo"))
+        saved += 1
+    db.session.commit()
+    if saved:
+        flash(f"Read {saved} value(s) from your report. Review them below — and discuss anything flagged with your doctor.", "success")
+    else:
+        flash("No readable values found in that photo — try a clearer picture or add them manually.", "error")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/labs/delete/<int:lab_id>", methods=["POST"])
+@login_required
+def delete_lab_result(lab_id):
+    row = LabResult.query.filter_by(id=lab_id, user_id=current_user.id).first()
+    if row:
+        db.session.delete(row)
+        db.session.commit()
+    return redirect(url_for("dashboard"))
 
 
 # ══════════════════════════════════════════════════════════
