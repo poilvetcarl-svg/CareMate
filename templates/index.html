@@ -91,8 +91,8 @@
       <svg width="0" height="0" style="position:absolute">
         <defs>
           <linearGradient id="mockRingGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#FF6B6B"/>
-            <stop offset="100%" stop-color="#FF8E53"/>
+            <stop offset="0%" stop-color="#2ED573"/>
+            <stop offset="100%" stop-color="#63E6BE"/>
           </linearGradient>
         </defs>
       </svg>
@@ -106,8 +106,8 @@
           <circle class="ring-fill" cx="55" cy="55" r="46"/>
         </svg>
         <div class="ring-center">
-          <span class="ring-pct">68%</span>
-          <span class="ring-sub">Risk</span>
+          <span class="ring-pct">78</span>
+          <span class="ring-sub">/ 100 · Good</span>
         </div>
       </div>
       <div class="mock-vax-list">
@@ -561,37 +561,36 @@
       <p class="ai-summary-text" id="aiSummaryText">Analyzing your health profile...</p>
     </div>
 
-    <!-- Risk Score -->
+    <!-- Prevention Score -->
     <div class="risk-card">
       <div class="risk-header">
-        <h3>Your Risk Assessment</h3>
+        <h3>Your Prevention Score</h3>
         <span class="risk-badge" id="riskBadge">—</span>
       </div>
       <div class="risk-visual">
         <div class="risk-gauge-container">
           <svg class="risk-gauge" viewBox="0 0 220 145">
-            <defs>
-              <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style="stop-color:#2ED573"/>
-                <stop offset="50%" style="stop-color:#FFA502"/>
-                <stop offset="100%" style="stop-color:#FF4757"/>
-              </linearGradient>
-            </defs>
             <!-- Track -->
             <path d="M 15 115 A 95 95 0 0 1 205 115" fill="none" stroke="rgba(5,150,105,0.12)" stroke-width="14" stroke-linecap="round"/>
-            <!-- Animated arc -->
-            <path d="M 15 115 A 95 95 0 0 1 205 115" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round"
+            <!-- Animated arc — coloured by score level at render time -->
+            <path d="M 15 115 A 95 95 0 0 1 205 115" fill="none" stroke="#2ED573" stroke-width="14" stroke-linecap="round"
                   stroke-dasharray="298" stroke-dashoffset="298" id="gaugeArc" class="gauge-arc"/>
             <!-- Score text -->
-            <text x="110" y="92" text-anchor="middle" dominant-baseline="middle"
+            <text x="110" y="86" text-anchor="middle" dominant-baseline="middle"
                   font-size="42" font-weight="900" font-family="DM Sans, sans-serif"
-                  fill="#1A0A00" id="riskScore">0%</text>
-            <text x="110" y="124" text-anchor="middle"
+                  fill="#1A0A00" id="riskScore">0</text>
+            <text x="110" y="106" text-anchor="middle"
+                  font-size="12" font-weight="600" font-family="DM Sans, sans-serif"
+                  fill="#A07850">/ 100</text>
+            <text x="110" y="128" text-anchor="middle"
                   font-size="11" font-family="DM Sans, sans-serif"
-                  fill="#A07850" letter-spacing="1">RISK SCORE</text>
+                  fill="#A07850" letter-spacing="1">PREVENTION SCORE</text>
           </svg>
         </div>
-        <div class="risk-factors-list" id="riskFactorsList"></div>
+        <div>
+          <p style="font-size:12px;font-weight:700;color:#A07850;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">What's lowering your score</p>
+          <div class="risk-factors-list" id="riskFactorsList"></div>
+        </div>
       </div>
       <p class="risk-advice" id="riskAdvice"></p>
     </div>

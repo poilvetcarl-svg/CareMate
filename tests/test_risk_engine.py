@@ -50,6 +50,23 @@ class TestRiskLevels:
         assert with_db["score"] > without["score"]
 
 
+class TestPreventionScore:
+    def test_prevention_score_is_inverse_of_risk(self):
+        result = calculate_risk_score(make_profile(age=70, conditions=["diabetes"]))
+        assert result["prevention_score"] == 100 - result["percentage"]
+
+    def test_healthy_adult_scores_good(self):
+        result = calculate_risk_score(make_profile())
+        assert result["prevention_label"] == "Good"
+        assert result["prevention_score"] >= 63
+
+    def test_high_risk_profile_needs_attention(self):
+        result = calculate_risk_score(make_profile(
+            age=70, conditions=["diabetes"], vaccinated_recently="no"))
+        assert result["prevention_label"] == "Needs Attention"
+        assert result["prevention_score"] <= 35
+
+
 class TestRiskFactors:
     def test_age_bands(self):
         young = calculate_risk_score(make_profile(age=25))

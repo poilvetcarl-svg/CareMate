@@ -669,6 +669,15 @@ def calculate_risk_score(data):
         emoji = "🟢"
         advice = "Stay up to date with routine vaccines. Annual flu shot recommended for all adults."
 
+    # Prevention Score — same math, positive framing (higher = better protected)
+    prevention_score = 100 - pct
+    if prevention_score >= 63:
+        prevention_label, prevention_color = "Good", "#2ED573"
+    elif prevention_score >= 36:
+        prevention_label, prevention_color = "Fair", "#FFA502"
+    else:
+        prevention_label, prevention_color = "Needs Attention", "#FF4757"
+
     return {
         "score": score,
         "percentage": pct,
@@ -676,7 +685,10 @@ def calculate_risk_score(data):
         "color": color,
         "emoji": emoji,
         "advice": advice,
-        "factors": factors
+        "factors": factors,
+        "prevention_score": prevention_score,
+        "prevention_label": prevention_label,
+        "prevention_color": prevention_color
     }
 
 
@@ -1468,8 +1480,8 @@ def recommend():
     # Deterministic fallback — used when no AI key is configured or the call fails
     fallback_summary = (
         f"Based on your health profile, we have identified {len(vaccines)} vaccines "
-        f"recommended for you. Your {risk['level'].lower()} classification indicates that "
-        f"timely vaccination is important for protecting your health. Please consult with "
+        f"recommended for you. Your Prevention Score is {risk['prevention_score']}/100 — completing them raises it. "
+        f"Please consult with "
         f"a healthcare provider to discuss your personalized immunization schedule."
     )
     ai_summary = fallback_summary
@@ -1485,11 +1497,11 @@ def recommend():
 - Medical conditions: {conditions_text}
 - Pregnancy: {data.get('pregnant', 'no')}
 - Travel plans: {travel_text}
-- Risk level: {risk['level']} ({risk['percentage']}%)
+- Prevention Score: {risk['prevention_score']}/100 ({risk['prevention_label']})
 - Vaccines they need: {vaccine_names}
 - Health checks due at their age: {screening_names}
 
-Write a personal, warm 3-4 sentence message directly to this patient — like a doctor talking to someone they genuinely care about. Mention their specific situation (age, conditions, travel), explain what their risk level actually means in plain terms, and highlight the one or two vaccines that matter most for *them*. Sound like a real person, not a medical report. Use "you" and "your". No bullet points, no clinical jargon, no generic advice. Make it feel like it was written specifically for this person."""
+Write a personal, warm 3-4 sentence message directly to this patient — like a doctor talking to someone they genuinely care about. Mention their specific situation (age, conditions, travel), explain what their Prevention Score means in plain terms and what would raise it, and highlight the one or two vaccines that matter most for *them*. Sound like a real person, not a medical report. Use "you" and "your". No bullet points, no clinical jargon, no generic advice. Make it feel like it was written specifically for this person."""
 
             response = client.chat.completions.create(
                 model="gpt-4o-mini",

@@ -497,7 +497,7 @@
 
     <!-- Floating risk score (populated from localStorage if available) -->
     <div class="risk-float hud-badge" id="riskFloat">
-      <div class="risk-float-label">Your Risk Score</div>
+      <div class="risk-float-label">Your Prevention Score</div>
       <div class="risk-float-score" id="rfScore">—</div>
       <div class="risk-float-level" id="rfLevel"></div>
       <div class="risk-float-vaccines" id="rfVaccines"></div>
@@ -679,14 +679,13 @@
       const vaccines = data.vaccines || [];
       if (!risk || !risk.percentage) return;
 
-      const pct   = risk.percentage;
-      const level = risk.level || '';
-      // Pick colour by risk level
-      const color = pct < 30 ? '#2ed573' : pct < 60 ? '#ffa502' : '#ff4757';
+      const pScore = risk.prevention_score ?? (100 - risk.percentage);
+      const level  = risk.prevention_label || risk.level || '';
+      const color  = pScore >= 63 ? '#2ed573' : pScore >= 36 ? '#ffa502' : '#ff4757';
 
-      document.getElementById('rfScore').textContent  = pct + '%';
+      document.getElementById('rfScore').textContent  = pScore + '/100';
       document.getElementById('rfScore').style.color  = color;
-      document.getElementById('rfLevel').textContent  = risk.emoji ? `${risk.emoji} ${level}` : level;
+      document.getElementById('rfLevel').textContent  = level;
       document.getElementById('rfLevel').style.color  = color;
 
       if (vaccines.length) {

@@ -407,12 +407,17 @@ function typeText(el, text, speed = 18) {
 
 // ===== RISK SCORE =====
 function renderRiskScore(risk) {
+  // Positive framing: Prevention Score, higher = better protected
+  const pScore = risk.prevention_score ?? (100 - risk.percentage);
+  const pLabel = risk.prevention_label || risk.level;
+  const pColor = risk.prevention_color || risk.color;
+
   const badgeEl = document.getElementById('riskBadge');
   if (badgeEl) {
-    badgeEl.textContent = `${risk.emoji} ${risk.level}`;
-    badgeEl.style.background = risk.color + '22';
-    badgeEl.style.color = risk.color;
-    badgeEl.style.border = `1px solid ${risk.color}44`;
+    badgeEl.textContent = pLabel;
+    badgeEl.style.background = pColor + '22';
+    badgeEl.style.color = pColor;
+    badgeEl.style.border = `1px solid ${pColor}44`;
     badgeEl.style.borderRadius = '100px';
     badgeEl.style.padding = '6px 16px';
     badgeEl.style.fontSize = '14px';
@@ -420,21 +425,23 @@ function renderRiskScore(risk) {
   }
 
   const scoreEl = document.getElementById('riskScore');
-  if (scoreEl) animateNumber(scoreEl, risk.percentage, 1200);
+  if (scoreEl) animateNumber(scoreEl, pScore, 1200);
 
   const arc = document.getElementById('gaugeArc');
   if (arc) {
+    arc.style.stroke = pColor;
     const total = 298;
-    const offset = total - (total * risk.percentage / 100);
+    const offset = total - (total * pScore / 100);
     setTimeout(() => { arc.style.strokeDashoffset = offset; }, 200);
   }
 
+  // Factors are shown as "what's lowering your score" — points count against it
   const factorsList = document.getElementById('riskFactorsList');
   if (factorsList) {
     factorsList.innerHTML = risk.factors.map(f => `
       <div class="risk-factor-item">
         <span class="risk-factor-label">${f.icon} ${f.factor}</span>
-        <span class="risk-factor-pts">+${f.points}</span>
+        <span class="risk-factor-pts">−${f.points}</span>
       </div>
     `).join('');
   }
@@ -446,12 +453,10 @@ function renderRiskScore(risk) {
 function animateNumber(el, target, duration) {
   let start = 0;
   const step = target / (duration / 16);
-  // Check if it's an SVG text element — update content with % suffix
-  const isSvgText = el.tagName === 'text';
   const timer = setInterval(() => {
     start += step;
     if (start >= target) { start = target; clearInterval(timer); }
-    el.textContent = isSvgText ? Math.round(start) + '%' : Math.round(start);
+    el.textContent = Math.round(start);
   }, 16);
 }
 
