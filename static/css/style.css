@@ -884,3 +884,18 @@ body {
   .footer-links { flex-direction: column; gap: 28px; }
   .tstat { padding: 0 20px; }
 }
+
+/* ── PREVENTION PILLARS ── */
+.pillar-tile {
+  background: white; border: 1px solid rgba(255,107,107,0.12); border-radius: 16px;
+  padding: 18px 14px; text-align: center; transition: var(--transition);
+}
+.pillar-tile:hover { border-color: var(--coral); transform: translateY(-3px); box-shadow: 0 10px 28px rgba(255,107,107,0.1); }
+.pillar-tile svg { width: 30px; height: 30px; color: var(--coral); margin-bottom: 10px; }
+.pillar-name { font-size: 13.5px; font-weight: 800; color: var(--text-primary); margin-bottom: 3px; }
+.pillar-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.45; }
+.pillar-soon {
+  font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+  background: rgba(255,142,83,0.15); color: #C2410C; border-radius: 20px;
+  padding: 2px 7px; vertical-align: 2px;
+}
