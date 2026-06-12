@@ -11,7 +11,8 @@
         "hemoglobin a1c",
         "glycated hemoglobin"
       ],
-      "explains": "Your average blood sugar over the past 2-3 months. Higher means a greater risk of diabetes."
+      "explains": "Your average blood sugar over the past 2-3 months. Higher means a greater risk of diabetes.",
+      "high_means": "Higher levels suggest pre-diabetes or diabetes — your average blood sugar has been running high."
     },
     "fasting_glucose": {
       "name": "Fasting Glucose",
@@ -27,7 +28,9 @@
         "blood sugar",
         "fasting blood glucose"
       ],
-      "explains": "Blood sugar after fasting. A snapshot of how your body handles glucose."
+      "explains": "Blood sugar after fasting. A snapshot of how your body handles glucose.",
+      "high_means": "Often points to pre-diabetes or diabetes, or simply that you didn't fast long enough before the test.",
+      "low_means": "Can happen with prolonged fasting or certain medications."
     },
     "total_cholesterol": {
       "name": "Total Cholesterol",
@@ -38,7 +41,8 @@
         "cholesterol",
         "kolesterol total"
       ],
-      "explains": "All the cholesterol in your blood. High levels raise heart-disease risk over time."
+      "explains": "All the cholesterol in your blood. High levels raise heart-disease risk over time.",
+      "high_means": "Raises long-term heart-disease risk; often linked to diet, weight, genetics or activity level."
     },
     "ldl": {
       "name": "LDL Cholesterol",
@@ -49,7 +53,8 @@
         "ldl-c",
         "kolesterol ldl"
       ],
-      "explains": "The 'bad' cholesterol that builds up in arteries. Lower is better."
+      "explains": "The 'bad' cholesterol that builds up in arteries. Lower is better.",
+      "high_means": "The 'bad' cholesterol is high — the main driver of artery plaque. Diet, exercise or statins can lower it."
     },
     "hdl": {
       "name": "HDL Cholesterol",
@@ -60,7 +65,8 @@
         "hdl-c",
         "kolesterol hdl"
       ],
-      "explains": "The 'good' cholesterol that clears arteries. Here, higher is better."
+      "explains": "The 'good' cholesterol that clears arteries. Here, higher is better.",
+      "low_means": "Low 'good' cholesterol gives less protection for your arteries; exercise and healthy fats help raise it."
     },
     "triglycerides": {
       "name": "Triglycerides",
@@ -70,7 +76,8 @@
       "aliases": [
         "trigliserida"
       ],
-      "explains": "A fat in your blood. High levels often track with diet, weight and heart risk."
+      "explains": "A fat in your blood. High levels often track with diet, weight and heart risk.",
+      "high_means": "Commonly tied to diet (sugar, alcohol), excess weight, or uncontrolled diabetes."
     },
     "systolic_bp": {
       "name": "Blood Pressure (Systolic)",
@@ -81,7 +88,9 @@
         "systolic",
         "sistolik"
       ],
-      "explains": "The top blood-pressure number — pressure when your heart beats."
+      "explains": "The top blood-pressure number — pressure when your heart beats.",
+      "high_means": "Elevated blood pressure (hypertension) — a major, silent risk factor for stroke and heart disease.",
+      "low_means": "Can cause dizziness; sometimes from dehydration or medication."
     },
     "diastolic_bp": {
       "name": "Blood Pressure (Diastolic)",
@@ -92,7 +101,9 @@
         "diastolic",
         "diastolik"
       ],
-      "explains": "The bottom blood-pressure number — pressure when your heart rests."
+      "explains": "The bottom blood-pressure number — pressure when your heart rests.",
+      "high_means": "Elevated blood pressure — worth tracking over several readings.",
+      "low_means": "Usually not concerning unless you have symptoms."
     },
     "creatinine": {
       "name": "Creatinine",
@@ -102,7 +113,9 @@
       "aliases": [
         "kreatinin"
       ],
-      "explains": "A waste product your kidneys filter. High levels can signal reduced kidney function."
+      "explains": "A waste product your kidneys filter. High levels can signal reduced kidney function.",
+      "high_means": "May reflect reduced kidney function or dehydration; muscular people naturally run a bit higher.",
+      "low_means": "Often harmless — common with low muscle mass."
     },
     "egfr": {
       "name": "eGFR",
@@ -112,7 +125,8 @@
       "aliases": [
         "gfr"
       ],
-      "explains": "How well your kidneys filter blood. Lower means weaker kidney function."
+      "explains": "How well your kidneys filter blood. Lower means weaker kidney function.",
+      "low_means": "A lower filtering rate can signal reduced kidney function; it's tracked over time."
     },
     "uric_acid": {
       "name": "Uric Acid",
@@ -122,7 +136,8 @@
       "aliases": [
         "asam urat"
       ],
-      "explains": "A waste product; high levels can cause gout and kidney stones."
+      "explains": "A waste product; high levels can cause gout and kidney stones.",
+      "high_means": "Can cause gout (joint pain) and kidney stones; linked to diet rich in red meat and seafood."
     },
     "alt": {
       "name": "ALT (SGPT)",
@@ -132,7 +147,8 @@
       "aliases": [
         "sgpt"
       ],
-      "explains": "A liver enzyme. Raised levels can indicate liver stress or inflammation."
+      "explains": "A liver enzyme. Raised levels can indicate liver stress or inflammation.",
+      "high_means": "Raised liver enzymes can mean liver stress — from fatty liver, alcohol, medications or infection."
     },
     "ast": {
       "name": "AST (SGOT)",
@@ -142,7 +158,8 @@
       "aliases": [
         "sgot"
       ],
-      "explains": "A liver and muscle enzyme. Often checked alongside ALT for liver health."
+      "explains": "A liver and muscle enzyme. Often checked alongside ALT for liver health.",
+      "high_means": "Raised levels can come from the liver or muscles; usually read together with ALT."
     },
     "hemoglobin": {
       "name": "Hemoglobin",
@@ -154,7 +171,9 @@
         "haemoglobin",
         "hemoglobin (hb)"
       ],
-      "explains": "The protein carrying oxygen in your blood. Low means anaemia; high can mean dehydration."
+      "explains": "The protein carrying oxygen in your blood. Low means anaemia; high can mean dehydration.",
+      "high_means": "Often from dehydration; sometimes the body making extra red cells.",
+      "low_means": "Low hemoglobin is anaemia — commonly from iron deficiency, blood loss, or chronic disease."
     },
     "vitamin_d": {
       "name": "Vitamin D (25-OH)",
@@ -165,7 +184,9 @@
         "25-oh vitamin d",
         "vit d"
       ],
-      "explains": "Vitamin D level. Low is very common and affects bones and immunity."
+      "explains": "Vitamin D level. Low is very common and affects bones and immunity.",
+      "high_means": "Rarely high (usually from over-supplementing).",
+      "low_means": "Low vitamin D is very common — from little sun exposure or diet — and affects bones and immunity."
     },
     "tsh": {
       "name": "TSH",
@@ -175,7 +196,9 @@
       "aliases": [
         "thyroid stimulating hormone"
       ],
-      "explains": "Thyroid signal hormone. High suggests an underactive thyroid, low an overactive one."
+      "explains": "Thyroid signal hormone. High suggests an underactive thyroid, low an overactive one.",
+      "high_means": "A high TSH usually points to an underactive thyroid (hypothyroidism) — fatigue, weight gain.",
+      "low_means": "A low TSH can point to an overactive thyroid (hyperthyroidism)."
     },
     "hematocrit": {
       "name": "Hematocrit",
@@ -187,7 +210,9 @@
         "hct",
         "hematokrit"
       ],
-      "explains": "The share of your blood made of red cells. Low can mean anaemia, high dehydration."
+      "explains": "The share of your blood made of red cells. Low can mean anaemia, high dehydration.",
+      "high_means": "Often dehydration; sometimes extra red-cell production.",
+      "low_means": "Low can mean anaemia or blood loss."
     },
     "rbc": {
       "name": "Red Blood Cells (Erythrocytes)",
@@ -200,7 +225,9 @@
         "red blood cell",
         "red blood cell count"
       ],
-      "explains": "The cells that carry oxygen. Counted to screen for anaemia or other blood conditions."
+      "explains": "The cells that carry oxygen. Counted to screen for anaemia or other blood conditions.",
+      "high_means": "Can reflect dehydration or, less often, extra red-cell production.",
+      "low_means": "A low count points toward anaemia."
     },
     "mcv": {
       "name": "MCV (Red Cell Size)",
@@ -210,7 +237,9 @@
       "aliases": [
         "mean corpuscular volume"
       ],
-      "explains": "The average size of your red blood cells — helps classify the type of anaemia."
+      "explains": "The average size of your red blood cells — helps classify the type of anaemia.",
+      "high_means": "Larger red cells often relate to low B12/folate or alcohol use.",
+      "low_means": "Smaller red cells often relate to iron deficiency."
     },
     "mch": {
       "name": "MCH (Hemoglobin per Cell)",
@@ -220,7 +249,9 @@
       "aliases": [
         "mean corpuscular hemoglobin"
       ],
-      "explains": "Average amount of oxygen-carrying protein per red cell."
+      "explains": "Average amount of oxygen-carrying protein per red cell.",
+      "high_means": "Usually tracks with larger red cells (B12/folate related).",
+      "low_means": "Usually tracks with iron-deficiency anaemia."
     },
     "mchc": {
       "name": "MCHC (Hemoglobin Concentration)",
@@ -230,7 +261,9 @@
       "aliases": [
         "mean corpuscular hemoglobin concentration"
       ],
-      "explains": "How concentrated the hemoglobin is inside red cells."
+      "explains": "How concentrated the hemoglobin is inside red cells.",
+      "high_means": "Uncommon; sometimes a lab artifact.",
+      "low_means": "Can accompany iron-deficiency anaemia."
     },
     "platelets": {
       "name": "Platelets (Thrombocytes)",
@@ -242,7 +275,9 @@
         "trombosit",
         "platelet count"
       ],
-      "explains": "Cells that help blood clot. Low raises bleeding risk; very high can raise clotting risk — relevant in dengue too."
+      "explains": "Cells that help blood clot. Low raises bleeding risk; very high can raise clotting risk — relevant in dengue too.",
+      "high_means": "A high count can raise clotting risk; sometimes follows infection or inflammation.",
+      "low_means": "A low count raises bleeding risk — notably watched in dengue fever."
     },
     "wbc": {
       "name": "White Blood Cells (Leukocytes)",
@@ -255,7 +290,9 @@
         "white blood cell",
         "white blood cell count"
       ],
-      "explains": "Your immune cells. High often means infection; low can mean a weakened immune system."
+      "explains": "Your immune cells. High often means infection; low can mean a weakened immune system.",
+      "high_means": "A high white count most often means your body is fighting an infection or inflammation.",
+      "low_means": "A low count can mean a weakened immune system or a viral infection."
     },
     "neutrophils": {
       "name": "Neutrophils",
@@ -268,7 +305,9 @@
         "neutrophyl",
         "neutrophils"
       ],
-      "explains": "The immune cells that fight bacterial infection. The largest share of white cells."
+      "explains": "The immune cells that fight bacterial infection. The largest share of white cells.",
+      "high_means": "A high share usually points to a bacterial infection or inflammation.",
+      "low_means": "A low share can leave you more prone to infection."
     },
     "lymphocytes": {
       "name": "Lymphocytes",
@@ -279,7 +318,9 @@
         "lymphocyte",
         "limfosit"
       ],
-      "explains": "Immune cells that fight viruses and build long-term immunity."
+      "explains": "Immune cells that fight viruses and build long-term immunity.",
+      "high_means": "A high share is common with viral infections.",
+      "low_means": "A low share can occur with stress, steroids, or some infections."
     },
     "monocytes": {
       "name": "Monocytes",
@@ -290,7 +331,9 @@
         "monocyte",
         "monosit"
       ],
-      "explains": "Immune cells that clean up infection and debris."
+      "explains": "Immune cells that clean up infection and debris.",
+      "high_means": "Commonly means your body is recovering from or fighting an infection, or ongoing inflammation. Mild elevations are usually not alarming.",
+      "low_means": "A low share is usually not significant on its own."
     },
     "eosinophils": {
       "name": "Eosinophils",
@@ -303,7 +346,9 @@
         "eosinophyl",
         "eosinophils"
       ],
-      "explains": "Immune cells linked to allergies and parasitic infections."
+      "explains": "Immune cells linked to allergies and parasitic infections.",
+      "high_means": "Often linked to allergies, asthma, or parasitic infections.",
+      "low_means": "A low share is usually not significant."
     },
     "basophils": {
       "name": "Basophils",
@@ -316,7 +361,9 @@
         "basophyl",
         "basophils"
       ],
-      "explains": "The rarest white cells, involved in allergic reactions."
+      "explains": "The rarest white cells, involved in allergic reactions.",
+      "high_means": "Can rise with allergic reactions or inflammation.",
+      "low_means": "A low share is usually not significant."
     }
   }
 }

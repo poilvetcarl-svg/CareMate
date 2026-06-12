@@ -257,10 +257,14 @@
               <div style="background:var(--bg-secondary);border-radius:10px;padding:12px 14px">
                 <div style="margin-bottom:6px"><strong>What it measures:</strong> {{ ref.explains }}</div>
                 <div style="margin-bottom:6px"><strong>Normal range:</strong> {{ ref.low }}–{{ ref.high }} {{ ref.unit }}</div>
+                {% if lab.flag == 'high' and ref.high_means %}
+                <div style="margin-bottom:6px"><strong>What above range can mean:</strong> {{ ref.high_means }}</div>
+                {% elif lab.flag == 'low' and ref.low_means %}
+                <div style="margin-bottom:6px"><strong>What below range can mean:</strong> {{ ref.low_means }}</div>
+                {% endif %}
                 <div><strong>What's next:</strong>
-                  {% if lab.flag == 'normal' %}This value is in range — nothing to do. Re-check at your next routine test.
-                  {% elif lab.flag == 'high' %}Your value is above range. It's not a diagnosis on its own — note it and discuss with your doctor, especially if it repeats.
-                  {% elif lab.flag == 'low' %}Your value is below range. It's not a diagnosis on its own — note it and discuss with your doctor, especially if it repeats.
+                  {% if lab.flag == 'normal' %}In range — nothing to do. Re-check at your next routine test.
+                  {% elif lab.flag in ['high','low'] %}This is not a diagnosis on its own. Note it, and bring it to your doctor — especially if it stays out of range on a repeat test.
                   {% else %}Keep this on record and review it with your doctor.{% endif %}
                 </div>
               </div>
