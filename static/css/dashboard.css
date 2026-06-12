@@ -45,30 +45,35 @@
   padding: 16px 12px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
 }
 
 .dash-nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  transition: background 0.15s, color 0.15s, transform 0.15s;
 }
 
 .dash-nav-item:hover {
-  background: var(--bg-secondary);
+  background: rgba(255, 107, 107, 0.08);
+  border-color: rgba(255, 107, 107, 0.25);
   color: var(--text-primary);
+  transform: translateX(2px);
 }
 
 .dash-nav-item.active {
-  background: rgba(0, 214, 143, 0.1);
-  color: var(--accent);
+  background: linear-gradient(135deg, var(--coral, #FF6B6B), var(--orange, #FF8E53));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.28);
 }
 
 .dash-sidebar-footer {
