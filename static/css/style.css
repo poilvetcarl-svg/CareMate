@@ -923,3 +923,80 @@ body {
 }
 @media (max-width: 700px) { .pillar-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 420px) { .pillar-grid { grid-template-columns: 1fr; } }
+
+/* ============================================================
+   REDESIGN OVERRIDES — lighter, cleaner homepage (preview-based)
+   ============================================================ */
+
+/* Nav: black "Sign Up" pill */
+.nav-cta{ background:#1A1A1A !important; box-shadow:none !important; }
+.nav-cta:hover{ background:#000 !important; transform:translateY(-1px); }
+
+/* Hero: soft peach gradient, no blobs */
+.hero{
+  background:radial-gradient(120% 130% at 85% 8%, #FFE4D6 0%, #FFF1E8 38%, #ffffff 72%) !important;
+}
+.hero .hero-bg, .hero .blob{ display:none !important; }
+
+/* Hero mock card with app rail */
+.hero-mock{
+  display:flex !important; padding:0 !important; width:auto !important;
+  max-width:430px; border-radius:22px; overflow:hidden;
+  box-shadow:0 30px 70px rgba(180,120,90,.20); border:1px solid #f4ece7;
+  animation:none !important;
+}
+.mock-rail{
+  width:52px; background:#fff; border-right:1px solid #f1eae5;
+  display:flex; flex-direction:column; align-items:center; padding:16px 0; gap:20px;
+}
+.mr-dot{ width:30px; height:30px; border-radius:9px; display:grid; place-items:center; color:#c9bdb6; }
+.mr-dot.on{ background:linear-gradient(135deg,var(--coral),var(--orange)); color:#fff; }
+.mr-spacer{ flex:1; }
+.mock-body{ flex:1; padding:18px 18px 16px; }
+.mock-vax-item{ border:1px solid #f0eae6; border-radius:12px; padding:12px 14px; margin-bottom:8px; background:#fff; }
+.mock-vax-item.alert{ border-color:rgba(255,107,107,.35); background:rgba(255,107,107,.04); }
+.mock-vax-item .mvax-name{ font-weight:700; }
+.chip-year{ background:#f1eae6; color:#8a7a70; }
+
+/* How It Works: numbered timeline + line-icon circles */
+.hiw-timeline{
+  display:flex; align-items:center; justify-content:space-between;
+  max-width:680px; margin:46px auto 0; position:relative;
+}
+.hiw-timeline::before{
+  content:''; position:absolute; top:14px; left:5%; right:5%; height:2px;
+  background:linear-gradient(90deg,var(--coral),#f3d9cd); z-index:0;
+}
+.hiw-node{
+  width:30px; height:30px; border-radius:50%; background:#fff; border:2px solid var(--coral);
+  color:var(--coral); display:grid; place-items:center; font-size:13px; font-weight:800;
+  position:relative; z-index:1;
+}
+.hiw-node.first{ background:var(--coral); color:#fff; }
+
+/* Override the numbered icon circles → soft line-icon circles */
+.hiw-steps::after{ display:none !important; }
+.hiw-steps{ margin-top:26px !important; }
+.hiw-step-icon{
+  width:64px !important; height:64px !important; background:#fafafa !important;
+  border:1px solid #efefef !important; box-shadow:none !important; color:#1A1A1A !important;
+}
+.hiw-step:hover .hiw-step-icon{ transform:none !important; box-shadow:0 8px 20px rgba(0,0,0,.06) !important; }
+.hiw-step-icon svg{ width:26px; height:26px; }
+
+/* Pillars: icon-left horizontal tiles */
+.pillar-tile{
+  display:flex !important; align-items:center; gap:14px; text-align:left;
+  padding:16px 18px !important;
+}
+.pillar-tile .p-ic{
+  width:42px; height:42px; border-radius:12px; background:#fbf3ee;
+  display:grid; place-items:center; color:var(--coral); flex-shrink:0;
+}
+.pillar-tile .p-ic svg{ width:22px; height:22px; }
+.pillar-tile .p-txt{ display:flex; flex-direction:column; }
+.pillar-tile .pillar-name{ display:flex; align-items:center; gap:7px; }
+
+/* Mock gauge ring — solid green (gradient def removed in redesign) */
+.hero-mock .ring-fill{ stroke:#2ED573 !important; }
+.hero-mock .ring-pct{ font-size:34px; }
