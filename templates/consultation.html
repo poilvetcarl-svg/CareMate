@@ -742,7 +742,7 @@
   });
 
   // ── D-ID STREAMING AVATAR ──
-  let didStreamId = null, didSessionId = null, didPC = null, didActive = false;
+  let didStreamId = null, didSessionId = null, didPC = null, didActive = false, didGreeted = false;
 
   function didVoiceId() {
     if (currentLang === 'indonesian') return DOCTOR_GENDER === 'male' ? 'id-ID-ArdiNeural' : 'id-ID-GadisNeural';
@@ -779,8 +779,18 @@
           const resume = () => { video.play().catch(() => {}); document.removeEventListener('click', resume); };
           document.addEventListener('click', resume);
         });
-        // Voice the most recent doctor reply that TTS hasn't covered yet
+        // The avatar only renders video while speaking — greet on connect so
+        // the doctor appears and talks instead of sitting blank.
         if (lastReplyText) { didTalk(lastReplyText); lastReplyText = null; }
+        else if (!didGreeted) {
+          didGreeted = true;
+          const greeting = currentLang === 'indonesian'
+            ? `Halo${patientName ? ' ' + patientName : ''}, saya ${DOCTOR_NAME}. Ada yang bisa saya bantu hari ini?`
+            : `Hi${patientName ? ' ' + patientName : ''}, I'm ${DOCTOR_NAME}. How can I help you today?`;
+          didTalk(greeting);
+          appendTranscript('doctor', greeting, DOCTOR_NAME);
+          consultHistory.push({ role: 'assistant', content: greeting });
+        }
       }
     };
 
