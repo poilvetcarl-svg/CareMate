@@ -267,6 +267,32 @@ function renderResults(result) {
 }
 
 // ===== PREVENTIVE SCREENINGS =====
+// ===== CORAL LINE ICONS (results section) =====
+const ICON_SVG = {
+  drop:   '<path d="M12 3s6 6 6 10.5a6 6 0 11-12 0C6 9 12 3 12 3z"/>',
+  heart:  '<path d="M12 20S4 15 4 9.5A3.5 3.5 0 0112 7a3.5 3.5 0 018 2.5C20 15 12 20 12 20z"/><path d="M6 12h2l1.5-3 2 5 1.5-2H18"/>',
+  stetho: '<path d="M6 3v5a4 4 0 008 0V3"/><path d="M10 14v1a5 5 0 0010 0v-1"/><circle cx="19.5" cy="11" r="2"/>',
+  ribbon: '<path d="M10 13l-3 8 3-1.5L12 21l2.5-1.5 3 1.5-3-8"/><path d="M9.5 14C7.5 11.5 7 9.5 7 8a5 5 0 0110 0c0 1.5-.5 3.5-2.5 6"/>',
+  lungs:  '<path d="M12 3v8"/><path d="M12 9c0 6-1 9-3.5 9C6 18 5 16 5 13c0-2 .6-3.6 1.6-4.6"/><path d="M12 9c0 6 1 9 3.5 9 2.5 0 3.5-2 3.5-5 0-2-.6-3.6-1.6-4.6"/>',
+  vial:   '<path d="M9 3h6M10 3v12a2 2 0 004 0V3"/><path d="M10 9.5h4"/>',
+  bone:   '<path d="M8 16a2 2 0 11-1.6-3.2A2 2 0 118 9l1-1 6 6-1 1a2 2 0 11-3.4 1.6A2 2 0 018 16z"/><path d="M16 8a2 2 0 111.6-3.2A2 2 0 1116 1"/>',
+  eye:    '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="2.5"/>',
+  kidney: '<path d="M14 5c-3 0-5 3-5 7s2 7 5 7c1.7 0 3-1.3 3-3 0-1.2-.6-1.8-.6-2.5S17 9.5 17 8.2C17 6.4 15.7 5 14 5z"/>',
+  shield: '<path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/>',
+  pulse:  '<path d="M3 12h4l2-5 3 10 2.5-5H21"/>',
+};
+const SCREENING_ICON = {
+  blood_pressure: 'stetho', lipid_panel: 'heart', diabetes_screen: 'drop',
+  cervical_cancer: 'ribbon', breast_cancer: 'ribbon', colorectal_cancer: 'ribbon',
+  lung_cancer: 'lungs', hepatitis_screen: 'vial', hiv_screen: 'vial',
+  osteoporosis: 'bone', prostate: 'stetho', eye_exam_diabetic: 'eye',
+  kidney_function: 'kidney', tb_screen: 'lungs', aaa_screen: 'pulse',
+};
+function coralSvg(shape) {
+  return `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FF6B6B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICON_SVG[shape] || ICON_SVG.shield}</svg>`;
+}
+function screeningIcon(key) { return coralSvg(SCREENING_ICON[key] || 'pulse'); }
+
 function renderScreenings(screenings) {
   document.getElementById('screeningsSection')?.remove();
   if (!screenings.length) return;
@@ -277,7 +303,7 @@ function renderScreenings(screenings) {
 
   const row = (s, highlight) => `
     <div style="display:flex;align-items:flex-start;gap:12px;padding:${highlight ? '14px 16px' : '11px 16px'};border-bottom:1px solid rgba(255,107,107,0.1);background:white">
-      <div style="width:36px;height:36px;border-radius:10px;background:#FFF8F5;border:1px solid rgba(255,107,107,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${s.icon}</div>
+      <div style="width:36px;height:36px;border-radius:10px;background:#FFF8F5;border:1px solid rgba(255,107,107,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">${screeningIcon(s.key)}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
           <span style="font-size:14px;font-weight:700;color:#1A0A00">${s.name}</span>
@@ -435,15 +461,22 @@ function renderRiskScore(risk) {
     setTimeout(() => { arc.style.strokeDashoffset = offset; }, 200);
   }
 
-  // Factors are shown as "what's lowering your score" — points count against it
+  // Factors — no emoji, no point numbers. Tag each as improvable or fixed.
+  const improvable = [
+    /vaccin/i, /overdue/i, /smoking/i, /obesity/i, /travel/i,
+  ];
   const factorsList = document.getElementById('riskFactorsList');
   if (factorsList) {
-    factorsList.innerHTML = risk.factors.map(f => `
-      <div class="risk-factor-item">
-        <span class="risk-factor-label">${f.icon} ${f.factor}</span>
-        <span class="risk-factor-pts">−${f.points}</span>
-      </div>
-    `).join('');
+    factorsList.innerHTML = risk.factors.map(f => {
+      const canImprove = improvable.some(re => re.test(f.factor));
+      const tag = canImprove
+        ? '<span class="rf-tag rf-improve">Can improve</span>'
+        : '<span class="rf-tag rf-fixed">Fixed</span>';
+      return `<div class="risk-factor-item">
+        <span class="risk-factor-label">${f.factor}</span>
+        ${tag}
+      </div>`;
+    }).join('');
   }
 
   const adviceEl = document.getElementById('riskAdvice');
@@ -529,7 +562,7 @@ function renderVaccines(vaccines) {
       return `
         <div class="vr-row" id="vr-row-${v.key}-${i}" style="animation-delay:${i * 0.05}s">
           <div class="vr-row-main" onclick="toggleVrExpand('${expandId}', this)">
-            <div class="vr-icon-wrap">${v.icon}</div>
+            <div class="vr-icon-wrap">${coralSvg('shield')}</div>
             <div class="vr-row-content">
               <div class="vr-name-line">
                 <span class="vr-name">${v.name}</span>
