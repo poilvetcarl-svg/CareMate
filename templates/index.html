@@ -582,29 +582,29 @@
         <h3>Your Prevention Score</h3>
         <span class="risk-badge" id="riskBadge">—</span>
       </div>
-      <div class="risk-visual">
+      <!-- Centered gauge -->
+      <div class="risk-gauge-center">
         <div class="risk-gauge-container">
           <svg class="risk-gauge" viewBox="0 0 220 145">
-            <!-- Track -->
             <path d="M 15 115 A 95 95 0 0 1 205 115" fill="none" stroke="rgba(5,150,105,0.12)" stroke-width="14" stroke-linecap="round"/>
-            <!-- Animated arc — coloured by score level at render time -->
             <path d="M 15 115 A 95 95 0 0 1 205 115" fill="none" stroke="#2ED573" stroke-width="14" stroke-linecap="round"
                   stroke-dasharray="298" stroke-dashoffset="298" id="gaugeArc" class="gauge-arc"/>
-            <!-- Score text -->
             <text x="110" y="92" text-anchor="middle" dominant-baseline="middle"
-                  font-size="44" font-weight="900" font-family="DM Sans, sans-serif"
+                  font-size="46" font-weight="900" font-family="DM Sans, sans-serif"
                   fill="#1A0A00" id="riskScore">0</text>
             <text x="110" y="124" text-anchor="middle"
                   font-size="11" font-family="DM Sans, sans-serif"
                   fill="#A07850" letter-spacing="1">PREVENTION SCORE</text>
           </svg>
         </div>
-        <div>
-          <p style="font-size:12px;font-weight:700;color:#A07850;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">What's lowering your score</p>
-          <div class="risk-factors-list" id="riskFactorsList"></div>
-        </div>
+        <p class="risk-advice" id="riskAdvice"></p>
       </div>
-      <p class="risk-advice" id="riskAdvice"></p>
+
+      <!-- Factors affecting the score -->
+      <div class="risk-factors-block">
+        <p class="risk-factors-label">What's affecting your score</p>
+        <div class="risk-factors-list" id="riskFactorsList"></div>
+      </div>
     </div>
 
     <!-- Vaccine Recommendations -->

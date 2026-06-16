@@ -515,15 +515,26 @@ body {
 .risk-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
 .risk-header h3 { font-size: 20px; font-weight: 700; color: var(--text-primary); }
 .risk-badge { padding: 6px 16px; border-radius: 100px; font-size: 13px; font-weight: 700; }
-.risk-visual { display: flex; align-items: center; gap: 40px; flex-wrap: wrap; }
-.risk-gauge-container { position: relative; width: 220px; flex-shrink: 0; }
-.risk-gauge { width: 220px; overflow: visible; }
+/* Centered gauge + advice */
+.risk-gauge-center { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.risk-gauge-container { position: relative; width: 240px; flex-shrink: 0; }
+.risk-gauge { width: 240px; overflow: visible; }
 .gauge-arc { transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
-.risk-factors-list { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 200px; }
-.risk-factor-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255,107,107,0.04); border: 1px solid rgba(255,107,107,0.1); border-radius: 10px; padding: 10px 14px; }
-.risk-factor-label { font-size: 14px; display: flex; align-items: center; gap: 8px; color: var(--text-primary); }
-.risk-factor-pts { font-size: 13px; font-weight: 700; color: var(--coral-dark); background: rgba(255,107,107,0.1); padding: 2px 10px; border-radius: 20px; }
-.risk-advice { margin-top: 20px; padding: 14px 18px; background: rgba(255,107,107,0.06); border-left: 3px solid var(--coral); border-radius: 0 10px 10px 0; font-size: 14px; color: var(--text-secondary); }
+.risk-gauge-center .risk-advice {
+  margin-top: 6px; max-width: 460px; text-align: center;
+  background: rgba(255,107,107,0.06); border: none; border-radius: 12px;
+  padding: 12px 18px; font-size: 14px; color: var(--text-secondary); line-height: 1.6;
+}
+
+/* Factors affecting the score */
+.risk-factors-block { margin-top: 26px; }
+.risk-factors-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; text-align: center; }
+.risk-factors-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.risk-factor-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(255,107,107,0.04); border: 1px solid rgba(255,107,107,0.1); border-radius: 10px; padding: 11px 14px; }
+.risk-factor-label { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+.rf-tag { font-size: 10.5px; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+.rf-improve { background: rgba(46,213,115,0.12); color: #1f9d57; }
+.rf-fixed { background: rgba(100,116,139,0.1); color: #64748b; }
 
 /* VACCINES GRID */
 .vaccines-section { animation: fadeUp 0.5s ease 0.2s both; }
