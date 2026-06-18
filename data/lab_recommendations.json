@@ -1,0 +1,307 @@
+{
+  "note": "Maps flagged lab results to follow-up tests and relevant vaccines. For educational guidance only — not a diagnosis.",
+  "rules": {
+    "hba1c": {
+      "high": {
+        "urgency": "soon",
+        "message": "Elevated HbA1c suggests your blood sugar has been running high over the past 3 months — pre-diabetes or diabetes territory.",
+        "follow_up_tests": [
+          {"name": "Fasting Glucose", "reason": "Confirm elevated blood sugar with a second test"},
+          {"name": "Oral Glucose Tolerance Test (OGTT)", "reason": "Definitively diagnoses pre-diabetes or Type 2 diabetes"},
+          {"name": "Fasting Insulin", "reason": "Checks if your pancreas is working harder than it should"},
+          {"name": "Microalbumin/Creatinine Ratio (urine)", "reason": "Early kidney stress screen, important if blood sugar is high"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Diabetes raises risk of serious flu complications — annual flu shot is strongly recommended"},
+          {"key": "pneumococcal", "reason": "Pneumococcal disease is more severe in people with diabetes"},
+          {"key": "hepatitis_b", "reason": "Higher hepatitis B risk in people with diabetes due to blood glucose monitoring equipment"}
+        ]
+      }
+    },
+    "fasting_glucose": {
+      "high": {
+        "urgency": "soon",
+        "message": "Fasting glucose above 100 mg/dL may indicate pre-diabetes. Confirm with repeat testing.",
+        "follow_up_tests": [
+          {"name": "HbA1c", "reason": "Shows average blood sugar over 3 months — more reliable than a single glucose reading"},
+          {"name": "Fasting Insulin + HOMA-IR", "reason": "Measures insulin resistance"},
+          {"name": "Lipid Panel", "reason": "Pre-diabetes often comes with abnormal cholesterol"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Blood sugar dysregulation increases flu severity"},
+          {"key": "pneumococcal", "reason": "Recommended for those with or at risk of diabetes"}
+        ]
+      },
+      "low": {
+        "urgency": "check",
+        "message": "Blood sugar below 70 mg/dL at fasting — could be reactive hypoglycemia or prolonged fast.",
+        "follow_up_tests": [
+          {"name": "Fasting Insulin", "reason": "Rule out insulinoma or other causes of low glucose"},
+          {"name": "Cortisol (morning)", "reason": "Low cortisol can cause hypoglycemia"}
+        ],
+        "vaccines": []
+      }
+    },
+    "total_cholesterol": {
+      "high": {
+        "urgency": "soon",
+        "message": "Total cholesterol above 200 mg/dL increases long-term cardiovascular risk.",
+        "follow_up_tests": [
+          {"name": "Full Lipid Panel (LDL, HDL, TG)", "reason": "Break down which fraction is driving the total"},
+          {"name": "hs-CRP (high-sensitivity C-reactive protein)", "reason": "Measures vascular inflammation — independent heart risk marker"},
+          {"name": "Homocysteine", "reason": "Elevated homocysteine independently raises heart and stroke risk"},
+          {"name": "Apolipoprotein B (ApoB)", "reason": "More precise cardiovascular risk predictor than LDL alone"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Influenza significantly increases heart attack risk in the weeks following infection"},
+          {"key": "pneumococcal", "reason": "Recommended for adults with cardiovascular risk factors"}
+        ]
+      }
+    },
+    "ldl": {
+      "high": {
+        "urgency": "soon",
+        "message": "High LDL ('bad' cholesterol) is the primary driver of arterial plaque buildup.",
+        "follow_up_tests": [
+          {"name": "ApoB / ApoA1 ratio", "reason": "More accurate cardiovascular risk than LDL in isolation"},
+          {"name": "Lipoprotein(a) [Lp(a)]", "reason": "Genetically elevated Lp(a) is a strong independent heart risk — checked once in a lifetime"},
+          {"name": "hs-CRP", "reason": "Inflammation amplifies LDL-related risk"},
+          {"name": "Thyroid (TSH)", "reason": "Hypothyroidism is a common reversible cause of high LDL"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Flu markedly raises short-term heart attack risk"},
+          {"key": "pneumococcal", "reason": "Cardiovascular disease raises pneumonia severity"}
+        ]
+      }
+    },
+    "hdl": {
+      "low": {
+        "urgency": "check",
+        "message": "Low HDL ('good' cholesterol) reduces arterial protection and raises heart disease risk.",
+        "follow_up_tests": [
+          {"name": "Triglycerides", "reason": "Low HDL and high triglycerides often occur together (metabolic syndrome)"},
+          {"name": "Fasting Glucose / HbA1c", "reason": "Low HDL is linked to insulin resistance"},
+          {"name": "ApoA1", "reason": "Protein that carries HDL — gives a more complete picture of protective cholesterol"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Metabolic syndrome and low HDL increase influenza complication risk"}
+        ]
+      }
+    },
+    "triglycerides": {
+      "high": {
+        "urgency": "soon",
+        "message": "Elevated triglycerides are linked to diet, excess weight, alcohol and insulin resistance.",
+        "follow_up_tests": [
+          {"name": "Fasting Glucose / HbA1c", "reason": "High triglycerides often signal underlying blood sugar issues"},
+          {"name": "Liver Function (ALT, AST, GGT)", "reason": "Fatty liver is a common companion of high triglycerides"},
+          {"name": "TSH", "reason": "Hypothyroidism can raise triglycerides"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Metabolic dysfunction raises flu complication risk"}
+        ]
+      }
+    },
+    "creatinine": {
+      "high": {
+        "urgency": "urgent",
+        "message": "Elevated creatinine may indicate reduced kidney function — this should be followed up promptly.",
+        "follow_up_tests": [
+          {"name": "eGFR (estimated Glomerular Filtration Rate)", "reason": "Directly estimates how well kidneys are filtering — the key CKD metric"},
+          {"name": "BUN (Blood Urea Nitrogen)", "reason": "Another kidney waste marker to confirm impairment"},
+          {"name": "Urine Microalbumin/Creatinine Ratio", "reason": "Detects early kidney leakage — can catch damage before creatinine rises"},
+          {"name": "Urine Complete Analysis", "reason": "Looks for casts and protein that signal kidney damage"},
+          {"name": "Blood Pressure monitoring", "reason": "Hypertension is both a cause and consequence of CKD"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Kidney disease significantly raises risk of flu complications"},
+          {"key": "pneumococcal", "reason": "Strongly recommended for all stages of CKD"},
+          {"key": "hepatitis_b", "reason": "Hepatitis B vaccination is recommended before dialysis becomes necessary"}
+        ]
+      }
+    },
+    "egfr": {
+      "low": {
+        "urgency": "urgent",
+        "message": "Low eGFR means kidneys are not filtering at full capacity — classify and monitor kidney disease stage.",
+        "follow_up_tests": [
+          {"name": "Urine Albumin-to-Creatinine Ratio", "reason": "Confirms and stages chronic kidney disease (CKD)"},
+          {"name": "Renal Ultrasound", "reason": "Visualizes kidney size and structure"},
+          {"name": "Electrolytes (Na, K, Bicarbonate)", "reason": "Kidneys regulate electrolyte balance — check for imbalances"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Essential for all CKD patients"},
+          {"key": "pneumococcal", "reason": "CKD is a high-risk condition for pneumococcal disease"},
+          {"key": "hepatitis_b", "reason": "Recommended before kidney disease progresses to dialysis stage"}
+        ]
+      }
+    },
+    "uric_acid": {
+      "high": {
+        "urgency": "check",
+        "message": "Elevated uric acid raises gout risk and may stress the kidneys over time.",
+        "follow_up_tests": [
+          {"name": "Creatinine + eGFR", "reason": "Uric acid is cleared by kidneys — check kidney function"},
+          {"name": "24-hour Urine Uric Acid", "reason": "Determines if over-production or under-excretion is the cause"},
+          {"name": "Lipid Panel + Fasting Glucose", "reason": "Hyperuricemia is associated with metabolic syndrome"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Fever from flu can trigger gout attacks"}
+        ]
+      }
+    },
+    "alt": {
+      "high": {
+        "urgency": "soon",
+        "message": "Elevated ALT suggests liver cell stress or inflammation — most commonly fatty liver, but viral hepatitis must be ruled out.",
+        "follow_up_tests": [
+          {"name": "AST / ALT ratio", "reason": "Ratio helps distinguish fatty liver from alcoholic liver disease"},
+          {"name": "GGT (Gamma-glutamyl transferase)", "reason": "Sensitive marker of liver stress, especially from alcohol or medications"},
+          {"name": "Hepatitis B Surface Antigen (HBsAg)", "reason": "Rule out active hepatitis B infection"},
+          {"name": "Hepatitis C Antibody (Anti-HCV)", "reason": "Rule out hepatitis C — often asymptomatic"},
+          {"name": "Liver Ultrasound", "reason": "Check for fatty liver, fibrosis or structural changes"},
+          {"name": "Albumin", "reason": "Measures liver's protein-making function"}
+        ],
+        "vaccines": [
+          {"key": "hepatitis_a", "reason": "Hepatitis A can cause acute liver failure on top of existing liver disease"},
+          {"key": "hepatitis_b", "reason": "All adults with liver disease should be immune to hepatitis B"}
+        ]
+      }
+    },
+    "ast": {
+      "high": {
+        "urgency": "soon",
+        "message": "Elevated AST can come from the liver, heart muscle, or skeletal muscle.",
+        "follow_up_tests": [
+          {"name": "ALT", "reason": "If ALT is also high, likely liver-specific; if AST >> ALT, consider heart or muscle"},
+          {"name": "CK (Creatine Kinase)", "reason": "If muscle or heart damage is suspected"},
+          {"name": "Hepatitis B and C serology", "reason": "Rule out viral hepatitis"},
+          {"name": "GGT", "reason": "Confirms liver origin of elevated AST"}
+        ],
+        "vaccines": [
+          {"key": "hepatitis_a", "reason": "Protect the liver from additional insult"},
+          {"key": "hepatitis_b", "reason": "Hepatitis B check and vaccination for unimmunized adults with liver enzyme elevations"}
+        ]
+      }
+    },
+    "hemoglobin": {
+      "low": {
+        "urgency": "soon",
+        "message": "Low hemoglobin means anemia — your blood is carrying less oxygen than it should.",
+        "follow_up_tests": [
+          {"name": "Serum Ferritin", "reason": "Measures iron stores — the most common anemia cause is iron deficiency"},
+          {"name": "Serum Iron + TIBC (Total Iron Binding Capacity)", "reason": "Confirms iron deficiency anemia pattern"},
+          {"name": "Vitamin B12", "reason": "B12 deficiency causes megaloblastic anemia — common in vegetarians"},
+          {"name": "Folate (Folic Acid)", "reason": "Deficiency also causes large-cell anemia"},
+          {"name": "Reticulocyte count", "reason": "Shows if bone marrow is responding to anemia"},
+          {"name": "Peripheral blood smear", "reason": "Classifies anemia type by red cell shape"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Anemia from any cause impairs immune response — flu vaccination is especially important"},
+          {"key": "pneumococcal", "reason": "Anemia raises pneumonia severity risk"}
+        ]
+      }
+    },
+    "hematocrit": {
+      "low": {
+        "urgency": "soon",
+        "message": "Low hematocrit confirms reduced red cell volume — iron studies and B12/folate should follow.",
+        "follow_up_tests": [
+          {"name": "Serum Ferritin", "reason": "Most common cause of low hematocrit is iron deficiency"},
+          {"name": "Vitamin B12 + Folate", "reason": "Deficiency causes anemia with large red cells"},
+          {"name": "Reticulocyte count", "reason": "Assesses bone marrow response"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Anemia weakens immune response — vaccination more important"}
+        ]
+      }
+    },
+    "vitamin_d": {
+      "low": {
+        "urgency": "check",
+        "message": "Vitamin D deficiency is very common in Indonesia and linked to immune function, bone health and mood.",
+        "follow_up_tests": [
+          {"name": "Parathyroid Hormone (PTH)", "reason": "Chronically low vitamin D elevates PTH — check bone metabolism"},
+          {"name": "Calcium + Phosphorus", "reason": "Vitamin D regulates calcium absorption"},
+          {"name": "Bone Density (DEXA scan)", "reason": "If deficiency has been prolonged or you are post-menopausal"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Vitamin D plays a key role in respiratory immune defense — vaccination compensates"},
+          {"key": "pneumococcal", "reason": "Low vitamin D is linked to more severe respiratory infections"}
+        ]
+      }
+    },
+    "tsh": {
+      "high": {
+        "urgency": "soon",
+        "message": "High TSH means the thyroid is underactive (hypothyroidism) — the pituitary is calling for more thyroid hormone.",
+        "follow_up_tests": [
+          {"name": "Free T4 (fT4)", "reason": "Confirms hypothyroidism — low fT4 with high TSH = primary hypothyroidism"},
+          {"name": "Free T3 (fT3)", "reason": "Active thyroid hormone — low in overt hypothyroidism"},
+          {"name": "Anti-TPO antibodies", "reason": "Positive in Hashimoto's thyroiditis (autoimmune thyroid disease)"},
+          {"name": "Lipid Panel", "reason": "Hypothyroidism commonly raises cholesterol"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Thyroid conditions increase vulnerability to respiratory infections"}
+        ]
+      },
+      "low": {
+        "urgency": "soon",
+        "message": "Low TSH suggests an overactive thyroid (hyperthyroidism) or thyroid hormone excess.",
+        "follow_up_tests": [
+          {"name": "Free T4 + Free T3", "reason": "Confirms hyperthyroidism and severity"},
+          {"name": "TSH receptor antibodies (TRAb)", "reason": "Diagnoses Graves' disease — the most common cause"},
+          {"name": "Thyroid Ultrasound", "reason": "Checks for nodules or diffuse enlargement"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Thyroid disease can complicate flu illness"}
+        ]
+      }
+    },
+    "wbc": {
+      "high": {
+        "urgency": "urgent",
+        "message": "Elevated white blood cell count may indicate infection, inflammation or — rarely — blood disorders.",
+        "follow_up_tests": [
+          {"name": "Differential WBC count", "reason": "Which cell type is elevated narrows the cause (bacterial vs viral vs allergy vs leukemia)"},
+          {"name": "CRP + ESR", "reason": "Inflammation markers to gauge infection severity"},
+          {"name": "Blood culture", "reason": "If bacterial infection is suspected"},
+          {"name": "Peripheral blood smear", "reason": "If leukemia or lymphoma is being considered"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Recurrent infections raise suspicion of immune dysregulation — vaccination important"},
+          {"key": "pneumococcal", "reason": "Important if immune system is under stress"}
+        ]
+      },
+      "low": {
+        "urgency": "urgent",
+        "message": "Low white cell count (leukopenia) can signal viral infection, bone marrow suppression or autoimmune disease.",
+        "follow_up_tests": [
+          {"name": "Differential WBC count", "reason": "Identifies which cell line is low"},
+          {"name": "ANA (Antinuclear antibody)", "reason": "Screen for autoimmune disease (lupus, etc.)"},
+          {"name": "Vitamin B12 + Folate", "reason": "Deficiencies suppress bone marrow"},
+          {"name": "HIV test", "reason": "HIV causes progressive leukopenia if untreated"}
+        ],
+        "vaccines": [
+          {"key": "influenza", "reason": "Low immunity makes flu more dangerous — consult doctor on vaccine timing"},
+          {"key": "pneumococcal", "reason": "Immune suppression raises pneumococcal disease risk significantly"}
+        ]
+      }
+    },
+    "platelets": {
+      "low": {
+        "urgency": "urgent",
+        "message": "Low platelets (thrombocytopenia) can increase bleeding risk — the cause must be identified.",
+        "follow_up_tests": [
+          {"name": "Peripheral blood smear", "reason": "Confirms and classifies platelet reduction"},
+          {"name": "Dengue NS1 + IgM/IgG", "reason": "Dengue fever is a common cause of sudden platelet drop in Indonesia"},
+          {"name": "ANA + Anti-dsDNA", "reason": "Autoimmune thrombocytopenia (ITP) screen"},
+          {"name": "Coagulation panel (PT, aPTT)", "reason": "Assess clotting ability with low platelets"}
+        ],
+        "vaccines": [
+          {"key": "dengue", "reason": "Dengvaxia is available in Indonesia for dengue prevention — discuss with your doctor"}
+        ]
+      }
+    }
+  }
+}

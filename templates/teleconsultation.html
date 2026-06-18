@@ -129,11 +129,10 @@
 
       <div class="doctor-card-top">
         <div class="doctor-photo-wrap">
-          <!-- Tavus avatar video (auto-plays, muted, loops) -->
-          <video class="doctor-photo" autoplay muted loop playsinline aria-label="Doctor introduction video" preload="metadata"
-                 style="object-fit:cover;object-position:top;">
-            <source src="{{ doctor.photo }}" type="video/mp4">
-          </video>
+          <!-- Professional headshot — same face shown live in the consultation -->
+          <img class="doctor-photo" src="{{ doctor.did_photo or doctor.photo }}"
+               alt="{{ doctor.name }}" loading="lazy"
+               style="object-fit:cover;object-position:center top;" />
           <div class="doctor-online-dot online"></div>
         </div>
         <div class="doctor-info">

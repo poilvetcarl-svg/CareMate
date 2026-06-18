@@ -341,8 +341,8 @@ _TAVUS_VIDEO_MALE   = "https://cdn.replica.tavus.io/39476/8558b349.mp4"    # Raj
 _TAVUS_VIDEO_FEMALE = "https://cdn.replica.tavus.io/20310/f5d5455f_normalized.mp4"  # Olivia - Doctor (phoenix-3)
 
 DOCTORS = [
-    {"id": 1, "did_photo": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=512&q=80&auto=format&fit=crop", "name": "Dr. Budi Santoso", "specialty": "Internal Medicine & Infectious Disease", "hospital": "RS Pondok Indah", "city": "Jakarta Selatan", "lat": -6.2615, "lng": 106.7890, "rating": 4.9, "reviews": 312, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "15 years", "slots": ["09:00", "10:30", "14:00", "15:30"], "gender": "male", "tts_voice": "onyx"},
-    {"id": 2, "did_photo": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=512&q=80&auto=format&fit=crop", "name": "Dr. Sari Dewi, Sp.PD", "specialty": "Vaccinology & Travel Medicine", "hospital": "RSUP Cipto Mangunkusumo", "city": "Jakarta Pusat", "lat": -6.1924, "lng": 106.8455, "rating": 4.8, "reviews": 487, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English", "Dutch"], "photo": _TAVUS_VIDEO_FEMALE, "experience": "18 years", "slots": ["08:00", "11:00", "13:00"], "gender": "female", "tts_voice": "nova"},
+    {"id": 1, "did_photo": "https://images.unsplash.com/photo-1622902046580-2b47f47f5471?w=512&q=85&auto=format&fit=facearea&facepad=2.8", "name": "Dr. Budi Santoso", "specialty": "Internal Medicine & Infectious Disease", "hospital": "RS Pondok Indah", "city": "Jakarta Selatan", "lat": -6.2615, "lng": 106.7890, "rating": 4.9, "reviews": 312, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "15 years", "slots": ["09:00", "10:30", "14:00", "15:30"], "gender": "male", "tts_voice": "onyx"},
+    {"id": 2, "did_photo": "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=512&q=85&auto=format&fit=facearea&facepad=2.8", "name": "Dr. Sari Dewi, Sp.PD", "specialty": "Vaccinology & Travel Medicine", "hospital": "RSUP Cipto Mangunkusumo", "city": "Jakarta Pusat", "lat": -6.1924, "lng": 106.8455, "rating": 4.8, "reviews": 487, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English", "Dutch"], "photo": _TAVUS_VIDEO_FEMALE, "experience": "18 years", "slots": ["08:00", "11:00", "13:00"], "gender": "female", "tts_voice": "nova"},
     {"id": 3, "name": "Dr. Ahmad Fauzi, Sp.A", "specialty": "Pediatric & Adult Immunization", "hospital": "RS Siloam Hospitals", "city": "Tangerang", "lat": -6.2388, "lng": 106.6402, "rating": 4.7, "reviews": 256, "fee": "Rp 200.000", "available": False, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "12 years", "slots": ["10:00", "14:30", "16:00"], "gender": "male", "tts_voice": "echo"},
     {"id": 4, "name": "Dr. Maya Kusuma, M.D.", "specialty": "Family Medicine & Preventive Health", "hospital": "Klinik Pratama SehatKu", "city": "Bekasi", "lat": -6.2349, "lng": 106.9896, "rating": 4.6, "reviews": 198, "fee": "Rp 150.000", "available": False, "languages": ["Bahasa Indonesia"], "photo": _TAVUS_VIDEO_FEMALE, "experience": "8 years", "slots": ["09:30", "11:30", "15:00", "17:00"], "gender": "female", "tts_voice": "shimmer"},
     {"id": 5, "name": "Dr. Hendro Wibowo, Sp.PD", "specialty": "Internal Medicine & Immunology", "hospital": "RS Medistra", "city": "Jakarta Selatan", "lat": -6.2297, "lng": 106.8261, "rating": 4.9, "reviews": 541, "fee": "Rp 350.000", "available": False, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "22 years", "slots": ["Next week"], "gender": "male", "tts_voice": "onyx"},
@@ -1147,6 +1147,9 @@ def dashboard():
 with open(os.path.join(os.path.dirname(__file__), "data", "lab_reference.json")) as _f:
     LAB_REFERENCE = json.load(_f)["tests"]
 
+with open(os.path.join(os.path.dirname(__file__), "data", "lab_recommendations.json")) as _f:
+    LAB_RECOMMENDATIONS = json.load(_f)["rules"]
+
 
 def match_lab_test(name):
     """Match a free-text test name to a known reference key, or None."""
@@ -1274,6 +1277,93 @@ def delete_lab_result(lab_id):
         db.session.delete(row)
         db.session.commit()
     return redirect(url_for("dashboard"))
+
+
+@app.route("/api/labs/recommendations")
+@login_required
+def lab_recommendations_api():
+    """Return follow-up tests + vaccines for the user's flagged lab results."""
+    lab_results = LabResult.query.filter_by(user_id=current_user.id)\
+        .order_by(LabResult.date_taken.desc()).all()
+
+    # Deduplicate by test_key: keep only the most recent per test
+    seen = {}
+    for lab in lab_results:
+        key = lab.test_key
+        if key and key not in seen:
+            seen[key] = lab
+
+    flagged = [lab for lab in seen.values() if lab.flag in ("high", "low")]
+    if not flagged:
+        return jsonify({"has_flags": False, "flags": [], "follow_up_tests": [], "vaccines": []})
+
+    follow_up_map = {}   # name → reason (deduplicated)
+    vaccine_map = {}     # key → {key, reason, names}
+    flag_summaries = []
+
+    for lab in flagged:
+        rule = LAB_RECOMMENDATIONS.get(lab.test_key, {}).get(lab.flag, {})
+        if not rule:
+            continue
+        flag_summaries.append({
+            "test_name": lab.test_name,
+            "value": lab.value,
+            "unit": lab.unit,
+            "flag": lab.flag,
+            "date": lab.date_taken.strftime("%d %b %Y"),
+            "urgency": rule.get("urgency", "check"),
+            "message": rule.get("message", "")
+        })
+        for ft in rule.get("follow_up_tests", []):
+            name = ft["name"]
+            if name not in follow_up_map:
+                follow_up_map[name] = ft["reason"]
+        for v in rule.get("vaccines", []):
+            vkey = v["key"]
+            if vkey not in vaccine_map:
+                vaccine_map[vkey] = {"key": vkey, "reasons": []}
+            vaccine_map[vkey]["reasons"].append(v["reason"])
+
+    # Resolve vaccine display names
+    vaccines_out = []
+    for vkey, vdata in vaccine_map.items():
+        ref = VACCINE_DATA["vaccines"].get(vkey, {})
+        vaccines_out.append({
+            "key": vkey,
+            "name": ref.get("name", vkey.replace("_", " ").title()),
+            "reasons": vdata["reasons"]
+        })
+
+    follow_up_out = [{"name": n, "reason": r} for n, r in follow_up_map.items()]
+
+    # Build teleconsult context string for Tavus
+    flag_lines = []
+    for f in flag_summaries:
+        flag_lines.append(
+            f"  • {f['test_name']}: {f['value']} {f['unit']} ({f['flag'].upper()}) — {f['message']}"
+        )
+    vacc_lines = [f"  • {v['name']}: {v['reasons'][0]}" for v in vaccines_out]
+    ft_lines = [f"  • {ft['name']}: {ft['reason']}" for ft in follow_up_out[:6]]
+
+    lab_context = (
+        "--- PATIENT LAB RESULTS (from CareMate) ---\n"
+        + "\n".join(flag_lines)
+        + "\n\nRecommended Follow-up Tests:\n" + "\n".join(ft_lines)
+        + "\n\nVaccines Indicated by Lab Results:\n" + "\n".join(vacc_lines)
+        + "\n---\n"
+        "INSTRUCTION: Open the consultation by summarising these lab findings in plain language. "
+        "Explain each flagged value and what it means clinically. Then go through the recommended "
+        "follow-up tests one by one and explain why each is needed. Then explain the vaccine "
+        "recommendations. Use a warm, clear, doctor-patient tone. Invite questions after."
+    )
+
+    return jsonify({
+        "has_flags": True,
+        "flags": flag_summaries,
+        "follow_up_tests": follow_up_out,
+        "vaccines": vaccines_out,
+        "lab_context_for_tavus": lab_context
+    })
 
 
 # ══════════════════════════════════════════════════════════
@@ -1988,6 +2078,8 @@ def tavus_create_conversation():
 
     # Optional assessment results passed from the frontend
     patient_ctx = data.get("patient_context", {})
+    # Optional lab results context (from /api/labs/recommendations flow)
+    lab_ctx_str = data.get("lab_context", "")
     base_context = _doctor_tavus_context(doctor, lang_override)
 
     if patient_ctx:
@@ -2109,6 +2201,23 @@ def tavus_create_conversation():
     else:
         full_context = base_context
         greeting = _doctor_greeting(doctor, lang_override)
+
+    # Append lab context if provided (from lab results panel)
+    if lab_ctx_str:
+        full_context = full_context + "\n\n" + lab_ctx_str
+        # Override greeting to open with lab results
+        speaks_id_lab = (lang_override == "indonesian") or \
+                        (lang_override is None and "Bahasa Indonesia" in doctor.get("languages", []))
+        if speaks_id_lab:
+            greeting = (
+                f"Halo, saya {doctor['name']}. Saya sudah melihat hasil lab Anda yang baru masuk dan ada beberapa hal penting yang ingin saya diskusikan dengan Anda. "
+                "Mari kita bahas bersama."
+            )
+        else:
+            greeting = (
+                f"Hello, I'm {doctor['name']}. I've just reviewed your latest lab results and there are some important findings I want to walk you through. "
+                "Let's go through them together."
+            )
 
     # Determine Tavus language: override > doctor profile
     if lang_override in ("indonesian", "english"):

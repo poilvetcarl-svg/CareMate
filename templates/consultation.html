@@ -74,7 +74,7 @@
     .tavus-loading.hidden { opacity: 0; pointer-events: none; }
     .tavus-loading-avatar {
       width: 100px; height: 100px; border-radius: 50%;
-      background-image: url('{{ doctor.photo }}');
+      background-image: url('{{ doctor.did_photo or doctor.photo }}');
       background-size: cover; background-position: center top;
       border: 3px solid rgba(124,58,237,0.5);
       box-shadow: 0 0 40px rgba(124,58,237,0.3);
@@ -104,7 +104,7 @@
     }
     .tavus-fallback .fb-avatar {
       width: 120px; height: 120px; border-radius: 50%;
-      background-image: url('{{ doctor.photo }}');
+      background-image: url('{{ doctor.did_photo or doctor.photo }}');
       background-size: cover; background-position: center;
       border: 3px solid rgba(124,58,237,0.4);
       animation: breatheIdle 5s ease-in-out infinite;
@@ -435,7 +435,7 @@
   <div class="video-area">
 
     <!-- Blurred pre-load background -->
-    <div class="tavus-bg" id="tavusBg" style="background-image: url('{{ doctor.photo }}');"></div>
+    <div class="tavus-bg" id="tavusBg" style="background-image: url('{{ doctor.did_photo or doctor.photo }}');"></div>
 
     <!-- Tavus CVI iframe — filled once conversation URL is ready -->
     <iframe
@@ -859,15 +859,37 @@
         if (saved) patientContext = JSON.parse(saved);
       } catch(e) {}
 
+      // Load lab context if arriving from lab recommendations panel
+      let labContext = null;
+      try {
+        const labSaved = localStorage.getItem('labConsultContext');
+        if (labSaved) {
+          const labData = JSON.parse(labSaved);
+          labContext = labData.lab_context || null;
+          // Show a subtle banner so the patient knows their labs are loaded
+          if (labContext) {
+            const banner = document.createElement('div');
+            banner.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(16,185,129,.92);color:#fff;font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px;pointer-events:none';
+            banner.textContent = '🧪 Lab results shared with your doctor';
+            document.body.appendChild(banner);
+            setTimeout(() => banner.remove(), 4000);
+          }
+          localStorage.removeItem('labConsultContext');
+        }
+      } catch(e) {}
+
       // Create a Tavus conversation for this doctor
+      const tavusBody = {
+        doctor_id: DOCTOR_ID,
+        patient_context: patientContext,
+        language_override: langOverride || 'english'
+      };
+      if (labContext) tavusBody.lab_context = labContext;
+
       const r = await fetch('/api/tavus/conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          doctor_id: DOCTOR_ID,
-          patient_context: patientContext,
-          language_override: langOverride || 'english'
-        })
+        body: JSON.stringify(tavusBody)
       });
 
       const data = await r.json();
