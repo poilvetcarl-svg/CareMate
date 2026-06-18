@@ -479,7 +479,7 @@
             The AI doctor will still respond and speak to you.
           </p>
         </div>
-        <button onclick="didFailoverAttempted=false;initTavus()" style="margin-top:12px;background:rgba(124,58,237,0.3);border:1px solid rgba(124,58,237,0.5);color:white;padding:8px 20px;border-radius:20px;font-size:13px;cursor:pointer;">
+        <button onclick="initTavus()" style="margin-top:12px;background:rgba(124,58,237,0.3);border:1px solid rgba(124,58,237,0.5);color:white;padding:8px 20px;border-radius:20px;font-size:13px;cursor:pointer;">
           🔄 Retry Video
         </button>
       </div>
@@ -719,17 +719,13 @@
     document.getElementById('tavusFallback').style.display = 'flex';
   }
 
-  // ── VIDEO FAILOVER CHAIN: Tavus → D-ID streaming avatar → static ──
-  let didFailoverAttempted = false;
+  // ── VIDEO FAILOVER: Tavus → static (looping real replica video + chat) ──
+  // D-ID's animated-photo avatar was removed — it looked fake. If Tavus is
+  // unavailable we fall straight back to the real looping replica footage,
+  // which reads as a genuine person far better than a talking still image.
   function failoverVideo(reason) {
-    if (didActive) return;                 // D-ID already running — nothing to do
-    if (didFailoverAttempted) { showStaticFallback(); return; }
-    didFailoverAttempted = true;
     console.warn('Video failover:', reason);
-    initDidStream().catch(err => {
-      console.warn('D-ID stream failed:', err);
-      showStaticFallback();
-    });
+    showStaticFallback();
   }
 
   // ── LISTEN FOR WEBRTC / DAILY.CO ERRORS FROM TAVUS IFRAME ──

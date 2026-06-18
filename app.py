@@ -145,9 +145,9 @@ _tavus_key        = os.environ.get("TAVUS_API_KEY", "")
 _tavus_replica_id = os.environ.get("TAVUS_REPLICA_ID", "")   # override / fallback
 TAVUS_ENABLED     = bool(_tavus_key)
 
-# Dedicated doctor stock replicas (phoenix-3/4) — auto-selected by doctor gender
+# Dedicated doctor stock replicas — both phoenix-4 (most photorealistic) for a real-person feel
 TAVUS_MALE_REPLICA   = "r621a6013477"   # Raj - Doctor (phoenix-4)
-TAVUS_FEMALE_REPLICA = "rd3ba0f30551"   # Olivia - Doctor (phoenix-3)
+TAVUS_FEMALE_REPLICA = "rf4e9d9790f0"   # Anna - Professional (phoenix-4)
 
 TAVUS_BASE = "https://tavusapi.com/v2"
 
@@ -338,7 +338,7 @@ with open("data/vaccines.json") as f:
 
 # Tavus avatar thumbnail videos (used as doctor photos in the UI)
 _TAVUS_VIDEO_MALE   = "https://cdn.replica.tavus.io/39476/8558b349.mp4"    # Raj - Doctor (phoenix-4)
-_TAVUS_VIDEO_FEMALE = "https://cdn.replica.tavus.io/20310/f5d5455f_normalized.mp4"  # Olivia - Doctor (phoenix-3)
+_TAVUS_VIDEO_FEMALE = "https://cdn.replica.tavus.io/39895/8c44fce6.mp4"  # Anna - Professional (phoenix-4)
 
 DOCTORS = [
     {"id": 1, "did_photo": "https://images.unsplash.com/photo-1622902046580-2b47f47f5471?w=512&q=85&auto=format&fit=facearea&facepad=2.8", "name": "Dr. Budi Santoso", "specialty": "Internal Medicine & Infectious Disease", "hospital": "RS Pondok Indah", "city": "Jakarta Selatan", "lat": -6.2615, "lng": 106.7890, "rating": 4.9, "reviews": 312, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "15 years", "slots": ["09:00", "10:30", "14:00", "15:30"], "gender": "male", "tts_voice": "onyx"},
