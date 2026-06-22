@@ -14,3 +14,4 @@ pytest==8.0.0
 flask-mail==0.10.0
 fpdf2==2.7.8
 qrcode[pil]==7.4.2
+psycopg2-binary==2.9.9

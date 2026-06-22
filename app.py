@@ -69,14 +69,26 @@ app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER") \
 # ── Extensions ──
 csrf = CSRFProtect(app)
 
-# Database — Railway provides DATABASE_URL as postgres://, SQLAlchemy needs postgresql://
-# On Vercel the filesystem is read-only except /tmp, so default SQLite there.
+# Database — use a persistent Postgres in production (Vercel/Neon inject one of the
+# env vars below). On Vercel the filesystem is read-only except /tmp, and /tmp is
+# ephemeral, so SQLite there is NOT durable — only used as a local-dev fallback.
 _default_sqlite = "sqlite:////tmp/caremate.db" if os.environ.get("VERCEL") else "sqlite:///caremate.db"
-_db_url = os.environ.get("DATABASE_URL", _default_sqlite)
+# Accept the various names Vercel Postgres / Neon use, preferring an unpooled URL
+# (better for create_all / migrations) when available.
+_db_url = (
+    os.environ.get("DATABASE_URL")
+    or os.environ.get("POSTGRES_URL_NON_POOLING")
+    or os.environ.get("DATABASE_URL_UNPOOLED")
+    or os.environ.get("POSTGRES_URL")
+    or os.environ.get("POSTGRES_PRISMA_URL")
+    or _default_sqlite
+)
 if _db_url.startswith("postgres://"):
     _db_url = _db_url.replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = _db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# Recycle pooled connections so serverless cold starts don't reuse dead sockets.
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 280}
 
 from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, seed_clinics
 db.init_app(app)
@@ -1589,6 +1601,16 @@ def references():
     return render_template("references.html")
 
 
+@app.route("/terms")
+def terms():
+    return render_template("legal.html", doc="terms")
+
+
+@app.route("/privacy")
+def privacy():
+    return render_template("legal.html", doc="privacy")
+
+
 @app.route("/clinics")
 def clinics():
     all_clinics = Clinic.query.order_by(Clinic.rating.desc()).all()
@@ -2200,7 +2222,24 @@ def tavus_create_conversation():
             )
     else:
         full_context = base_context
-        greeting = _doctor_greeting(doctor, lang_override)
+        # No assessment context — greet by name if we have one, and ask how to help
+        p_name = (data.get("patient_name") or "").strip()
+        if p_name:
+            speaks_id = (lang_override == "indonesian") or \
+                        (lang_override is None and "Bahasa Indonesia" in doctor.get("languages", []))
+            if speaks_id:
+                greeting = (f"Halo {p_name}! Saya {doctor['name']}. "
+                            f"Senang bertemu dengan Anda. Apa yang bisa saya bantu hari ini?")
+            else:
+                greeting = (f"Hi {p_name}! I'm {doctor['name']}. "
+                            f"It's good to meet you. How can I help you today?")
+            full_context = base_context + (
+                f"\n\nThe patient's name is {p_name}. Greet them warmly by name and ask "
+                f"how you can help. They have not completed an assessment yet, so let them "
+                f"lead the conversation."
+            )
+        else:
+            greeting = _doctor_greeting(doctor, lang_override)
 
     # Append lab context if provided (from lab results panel)
     if lab_ctx_str:
