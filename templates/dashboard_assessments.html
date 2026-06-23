@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Health Assessments, CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
+</head>
+<body class="dash-body">
+
+<button class="dash-burger" aria-label="Open menu" onclick="document.body.classList.add(&apos;nav-open&apos;)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="dash-backdrop" onclick="document.body.classList.remove(&apos;nav-open&apos;)"></div>
+<aside class="dash-sidebar">
+  <div class="dash-logo"><a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span>Mate</span></a></div>
+  <nav class="dash-nav">
+    <a href="/dashboard" class="dash-nav-item">Overview</a>
+    <a href="/dashboard/assessments" class="dash-nav-item active">Health Assessment</a>
+    <a href="/dashboard/records" class="dash-nav-item">My Health Records</a>
+    <a href="/teleconsultation" class="dash-nav-item">Talk to a Doctor</a>
+    <a href="/clinics" class="dash-nav-item">Find Care</a>
+    <a href="/dashboard/reminders" class="dash-nav-item">Reminders</a>
+  </nav>
+  <div class="dash-sidebar-footer">
+    <div class="dash-user-pill">
+      <div class="dash-avatar">{{ current_user.name[0].upper() if current_user.name else 'U' }}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ current_user.name or 'User' }}</div>
+        <div style="font-size:11px;color:var(--text-muted)">{{ current_user.email }}</div>
+      </div>
+    </div>
+    <a href="/logout" class="dash-logout-btn">Sign Out</a>
+  </div>
+</aside>
+
+<main class="dash-main">
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-title"><i class="ti ti-clipboard-heart" style="color:var(--coral)"></i> Health Assessments</h1>
+      <p class="dash-sub">Every assessment you've taken, with your prevention score and recommendations.</p>
+    </div>
+    <a href="/#assessment" class="btn-primary" style="padding:10px 20px;font-size:13px"><i class="ti ti-plus" style="vertical-align:-2px"></i> Take New Assessment</a>
+  </div>
+
+  {% if assessments %}
+  <div class="dash-card">
+    {% for a in assessments %}
+    {% set conds = a.conditions | from_json if a.conditions else [] %}
+    {% set vaccs = a.vaccines_recommended | from_json if a.vaccines_recommended else [] %}
+    {% set pscore = (100 - a.risk_score)|int if a.risk_score is not none else None %}
+    <div style="border-bottom:1px solid var(--border);padding:16px 0">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        {% if pscore is not none %}
+        <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,107,107,0.1);color:var(--coral);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
+          <span style="font-size:18px;font-weight:900;line-height:1">{{ pscore }}</span>
+          <span style="font-size:8px;font-weight:700;letter-spacing:.04em">/100</span>
+        </div>
+        {% endif %}
+        <div style="flex:1;min-width:160px">
+          <div style="font-size:14px;font-weight:800;color:var(--text-primary)">Prevention score: {{ pscore if pscore is not none else 'Not scored' }}{% if a.risk_level %} · {{ a.risk_level }}{% endif %}</div>
+          <div style="font-size:12px;color:var(--text-muted)">{{ a.created_at.strftime('%d %b %Y, %H:%M') }} · Age {{ a.age }}{% if conds %} · {{ conds|length }} condition(s){% endif %}</div>
+        </div>
+      </div>
+      {% if vaccs %}
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-left:0">
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted);align-self:center">Recommended:</span>
+        {% for vk in vaccs[:6] %}
+        <span style="font-size:11px;font-weight:700;background:rgba(255,107,107,0.1);color:var(--coral);padding:3px 10px;border-radius:20px">{{ vaccines.get(vk, {}).get('name', vk) if vaccines.get(vk) else vk }}</span>
+        {% endfor %}
+        {% if vaccs|length > 6 %}<span style="font-size:11px;color:var(--text-muted);align-self:center">+{{ vaccs|length - 6 }} more</span>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="dash-card">
+    <div class="dash-empty" style="padding:36px 0;text-align:center">
+      <div style="font-size:40px;color:var(--coral);margin-bottom:12px"><i class="ti ti-clipboard-heart"></i></div>
+      <div style="font-size:16px;font-weight:800;margin-bottom:6px">No assessments yet</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:18px">Take a 60-second assessment to get your prevention score and personalised recommendations.</div>
+      <a href="/#assessment" class="btn-primary" style="padding:11px 22px;font-size:14px;text-decoration:none">Take your first assessment</a>
+    </div>
+  </div>
+  {% endif %}
+</main>
+</body>
+</html>

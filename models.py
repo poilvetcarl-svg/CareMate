@@ -1,5 +1,5 @@
 """
-CareMate — Database Models
+CareMate, Database Models
 SQLite + SQLAlchemy ORM
 """
 from flask_sqlalchemy import SQLAlchemy
@@ -110,6 +110,54 @@ class LabResult(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref=db.backref('lab_results', lazy=True, cascade='all, delete-orphan'))
+
+
+# ── CONSULTATION SUMMARY (saved after each AI teleconsultation) ───────────────
+class ConsultationSummary(db.Model):
+    id               = db.Column(db.Integer, primary_key=True)
+    user_id          = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    doctor_name      = db.Column(db.String(120))
+    doctor_specialty = db.Column(db.String(160))
+    summary          = db.Column(db.Text, nullable=False)
+    transcript       = db.Column(db.Text)            # JSON of the last messages
+    created_at       = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('consultations', lazy=True, cascade='all, delete-orphan'))
+
+
+# ── TAVUS VIDEO SESSION (maps a Tavus conversation to the user so we can save its
+#    transcript/summary when Tavus delivers it via webhook after the call) ──────
+class TavusSession(db.Model):
+    id               = db.Column(db.Integer, primary_key=True)
+    conversation_id  = db.Column(db.String(120), unique=True, index=True, nullable=False)
+    user_id          = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    doctor_name      = db.Column(db.String(120))
+    doctor_specialty = db.Column(db.String(160))
+    saved            = db.Column(db.Boolean, default=False)   # transcript already turned into a ConsultationSummary
+    created_at       = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# ── WEARABLE / SMARTWATCH CONNECTION (demo: simulated metrics) ────────────────
+class WearableDevice(db.Model):
+    id           = db.Column(db.Integer, primary_key=True)
+    user_id      = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True, nullable=False)
+    provider     = db.Column(db.String(60))            # e.g. "Apple Watch", "Fitbit Sense"
+    connected_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('wearable', uselist=False, cascade='all, delete-orphan'))
+
+
+# ── DAILY WELLBEING CHECK-IN (the companion "how do you feel today") ──────────
+class DailyCheckin(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    day        = db.Column(db.Date, default=date.today, index=True)
+    body       = db.Column(db.Integer)   # 1 (unwell) .. 5 (great)
+    mind       = db.Column(db.Integer)   # 1 (exhausted) .. 5 (great)
+    note       = db.Column(db.String(280))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('checkins', lazy=True, cascade='all, delete-orphan'))
 
 
 # ── VACCINATION RECORD ────────────────────────────────────────────────────────
@@ -282,6 +330,16 @@ SEED_CLINICS = [
          vaccines_offered='["influenza","pneumococcal","zoster","hepatitis_b","hepatitis_a","typhoid","hpv","tdap"]',
          price_range="Rp 250.000 – 1.800.000", opening_hours="Sen–Min 08:00–20:00", rating=4.6,
          logo="🏠", network="Vaxine Care", website="https://vaxinecare.com", home_service=True),
+    dict(name="Imuni", branch="Vaksinasi di Rumah", address="Service area: Jabodetabek, Bandung, Surabaya & Bali",
+         city="Jakarta", phone="+6282120097800", latitude=-6.1457, longitude=106.8606,
+         vaccines_offered='["influenza","pneumococcal","zoster","hepatitis_b","hepatitis_a","typhoid","hpv","tdap","mmr","varicella","rotavirus"]',
+         price_range="Rp 200.000 – 2.500.000", opening_hours="Sen–Min 08:00–20:00", rating=4.9,
+         logo="🏠", network="Imuni", website="https://imuni.id", home_service=True),
+    dict(name="InHarmony", branch="Klinik Vaksinasi", address="Service area: Jakarta, clinic & home service",
+         city="Jakarta", phone="+62214220214", latitude=-6.1846, longitude=106.8540,
+         vaccines_offered='["influenza","pneumococcal","zoster","hepatitis_b","hepatitis_a","typhoid","hpv","tdap","mmr","varicella","meningococcal","yellow_fever"]',
+         price_range="Rp 200.000 – 3.000.000", opening_hours="Sen–Jum 09:00–20:00", rating=4.8,
+         logo="🏠", network="InHarmony", website="https://inharmonyclinic.com", home_service=True),
 ]
 
 def seed_clinics():

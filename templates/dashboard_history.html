@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vaccination History — CareMate</title>
+  <title>Vaccination History, CareMate</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
 </head>
 <body class="dash-body">
 
+<button class="dash-burger" aria-label="Open menu" onclick="document.body.classList.add(&apos;nav-open&apos;)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="dash-backdrop" onclick="document.body.classList.remove(&apos;nav-open&apos;)"></div>
 <aside class="dash-sidebar">
-  <div class="dash-logo"><a href="/" class="nav-logo">Care<span>Mate</span></a></div>
+  <div class="dash-logo"><a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span>Mate</span></a></div>
   <nav class="dash-nav">
     <a href="/dashboard" class="dash-nav-item">Overview</a>
     <a href="/dashboard/history" class="dash-nav-item active">Vaccination History</a>
@@ -33,7 +35,7 @@
 <main class="dash-main">
   <div class="dash-header">
     <div>
-      <h1 class="dash-title">💉 Vaccination History</h1>
+      <h1 class="dash-title"><i class="ti ti-vaccine" style="color:var(--coral)"></i> Vaccination History</h1>
       <p class="dash-sub">All vaccines you've recorded on CareMate.</p>
     </div>
     <button class="btn-primary" style="padding:10px 20px;font-size:13px" onclick="openLogModal()">+ Log Vaccine</button>
@@ -60,14 +62,14 @@
         </div>
         <a href="/dashboard/certificate/{{ rec.id }}"
            style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;background:rgba(5,150,105,0.08);color:var(--accent);border:1px solid rgba(5,150,105,0.2);text-decoration:none;white-space:nowrap">
-          📄 Download Certificate
+          <i class="ti ti-file-text" style="color:var(--coral)"></i> Download Certificate
         </a>
       </div>
       {% endfor %}
     </div>
     {% else %}
     <div class="dash-empty">
-      <div style="font-size:48px;margin-bottom:12px">💉</div>
+      <div style="font-size:48px;margin-bottom:12px"><i class="ti ti-vaccine" style="color:var(--coral)"></i></div>
       <div style="font-size:16px;font-weight:700;margin-bottom:6px">No vaccines recorded yet</div>
       <div style="font-size:13px;color:var(--text-muted)">Start logging your vaccination history below.</div>
       <button class="dash-action-btn" style="margin-top:16px" onclick="openLogModal()">+ Log Your First Vaccine</button>
@@ -121,7 +123,7 @@
       <div class="form-row">
         <label>Set Reminder for Next Dose?</label>
         <select name="set_reminder">
-          <option value="yes">Yes — remind me</option>
+          <option value="yes">Yes, remind me</option>
           <option value="no">No thanks</option>
         </select>
       </div>

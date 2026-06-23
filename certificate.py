@@ -1,5 +1,5 @@
 """
-CareMate — Vaccine Certificate PDF Generator
+CareMate, Vaccine Certificate PDF Generator
 Uses fpdf2 + qrcode to produce professional A4 landscape certificates.
 """
 from fpdf import FPDF

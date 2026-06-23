@@ -7,11 +7,13 @@
   <link rel="apple-touch-icon" href="/static/img/favicon-192.png" />
   <title>Welcome to CareMate</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
   <style>
     body { min-height:100vh; background:var(--bg-secondary); display:flex; align-items:center; justify-content:center; padding:24px; }
     .ob-wrap { max-width:540px; width:100%; }
     .ob-card { background:var(--bg-card); border:1px solid var(--border); border-radius:24px; padding:40px 36px; box-shadow:0 8px 40px rgba(0,0,0,0.08); }
-    .ob-logo { text-align:center; margin-bottom:28px; font-size:32px; font-weight:900; color:var(--text-primary); }
+    .ob-logo { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:28px; font-size:32px; font-weight:900; color:var(--text-primary); }
+    .ob-logo img { height:38px; width:auto; display:block; }
     .ob-logo span { color:var(--accent); }
     .ob-title { font-size:24px; font-weight:900; margin-bottom:6px; }
     .ob-sub { font-size:14px; color:var(--text-muted); margin-bottom:28px; }
@@ -25,16 +27,16 @@
     /* Steps */
     .ob-steps { display:flex; flex-direction:column; gap:12px; margin-bottom:28px; }
     .ob-step { display:flex; align-items:center; gap:14px; padding:16px 18px; border-radius:14px; border:1.5px solid var(--border); background:var(--bg); transition:border-color 0.2s; }
-    .ob-step.done { border-color:var(--accent); background:rgba(5,150,105,0.04); }
-    .ob-step.active { border-color:var(--accent); background:rgba(5,150,105,0.06); box-shadow:0 2px 12px rgba(5,150,105,0.12); }
-    .ob-step-icon { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; background:var(--bg-secondary); }
-    .ob-step.done .ob-step-icon { background:rgba(5,150,105,0.12); }
-    .ob-step.active .ob-step-icon { background:rgba(5,150,105,0.15); }
+    .ob-step.done { border-color:rgba(255,107,107,0.35); background:rgba(255,107,107,0.04); }
+    .ob-step.active { border-color:var(--accent); background:rgba(255,107,107,0.06); box-shadow:0 2px 12px rgba(255,107,107,0.12); }
+    .ob-step-icon { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; background:rgba(255,107,107,0.1); color:var(--accent); }
+    .ob-step.done .ob-step-icon { background:rgba(255,107,107,0.14); }
+    .ob-step.active .ob-step-icon { background:rgba(255,107,107,0.16); }
     .ob-step-text { flex:1; }
     .ob-step-title { font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:2px; }
     .ob-step-desc { font-size:12px; color:var(--text-muted); }
     .ob-step-badge { font-size:10px; font-weight:800; padding:3px 8px; border-radius:20px; }
-    .badge-done { background:rgba(5,150,105,0.1); color:var(--accent); border:1px solid rgba(5,150,105,0.2); }
+    .badge-done { background:rgba(255,107,107,0.1); color:var(--accent); border:1px solid rgba(255,107,107,0.2); }
     .badge-next { background:rgba(245,158,11,0.1); color:#d97706; border:1px solid rgba(245,158,11,0.2); }
     .badge-todo { background:var(--bg-secondary); color:var(--text-muted); border:1px solid var(--border); }
 
@@ -47,10 +49,10 @@
 </head>
 <body>
 <div class="ob-wrap">
-  <div class="ob-logo">Care<span>Mate</span></div>
+  <div class="ob-logo"><img src="/static/img/logo-icon.png" alt="" />Care<span>Mate</span></div>
 
   <div class="ob-card">
-    <div class="ob-title">Welcome, {{ current_user.name.split()[0] if current_user.name else 'there' }}! 🎉</div>
+    <div class="ob-title">Welcome, {{ current_user.name.split()[0] if current_user.name else 'there' }}! <i class="ti ti-confetti" style="color:var(--coral)"></i></div>
     <div class="ob-sub">Complete your profile in 3 quick steps to get personalised vaccine recommendations.</div>
 
     <!-- Progress -->
@@ -58,7 +60,7 @@
       <div class="ob-progress-bar-wrap">
         <div class="ob-progress-bar" style="width:{{ progress }}%"></div>
       </div>
-      <div class="ob-progress-label">{{ progress }}% complete — {{ steps_done }}/{{ steps_total }} steps done</div>
+      <div class="ob-progress-label">{{ progress }}% complete, {{ steps_done }}/{{ steps_total }} steps done</div>
     </div>
 
     <!-- Steps -->
@@ -66,7 +68,7 @@
 
       <!-- Step 1: Account -->
       <div class="ob-step done">
-        <div class="ob-step-icon">✅</div>
+        <div class="ob-step-icon"><i class="ti ti-circle-check"></i></div>
         <div class="ob-step-text">
           <div class="ob-step-title">Create your account</div>
           <div class="ob-step-desc">Email and password set up</div>
@@ -76,19 +78,19 @@
 
       <!-- Step 2: Profile -->
       <div class="ob-step {{ 'done' if has_profile else 'active' }}">
-        <div class="ob-step-icon">{{ '✅' if has_profile else '👤' }}</div>
+        <div class="ob-step-icon"><i class="ti {{ 'ti-circle-check' if has_profile else 'ti-user' }}"></i></div>
         <div class="ob-step-text">
           <div class="ob-step-title">Complete your profile</div>
-          <div class="ob-step-desc">Add date of birth and WhatsApp for reminders</div>
+          <div class="ob-step-desc">{{ 'Your details are set' if has_profile else 'Add a couple of details for better recommendations' }}</div>
         </div>
         <span class="ob-step-badge {{ 'badge-done' if has_profile else 'badge-next' }}">{{ 'Done' if has_profile else 'Next' }}</span>
       </div>
 
       <!-- Step 3: Assessment -->
       <div class="ob-step {{ 'done' if has_assessment else ('active' if has_profile else '') }}">
-        <div class="ob-step-icon">{{ '✅' if has_assessment else '📋' }}</div>
+        <div class="ob-step-icon"><i class="ti {{ 'ti-circle-check' if has_assessment else 'ti-clipboard-heart' }}"></i></div>
         <div class="ob-step-text">
-          <div class="ob-step-title">Run your vaccine assessment</div>
+          <div class="ob-step-title">Run your assessment</div>
           <div class="ob-step-desc">Get your personalised risk score and recommendations</div>
         </div>
         <span class="ob-step-badge {{ 'badge-done' if has_assessment else ('badge-next' if has_profile else 'badge-todo') }}">
@@ -98,7 +100,7 @@
 
       <!-- Step 4: First vaccine / booking -->
       <div class="ob-step {{ 'done' if has_vaccine else '' }}">
-        <div class="ob-step-icon">{{ '✅' if has_vaccine else '💉' }}</div>
+        <div class="ob-step-icon"><i class="ti {{ 'ti-circle-check' if has_vaccine else 'ti-vaccine' }}"></i></div>
         <div class="ob-step-text">
           <div class="ob-step-title">Log a vaccine or book a clinic</div>
           <div class="ob-step-desc">Start building your vaccination history</div>
@@ -112,43 +114,55 @@
     {% if not has_profile %}
     <form method="POST" action="/onboarding/profile">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-        <div>
-          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);display:block;margin-bottom:5px">Date of Birth</label>
-          <input type="date" name="dob" value="{{ current_user.date_of_birth.isoformat() if current_user.date_of_birth else '' }}"
-                 style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;box-sizing:border-box;background:var(--bg);color:var(--text-primary)" />
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);display:block;margin-bottom:5px">Sex</label>
-          <select name="sex" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text-primary)">
-            <option value="">Select...</option>
-            <option value="male" {{ 'selected' if current_user.sex == 'male' }}>Male</option>
-            <option value="female" {{ 'selected' if current_user.sex == 'female' }}>Female</option>
-          </select>
-        </div>
-      </div>
+
+      <!-- Sex is the only detail not collected at sign-up -->
       <div style="margin-bottom:14px">
-        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);display:block;margin-bottom:5px">WhatsApp Number (for reminders)</label>
-        <input type="tel" name="phone" value="{{ current_user.phone or '' }}" placeholder="+62812345678"
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);display:block;margin-bottom:5px">Sex</label>
+        <select name="sex" required style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text-primary)">
+          <option value="">Select...</option>
+          <option value="male" {{ 'selected' if current_user.sex == 'male' }}>Male</option>
+          <option value="female" {{ 'selected' if current_user.sex == 'female' }}>Female</option>
+        </select>
+      </div>
+
+      {% if not current_user.date_of_birth %}
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);display:block;margin-bottom:5px">Date of Birth</label>
+        <input type="date" name="dob"
                style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;box-sizing:border-box;background:var(--bg);color:var(--text-primary)" />
       </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:10px 12px;background:rgba(5,150,105,0.05);border-radius:10px;border:1px solid rgba(5,150,105,0.15)">
+      {% else %}
+      <input type="hidden" name="dob" value="{{ current_user.date_of_birth.isoformat() }}" />
+      {% endif %}
+
+      {% if not current_user.phone %}
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);display:block;margin-bottom:5px">WhatsApp Number (for reminders)</label>
+        <input type="tel" name="phone" placeholder="+62812345678"
+               style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;box-sizing:border-box;background:var(--bg);color:var(--text-primary)" />
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:10px 12px;background:rgba(255,107,107,0.05);border-radius:10px;border:1px solid rgba(255,107,107,0.15)">
         <input type="checkbox" name="whatsapp_opt_in" id="waOpt" style="width:16px;height:16px;accent-color:var(--accent)"
                {{ 'checked' if current_user.whatsapp_opt_in }} />
-        <label for="waOpt" style="font-size:13px;color:var(--text-secondary);cursor:pointer">Enable WhatsApp vaccine reminders</label>
+        <label for="waOpt" style="font-size:13px;color:var(--text-secondary);cursor:pointer">Enable WhatsApp reminders</label>
       </div>
-      <button type="submit" class="ob-cta">Save Profile & Continue →</button>
+      {% else %}
+      <input type="hidden" name="phone" value="{{ current_user.phone }}" />
+      <input type="hidden" name="whatsapp_opt_in" value="{{ 'on' if current_user.whatsapp_opt_in else '' }}" />
+      {% endif %}
+
+      <button type="submit" class="ob-cta">Save & Continue →</button>
     </form>
 
     {% elif not has_assessment %}
-    <a href="/#assessment" class="ob-cta">📋 Run My Assessment →</a>
+    <a href="/#assessment" class="ob-cta">Run My Assessment →</a>
 
     {% else %}
     <a href="/dashboard" class="ob-cta">Go to My Dashboard →</a>
     {% endif %}
 
     <div class="ob-skip">
-      <a href="/dashboard">Skip for now — go to dashboard</a>
+      <a href="/dashboard">Skip for now, go to dashboard</a>
     </div>
   </div>
 </div>

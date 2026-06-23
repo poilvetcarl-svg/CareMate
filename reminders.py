@@ -1,5 +1,5 @@
 """
-CareMate — WhatsApp Reminder Service
+CareMate, WhatsApp Reminder Service
 Uses Twilio WhatsApp API + APScheduler
 """
 import os
@@ -16,7 +16,7 @@ def send_whatsapp(to_number: str, message: str) -> dict:
     from_ = os.environ.get("TWILIO_WHATSAPP_FROM", "whatsapp:+14155238886")  # Twilio sandbox
 
     if not sid or not token:
-        # Dev mode — just log
+        # Dev mode, just log
         print(f"[WhatsApp MOCK] → {to_number}\n  {message}")
         return {"ok": True, "sid": "MOCK_SID"}
 
@@ -46,7 +46,7 @@ def build_reminder_message(vaccine_name: str, user_name: str, days_until: int) -
     return (
         f"💉 *Pengingat Vaksin CareMate*\n\n"
         f"Halo {name_str},\n\n"
-        f"Waktunya vaksin *{vaccine_name}* — jadwal {time_str}!\n\n"
+        f"Waktunya vaksin *{vaccine_name}*, jadwal {time_str}!\n\n"
         f"Segera booking ke klinik terdekat atau kunjungi "
         f"caremate.id untuk menemukan tempat vaksinasi.\n\n"
         f"_CareMate · Kesehatan Preventif untuk Semua_"

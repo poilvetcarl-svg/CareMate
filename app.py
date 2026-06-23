@@ -10,7 +10,7 @@ import base64
 import requests as http_req
 import string
 import random
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from dotenv import load_dotenv
 import logging
 import time
@@ -19,7 +19,7 @@ load_dotenv()
 
 APP_VERSION = "1.0.0"
 
-# ── Structured logging ──
+# -- Structured logging --
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s %(name)s :: %(message)s',
@@ -30,7 +30,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "vacc-dev-secret-2024")
 CORS(app)
 
-# ── Rate limiting — protects the OpenAI/Tavus-backed endpoints from abuse ──
+# -- Rate limiting, protects the OpenAI/Tavus-backed endpoints from abuse --
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 limiter = Limiter(
@@ -56,22 +56,22 @@ def _log_request(response):
                     response.status_code, duration_ms)
     return response
 
-# Flask-Mail — SMTP relay (Resend: server smtp.resend.com, username "resend", password = API key)
+# Flask-Mail, SMTP relay (Resend: server smtp.resend.com, username "resend", password = API key)
 app.config["MAIL_SERVER"]   = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
 app.config["MAIL_PORT"]     = int(os.environ.get("MAIL_PORT", 587))
 app.config["MAIL_USE_TLS"]  = True
 app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME", "")
 app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD", "")
-# Sender must be a verified domain address — separate from the SMTP username
+# Sender must be a verified domain address, separate from the SMTP username
 app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER") \
     or os.environ.get("MAIL_USERNAME") or "noreply@caremate.id"
 
-# ── Extensions ──
+# -- Extensions --
 csrf = CSRFProtect(app)
 
-# Database — use a persistent Postgres in production (Vercel/Neon inject one of the
+# Database, use a persistent Postgres in production (Vercel/Neon inject one of the
 # env vars below). On Vercel the filesystem is read-only except /tmp, and /tmp is
-# ephemeral, so SQLite there is NOT durable — only used as a local-dev fallback.
+# ephemeral, so SQLite there is NOT durable, only used as a local-dev fallback.
 _default_sqlite = "sqlite:////tmp/caremate.db" if os.environ.get("VERCEL") else "sqlite:///caremate.db"
 # Accept the various names Vercel Postgres / Neon use, preferring an unpooled URL
 # (better for create_all / migrations) when available.
@@ -90,7 +90,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Recycle pooled connections so serverless cold starts don't reuse dead sockets.
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 280}
 
-from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, seed_clinics
+from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, seed_clinics
 db.init_app(app)
 
 from flask_mail import Mail, Message as MailMessage
@@ -131,7 +131,7 @@ with app.app_context():
 _api_key = os.environ.get("OPENAI_API_KEY", "")
 client = OpenAI(api_key=_api_key) if _api_key.startswith("sk-") else None
 
-# D-ID Streaming Avatar (legacy — kept as fallback)
+# D-ID Streaming Avatar (legacy, kept as fallback)
 _did_key = os.environ.get("D_ID_API_KEY", "")
 DID_ENABLED = bool(_did_key)
 _did_active_streams = {}
@@ -152,21 +152,26 @@ def _did_close_stream(stream_id, session_id):
     except Exception as e:
         print(f"[D-ID] Could not close stream {stream_id}: {e}")
 
-# ── Tavus CVI (Conversational Video Interface) ──
+# -- Tavus CVI (Conversational Video Interface) --
 _tavus_key        = os.environ.get("TAVUS_API_KEY", "")
 _tavus_replica_id = os.environ.get("TAVUS_REPLICA_ID", "")   # override / fallback
 TAVUS_ENABLED     = bool(_tavus_key)
 
-# Dedicated doctor stock replicas — both phoenix-4 (most photorealistic) for a real-person feel
+# Dedicated doctor stock replicas, both phoenix-4 (most photorealistic) for a real-person feel
 TAVUS_MALE_REPLICA   = "r621a6013477"   # Raj - Doctor (phoenix-4)
 TAVUS_FEMALE_REPLICA = "rf4e9d9790f0"   # Anna - Professional (phoenix-4)
 
 TAVUS_BASE = "https://tavusapi.com/v2"
 
+# Shared secret so only Tavus (using our callback URL) can post to the webhook
+import hashlib
+TAVUS_WEBHOOK_SECRET = os.environ.get("TAVUS_WEBHOOK_SECRET") or \
+    hashlib.sha256((app.secret_key + "tavus-webhook").encode()).hexdigest()[:24]
+
 def _tavus_headers():
     return {"x-api-key": _tavus_key, "Content-Type": "application/json"}
 
-# ── Condition-specific clinical questions the doctor should ask ──
+# -- Condition-specific clinical questions the doctor should ask --
 # Two language variants so the doctor can use the right one
 _COND_Q_ID = {   # Bahasa Indonesia
     "diabetes": (
@@ -175,7 +180,7 @@ _COND_Q_ID = {   # Bahasa Indonesia
         "Sudahkah Anda mendapat vaksin influenza dan pneumokokus tahun ini?"
     ),
     "heart_disease": (
-        "Apa jenis kondisi jantung yang Anda miliki — gagal jantung, penyakit arteri koroner, atau aritmia? "
+        "Apa jenis kondisi jantung yang Anda miliki, gagal jantung, penyakit arteri koroner, atau aritmia? "
         "Apakah Anda menggunakan obat pengencer darah seperti warfarin atau aspirin? "
         "Kapan terakhir Anda kontrol ke dokter jantung?"
     ),
@@ -200,12 +205,12 @@ _COND_Q_ID = {   # Bahasa Indonesia
         "Pasien dengan gangguan ginjal membutuhkan dosis vaksin hepatitis B yang lebih tinggi."
     ),
     "liver_disease": (
-        "Apa penyebab penyakit hati Anda — hepatitis B, hepatitis C, sirosis, atau perlemakan hati? "
+        "Apa penyebab penyakit hati Anda, hepatitis B, hepatitis C, sirosis, atau perlemakan hati? "
         "Sudahkah Anda divaksin hepatitis A dan hepatitis B? "
         "Apakah Anda mengonsumsi alkohol secara rutin?"
     ),
     "immunocompromised": (
-        "Apa yang menyebabkan kondisi imunosupresi Anda — obat kortikosteroid, transplant organ, atau penyakit autoimun? "
+        "Apa yang menyebabkan kondisi imunosupresi Anda, obat kortikosteroid, transplant organ, atau penyakit autoimun? "
         "Berapa dosis dan sudah berapa lama Anda menggunakan imunosupresan? "
         "Ini sangat menentukan vaksin mana yang aman untuk Anda."
     ),
@@ -228,12 +233,12 @@ _COND_Q_ID = {   # Bahasa Indonesia
 
 _COND_Q_EN = {   # English
     "diabetes": (
-        "How well controlled is your blood sugar — do you know your last HbA1c reading? "
+        "How well controlled is your blood sugar, do you know your last HbA1c reading? "
         "Are you on insulin or oral medication? "
         "Have you received your influenza and pneumococcal vaccines this year?"
     ),
     "heart_disease": (
-        "What type of heart condition do you have — heart failure, coronary artery disease, or arrhythmia? "
+        "What type of heart condition do you have, heart failure, coronary artery disease, or arrhythmia? "
         "Are you on blood thinners such as warfarin or aspirin? "
         "When did you last see your cardiologist?"
     ),
@@ -258,12 +263,12 @@ _COND_Q_EN = {   # English
         "Patients with kidney disease need a higher dose of hepatitis B vaccine."
     ),
     "liver_disease": (
-        "What is the cause of your liver disease — hepatitis B, hepatitis C, cirrhosis, or fatty liver? "
+        "What is the cause of your liver disease, hepatitis B, hepatitis C, cirrhosis, or fatty liver? "
         "Have you been vaccinated against hepatitis A and B? "
         "Do you consume alcohol regularly?"
     ),
     "immunocompromised": (
-        "What is causing your immunosuppression — corticosteroid medications, organ transplant, or autoimmune disease? "
+        "What is causing your immunosuppression, corticosteroid medications, organ transplant, or autoimmune disease? "
         "What dose and for how long have you been on immunosuppressants? "
         "This determines which vaccines are safe for you."
     ),
@@ -305,7 +310,7 @@ def _doctor_tavus_context(doctor, lang_override=None):
     interruption_protocol = (
         "INTERRUPTION PROTOCOL (CRITICAL): If you detect that the patient has started speaking "
         "while you are still talking, IMMEDIATELY stop mid-sentence and say something warm like "
-        "'Silakan, saya mendengarkan.' (in Indonesian) or 'Please go ahead — I'm listening.' (in English). "
+        "'Silakan, saya mendengarkan.' (in Indonesian) or 'Please go ahead, I'm listening.' (in English). "
         "Do NOT continue your previous sentence. Wait for the patient to finish completely before speaking again. "
         "Never talk over the patient. Their words always take priority. "
     )
@@ -325,8 +330,13 @@ def _doctor_tavus_context(doctor, lang_override=None):
         "common vaccines including Hepatitis A/B, Typhoid, Influenza, COVID-19, HPV, Pneumococcal, "
         "Meningococcal, Japanese Encephalitis, Rabies, and Yellow Fever. "
         "Speak warmly and professionally. Keep answers concise and clear. "
+        "Never use em-dashes (long-dash punctuation); use commas, periods, or colons instead. "
         "For emergencies, direct patients to call 119 (Indonesian emergency services). "
-        "Do not fabricate medical data — if unsure, say so and recommend consulting official guidelines."
+        "Do not fabricate medical data, if unsure, say so and recommend consulting official guidelines. "
+        "IMPORTANT: You provide educational prevention guidance only. You must NEVER write, dictate, or "
+        "issue a prescription, and never name specific drug doses to take. If the patient asks for a "
+        "prescription or medication, explain that you can't prescribe and that they should see a "
+        "licensed clinician in person to obtain one."
     )
 
 def _doctor_greeting(doctor, lang_override=None):
@@ -363,37 +373,37 @@ DOCTORS = [
     {"id": 8, "name": "Dr. Dian Rahayu, Sp.KK", "specialty": "Dermatology & HPV Specialist", "hospital": "Klinik Vaksin Indonesia", "city": "Surabaya", "lat": -7.2574, "lng": 112.7521, "rating": 4.6, "reviews": 215, "fee": "Rp 175.000", "available": False, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_FEMALE, "experience": "9 years", "slots": ["10:30", "14:00", "16:00"], "gender": "female", "tts_voice": "shimmer"}
 ]
 
-# ── Rich clinical interaction data: condition → vaccine → structured fields ──
+# -- Rich clinical interaction data: condition → vaccine → structured fields --
 # Used to power the "How Your Condition Interacts" cards on the results page
 VACCINE_CLINICAL_DETAIL = {
     "diabetes": {
         "influenza": {
             "condition_causes": "Chronic hyperglycaemia impairs neutrophil chemotaxis and phagocytosis, reducing the first-line defence against influenza A/B viruses in the upper airway.",
             "disease_worsens": "Influenza triggers a surge in counter-regulatory hormones (cortisol, glucagon) causing acute hyperglycaemia; hospitalisation rates for diabetics with flu are 3× the non-diabetic baseline.",
-            "plain_language": "Diabetics face 3× the normal flu hospitalisation risk. A flu episode then makes blood sugar harder to control — vaccination breaks this dangerous cycle.",
+            "plain_language": "Diabetics face 3× the normal flu hospitalisation risk. A flu episode then makes blood sugar harder to control, vaccination breaks this dangerous cycle.",
             "if_not_vaccinated": "Unvaccinated diabetics risk flu-induced hyperglycaemic crises, potentially progressing to diabetic ketoacidosis (DKA) requiring ICU care. Cardiovascular events during flu illness are also significantly elevated.",
             "why_now": "Annual flu vaccination reduces diabetes-related hospitalisations by up to 79% (NEJM data). Every missed season represents cumulative, avoidable risk in a population already managing a chronic condition."
         },
         "pneumococcal": {
             "condition_causes": "Elevated blood glucose directly impairs macrophage oxidative burst and reduces complement-mediated bacterial clearance, leaving the lower respiratory tract vulnerable to S. pneumoniae.",
             "disease_worsens": "Invasive pneumococcal disease triggers systemic inflammation and bacteraemia that destabilises glycaemic control; sepsis-related insulin resistance can persist for weeks post-recovery.",
-            "plain_language": "Diabetics are 3–5× more likely to develop invasive pneumococcal pneumonia. The infection then makes glucose control significantly harder — a vicious cycle.",
+            "plain_language": "Diabetics are 3–5× more likely to develop invasive pneumococcal pneumonia. The infection then makes glucose control significantly harder, a vicious cycle.",
             "if_not_vaccinated": "Without vaccination, S. pneumoniae can progress from lobar pneumonia to septicaemia and meningitis. For diabetics, post-sepsis insulin resistance and multi-organ involvement are well-documented outcomes.",
             "why_now": "PCV20 provides lifelong protection in a single dose. Kemenkes RI and ADA both list it as mandatory for all diabetics from age 19. There is no benefit to delaying."
         },
         "hepatitis_b": {
             "condition_causes": "Diabetics on insulin face repeated percutaneous exposures. Impaired T-cell responses also reduce the ability to clear HBV once infected.",
             "disease_worsens": "HBV-related liver damage impairs gluconeogenesis regulation, worsening glycaemic variability. Cirrhosis from HBV dramatically complicates diabetes management.",
-            "plain_language": "Insulin use creates direct HBV exposure risk. HBV infection then makes blood sugar regulation significantly harder — vaccination eliminates the first step entirely.",
+            "plain_language": "Insulin use creates direct HBV exposure risk. HBV infection then makes blood sugar regulation significantly harder, vaccination eliminates the first step entirely.",
             "if_not_vaccinated": "Unvaccinated diabetics on insulin have documented outbreaks of HBV transmission. Chronic HBV leads to cirrhosis in ~20% of cases, creating an irreversible secondary burden.",
             "why_now": "WHO and ACIP mandate HBV vaccination for all adults with diabetes under 60. A 3-dose series over 6 months eliminates a highly preventable, serious risk."
         },
         "zoster": {
             "condition_causes": "Diabetes weakens T-cell-mediated immune surveillance, allowing the latent varicella-zoster virus (dormant in dorsal root ganglia) to reactivate as shingles.",
             "disease_worsens": "Shingles-associated acute pain triggers cortisol release that directly raises blood glucose; post-herpetic neuralgia (lasting months) creates chronic physiological stress that destabilises HbA1c.",
-            "plain_language": "Diabetics face 1.84× the normal risk of shingles reactivation. A shingles episode then makes diabetes harder to control — vaccination breaks this clinical cycle.",
+            "plain_language": "Diabetics face 1.84× the normal risk of shingles reactivation. A shingles episode then makes diabetes harder to control, vaccination breaks this clinical cycle.",
             "if_not_vaccinated": "Without vaccination the dormant varicella-zoster virus may reactivate as shingles, potentially causing severe burning nerve pain for months (post-herpetic neuralgia), deteriorating glycaemic control and potentially leading to CVD events.",
-            "why_now": "The recombinant herpes zoster vaccine provides >90% protection — the highest efficacy of any adult vaccine. Comorbidities increase reactivation risk; delay is unnecessary exposure to one of the most painful vaccine-preventable diseases."
+            "why_now": "The recombinant herpes zoster vaccine provides >90% protection, the highest efficacy of any adult vaccine. Comorbidities increase reactivation risk; delay is unnecessary exposure to one of the most painful vaccine-preventable diseases."
         },
         "covid19": {
             "condition_causes": "Hyperglycaemia enhances ACE2 receptor expression and facilitates viral replication in pulmonary and vascular tissue, while blunting the innate antiviral cytokine response.",
@@ -404,7 +414,7 @@ VACCINE_CLINICAL_DETAIL = {
         },
         "rsv": {
             "condition_causes": "Hyperglycaemia impairs innate immune cell function (neutrophil phagocytosis, NK cell activity) that normally contains RSV infection at the upper airway before it progresses to the lower respiratory tract.",
-            "disease_worsens": "RSV lower respiratory tract infection causes systemic stress responses — fever, hypoxia, inflammatory cytokines — that drive acute hyperglycaemic crises and make diabetes control erratic for weeks after recovery.",
+            "disease_worsens": "RSV lower respiratory tract infection causes systemic stress responses, fever, hypoxia, inflammatory cytokines, that drive acute hyperglycaemic crises and make diabetes control erratic for weeks after recovery.",
             "plain_language": "Diabetes slows the immune system's ability to stop RSV spreading to the lungs. When that happens, the infection makes blood sugar control much harder and can land a diabetic patient in hospital.",
             "if_not_vaccinated": "Diabetic adults hospitalised for RSV pneumonia face 3× higher rates of acute hyperglycaemic complications, extended hospital stays, and secondary infections. Recovery and glucose stabilisation can take weeks.",
             "why_now": "PAPDI Kartu Vaksinasi Dewasa 2025 lists RSV as a priority vaccine for adults with diabetes melitus alongside Herpes Zoster, Influenza, and Pneumococcal. Vaccination is most effective when given before respiratory season, ideally alongside flu vaccination."
@@ -414,44 +424,44 @@ VACCINE_CLINICAL_DETAIL = {
         "influenza": {
             "condition_causes": "Inflammatory cytokines from influenza (IL-6, TNF-α) destabilise atherosclerotic plaques and promote thrombosis. Tachycardia from fever increases myocardial oxygen demand in already-compromised hearts.",
             "disease_worsens": "Influenza triggers acute myocardial infarction (AMI) in patients with coronary artery disease; the risk of AMI is 6× higher in the week following flu diagnosis.",
-            "plain_language": "Flu is a cardiac trigger. Heart disease patients face 6× AMI risk in the week after flu infection — vaccination dramatically reduces this acute threat.",
+            "plain_language": "Flu is a cardiac trigger. Heart disease patients face 6× AMI risk in the week after flu infection, vaccination dramatically reduces this acute threat.",
             "if_not_vaccinated": "Unvaccinated heart disease patients risk flu-precipitated acute MI, decompensated heart failure requiring hospitalisation, and cardiogenic shock. Winter flu seasons show measurable peaks in cardiac mortality.",
             "why_now": "Flu vaccination reduces cardiovascular mortality by 15–45% in cardiac patients (Cochrane 2023). It is among the most cost-effective cardiac interventions available."
         },
         "pneumococcal": {
             "condition_causes": "Cardiac dysfunction reduces pulmonary perfusion and mucociliary clearance, creating ideal conditions for S. pneumoniae colonisation and progression to invasive disease.",
             "disease_worsens": "Pneumococcal bacteraemia causes direct myocardial inflammation, worsens existing heart failure through volume overload and hypoxia, and triggers fatal arrhythmias.",
-            "plain_language": "Heart failure reduces the lungs' ability to fight bacterial infection. Pneumonia then directly stresses the heart — this bidirectional risk is why vaccination is listed as cardiac standard of care.",
+            "plain_language": "Heart failure reduces the lungs' ability to fight bacterial infection. Pneumonia then directly stresses the heart, this bidirectional risk is why vaccination is listed as cardiac standard of care.",
             "if_not_vaccinated": "Pneumococcal pneumonia is a leading precipitant of acute decompensated heart failure hospitalisation. Sepsis-related haemodynamic stress carries high mortality in cardiac patients.",
-            "why_now": "ESC and AHA cardiac guidelines list pneumococcal vaccination as Class I recommendation. It is a single dose with lifelong protection — the risk-benefit ratio is unambiguous."
+            "why_now": "ESC and AHA cardiac guidelines list pneumococcal vaccination as Class I recommendation. It is a single dose with lifelong protection, the risk-benefit ratio is unambiguous."
         },
         "zoster": {
-            "condition_causes": "Cardiovascular disease is associated with chronic low-grade inflammation that impairs T-cell-mediated immunity — the primary defence against VZV reactivation from dorsal root ganglia.",
+            "condition_causes": "Cardiovascular disease is associated with chronic low-grade inflammation that impairs T-cell-mediated immunity, the primary defence against VZV reactivation from dorsal root ganglia.",
             "disease_worsens": "Shingles triggers a strong systemic inflammatory response (elevated IL-6, CRP) that destabilises atherosclerotic plaques, increasing the 1-year risk of myocardial infarction and stroke by up to 2.4×.",
             "plain_language": "Heart disease weakens the immune defences that keep shingles dormant. If shingles reactivates, the inflammation it triggers can in turn cause a heart attack or stroke.",
             "if_not_vaccinated": "Unvaccinated heart disease patients face both the direct pain and neuralgia of shingles and an elevated risk of a cardiac event in the weeks following an outbreak.",
             "why_now": "PAPDI Satgas Imunisasi Dewasa 2025 recommends Herpes Zoster Rekombinan (2 doses) for all adults with penyakit jantung regardless of age. Vaccinate now before an episode occurs."
         },
         "rsv": {
-            "condition_causes": "Cardiac dysfunction — reduced cardiac output, pulmonary congestion — impairs immune cell trafficking to the lungs, while the inflammatory response to RSV infection triggers systemic cytokine release that destabilises cardiac function.",
+            "condition_causes": "Cardiac dysfunction, reduced cardiac output, pulmonary congestion, impairs immune cell trafficking to the lungs, while the inflammatory response to RSV infection triggers systemic cytokine release that destabilises cardiac function.",
             "disease_worsens": "RSV-triggered inflammation elevates troponin, worsens heart failure, and increases thrombotic risk. Studies show a 2–3× increased risk of acute cardiac events in the 30 days following RSV lower respiratory tract infection.",
             "plain_language": "RSV causes severe lung inflammation that directly stresses the heart. In patients with existing heart disease, an RSV infection can trigger heart failure decompensation or even a heart attack.",
-            "if_not_vaccinated": "Adults with cardiovascular disease hospitalised for RSV have 30-day mortality rates of 6–8% — comparable to influenza. Heart failure patients face the highest risk of requiring ICU admission.",
-            "why_now": "PAPDI Kartu Vaksinasi Dewasa 2025 lists RSV as a priority vaccine for adults with penyakit kardiovaskular. A single dose provides protection for the season — vaccinate before respiratory virus season (April–August in Indonesia)."
+            "if_not_vaccinated": "Adults with cardiovascular disease hospitalised for RSV have 30-day mortality rates of 6–8%, comparable to influenza. Heart failure patients face the highest risk of requiring ICU admission.",
+            "why_now": "PAPDI Kartu Vaksinasi Dewasa 2025 lists RSV as a priority vaccine for adults with penyakit kardiovaskular. A single dose provides protection for the season, vaccinate before respiratory virus season (April–August in Indonesia)."
         }
     },
     "lung_disease": {
         "influenza": {
             "condition_causes": "COPD and asthma patients have heightened airway inflammation at baseline. Influenza compounds this with acute bronchospasm and mucus hypersecretion, reducing FEV1 by up to 40%.",
             "disease_worsens": "Flu-triggered COPD exacerbations are the leading cause of acute respiratory failure hospitalisation; exacerbations also accelerate the irreversible lung function decline characteristic of COPD.",
-            "plain_language": "Flu in a COPD patient is like throwing fuel on an already burning fire. Each exacerbation permanently worsens lung capacity — vaccination reduces exacerbation rate by ~60%.",
+            "plain_language": "Flu in a COPD patient is like throwing fuel on an already burning fire. Each exacerbation permanently worsens lung capacity, vaccination reduces exacerbation rate by ~60%.",
             "if_not_vaccinated": "Unvaccinated COPD patients face near-certain annual exacerbations that accelerate disease progression, require systemic steroids (which worsen bone density and glucose control), and can necessitate ventilatory support.",
             "why_now": "GOLD COPD guidelines mandate annual flu vaccination as the single most effective pharmacological intervention for reducing exacerbations. No patient with COPD should be unvaccinated."
         },
         "pneumococcal": {
             "condition_causes": "Structural lung damage in COPD allows S. pneumoniae to colonise the lower airways more easily. Impaired mucociliary clearance prevents bacterial expulsion before infection takes hold.",
             "disease_worsens": "Pneumococcal pneumonia causes cavitation and alveolar destruction in already-damaged lungs, accelerating transition to respiratory failure and oxygen dependence.",
-            "plain_language": "COPD patients have physical lung damage that gives pneumococcal bacteria a foothold. Pneumonia then destroys more lung tissue — vaccination protects irreplaceable pulmonary reserve.",
+            "plain_language": "COPD patients have physical lung damage that gives pneumococcal bacteria a foothold. Pneumonia then destroys more lung tissue, vaccination protects irreplaceable pulmonary reserve.",
             "if_not_vaccinated": "Pneumococcal pneumonia in COPD patients carries 30-day mortality of 10–15%. Survivors often have permanently reduced lung function and increased oxygen dependence.",
             "why_now": "GINA and GOLD both mandate pneumococcal vaccination. PCV20 covers the 20 most virulent serotypes in a single lifelong dose. Delay has no clinical justification."
         },
@@ -463,25 +473,25 @@ VACCINE_CLINICAL_DETAIL = {
             "why_now": "PAPDI Satgas Imunisasi Dewasa 2025 recommends Herpes Zoster Rekombinan (2 doses) for all adults with penyakit paru kronik regardless of age. The vaccine is non-live and safe with inhaled corticosteroids."
         },
         "rsv": {
-            "condition_causes": "Chronic lung disease (COPD, asthma) involves persistent airway inflammation and impaired mucociliary clearance — the first line of defence against RSV. The virus exploits damaged epithelium to establish deep lower respiratory tract infection.",
+            "condition_causes": "Chronic lung disease (COPD, asthma) involves persistent airway inflammation and impaired mucociliary clearance, the first line of defence against RSV. The virus exploits damaged epithelium to establish deep lower respiratory tract infection.",
             "disease_worsens": "RSV is the leading viral cause of COPD exacerbations in adults, comparable to influenza in severity. A single RSV exacerbation accelerates lung function decline (FEV₁ loss) and increases the risk of further exacerbations for up to 6 months.",
-            "plain_language": "RSV is a major trigger of the flare-ups that lung disease patients fear. It can make COPD or asthma dramatically worse for weeks — sometimes requiring oxygen, steroids, or hospitalisation.",
+            "plain_language": "RSV is a major trigger of the flare-ups that lung disease patients fear. It can make COPD or asthma dramatically worse for weeks, sometimes requiring oxygen, steroids, or hospitalisation.",
             "if_not_vaccinated": "Adults with COPD who get RSV face hospitalisation rates 5× higher than healthy adults. Many require ICU-level respiratory support. Those who recover often have permanently worsened lung function.",
-            "why_now": "PAPDI Kartu Vaksinasi Dewasa 2025 lists RSV as a priority vaccine for adults with penyakit paru alongside Herpes Zoster, Influenza, and Pneumococcal. Vaccinate during a stable period — not during an active exacerbation."
+            "why_now": "PAPDI Kartu Vaksinasi Dewasa 2025 lists RSV as a priority vaccine for adults with penyakit paru alongside Herpes Zoster, Influenza, and Pneumococcal. Vaccinate during a stable period, not during an active exacerbation."
         }
     },
     "hiv": {
         "zoster": {
             "condition_causes": "HIV-induced CD4+ T-cell depletion removes the primary immune brake on VZV reactivation. At CD4 counts below 200 cells/μL, risk of shingles approaches 30% annually.",
             "disease_worsens": "Shingles in HIV patients can disseminate to involve internal organs (visceral zoster), the eye (zoster ophthalmicus causing blindness), and the brain (varicella encephalitis).",
-            "plain_language": "HIV leaves the immune system unable to keep the dormant shingles virus suppressed. A shingles episode in HIV can spread internally in ways that are life-threatening — vaccination provides critical protection.",
+            "plain_language": "HIV leaves the immune system unable to keep the dormant shingles virus suppressed. A shingles episode in HIV can spread internally in ways that are life-threatening, vaccination provides critical protection.",
             "if_not_vaccinated": "Unvaccinated HIV patients with CD4 >200 face high risk of recurrent, painful shingles. Below CD4 200, disseminated VZV carries significant mortality and can cause permanent neurological damage.",
             "why_now": "The recombinant herpes zoster vaccine is recommended for HIV+ adults regardless of CD4 count. It provides >85% protection and does not contain live virus, making it safe even in immunocompromised patients."
         },
         "pneumococcal": {
             "condition_causes": "HIV depletes the splenic memory B-cells responsible for anti-pneumococcal antibody production, creating a 40× higher risk of invasive pneumococcal disease versus the general population.",
             "disease_worsens": "Pneumococcal bacteraemia triggers a cytokine cascade that drives HIV replication, potentially causing a transient but significant CD4 count drop and measurable viral load spike.",
-            "plain_language": "HIV essentially removes the immune memory that normally protects against pneumococcal bacteria. Infection then directly worsens HIV control — a medically documented two-way harm.",
+            "plain_language": "HIV essentially removes the immune memory that normally protects against pneumococcal bacteria. Infection then directly worsens HIV control, a medically documented two-way harm.",
             "if_not_vaccinated": "HIV-positive adults have 40× the risk of invasive pneumococcal disease. Bacteraemia progresses faster and is harder to treat due to compromised immune function.",
             "why_now": "All major HIV treatment guidelines (DHHS, EACS, WHO) mandate PCV vaccination immediately upon HIV diagnosis. Early vaccination is more immunogenic before further CD4 decline."
         }
@@ -489,22 +499,22 @@ VACCINE_CLINICAL_DETAIL = {
     "cancer": {
         "influenza": {
             "condition_causes": "Chemotherapy depletes neutrophils and lymphocytes, eliminating the immune cells that normally contain influenza infection at the mucosal surface before dissemination.",
-            "disease_worsens": "Flu in a chemotherapy patient can delay treatment cycles, cause irreversible lung damage, and trigger secondary bacterial superinfection — all of which directly impact cancer prognosis.",
-            "plain_language": "Chemotherapy wipes out the immune cells that fight flu. A flu infection can pause cancer treatment for weeks — vaccination protects both the patient's health and their treatment timeline.",
+            "disease_worsens": "Flu in a chemotherapy patient can delay treatment cycles, cause irreversible lung damage, and trigger secondary bacterial superinfection, all of which directly impact cancer prognosis.",
+            "plain_language": "Chemotherapy wipes out the immune cells that fight flu. A flu infection can pause cancer treatment for weeks, vaccination protects both the patient's health and their treatment timeline.",
             "if_not_vaccinated": "Flu in an immunocompromised cancer patient carries case fatality rates up to 40% when complicated by pneumonia. Treatment interruptions caused by flu-related hospitalisation worsen oncological outcomes.",
-            "why_now": "ASCO and ESMO mandate annual flu vaccination for all cancer patients on systemic therapy. Timing around chemotherapy cycles matters — a clinical pharmacist can advise on the optimal window."
+            "why_now": "ASCO and ESMO mandate annual flu vaccination for all cancer patients on systemic therapy. Timing around chemotherapy cycles matters, a clinical pharmacist can advise on the optimal window."
         },
         "zoster": {
             "condition_causes": "Chemotherapy and radiation-induced lymphocyte depletion remove the immune control keeping latent VZV dormant in dorsal root ganglia, triggering reactivation as shingles.",
-            "disease_worsens": "Shingles in cancer patients can disseminate to internal organs (lungs, liver, CNS), become haemorrhagic, and cause fatal complications — all while delaying cancer treatment.",
+            "disease_worsens": "Shingles in cancer patients can disseminate to internal organs (lungs, liver, CNS), become haemorrhagic, and cause fatal complications, all while delaying cancer treatment.",
             "plain_language": "Cancer treatment suppresses exactly the immune cells that prevent shingles. A shingles outbreak can hospitalise a patient, interrupt chemotherapy, and cause permanent nerve damage.",
-            "if_not_vaccinated": "Disseminated varicella-zoster in haematological malignancy patients carries mortality rates of 5–10%. Visceral involvement requires IV antivirals and intensive care — entirely preventable.",
+            "if_not_vaccinated": "Disseminated varicella-zoster in haematological malignancy patients carries mortality rates of 5–10%. Visceral involvement requires IV antivirals and intensive care, entirely preventable.",
             "why_now": "PAPDI 2025 and ASCO recommend the recombinant herpes zoster vaccine (non-live) for oncology patients at any age. Ideally vaccinate before starting immunosuppressive therapy for best immune response."
         }
     },
     "kidney_disease": {
         "zoster": {
-            "condition_causes": "Chronic kidney disease causes uraemia-related immune dysfunction — reduced lymphocyte count and impaired T-cell responses — proportional to GFR decline, allowing VZV dormancy to break.",
+            "condition_causes": "Chronic kidney disease causes uraemia-related immune dysfunction, reduced lymphocyte count and impaired T-cell responses, proportional to GFR decline, allowing VZV dormancy to break.",
             "disease_worsens": "Shingles in CKD patients can cause disseminated skin lesions, visceral involvement, and VZV nephritis that accelerates renal function decline. Antiviral dosing must be adjusted for eGFR.",
             "plain_language": "As the kidneys lose function, so does the immune system. Shingles is more frequent and more severe in kidney disease patients, and the antivirals used to treat it require careful dose adjustment.",
             "if_not_vaccinated": "CKD patients who develop shingles face longer duration of acute pain, higher rates of post-herpetic neuralgia, and potential worsening of renal function from viral nephritis.",
@@ -513,7 +523,7 @@ VACCINE_CLINICAL_DETAIL = {
     },
     "liver_disease": {
         "zoster": {
-            "condition_causes": "Chronic liver disease (cirrhosis, viral hepatitis) impairs Kupffer cell function and depletes NK cells and CD4+ T lymphocytes — key components of anti-VZV surveillance.",
+            "condition_causes": "Chronic liver disease (cirrhosis, viral hepatitis) impairs Kupffer cell function and depletes NK cells and CD4+ T lymphocytes, key components of anti-VZV surveillance.",
             "disease_worsens": "Hepatic impairment reduces antiviral drug metabolism; treatment of shingles requires adjusted dosing. VZV can also cause hepatitis flares in already compromised livers.",
             "plain_language": "A diseased liver cannot process antivirals normally and cannot maintain the immune cells that keep shingles dormant. Shingles in liver disease can be more difficult to treat and more prolonged.",
             "if_not_vaccinated": "Shingles in chronic liver disease can trigger immune-mediated hepatitis flares. If antiviral therapy is required, hepatotoxicity risk limits options. Post-herpetic neuralgia is more frequent and more severe.",
@@ -522,8 +532,8 @@ VACCINE_CLINICAL_DETAIL = {
     },
     "immunocompromised": {
         "zoster": {
-            "condition_causes": "Immunosuppression — whether from medications (corticosteroids, biologics, DMARDs), organ transplant, or primary immune deficiency — directly removes the T-cell surveillance that prevents VZV reactivation.",
-            "disease_worsens": "In immunocompromised patients, shingles can disseminate beyond dermatomes to involve the lungs (VZV pneumonitis), liver (VZV hepatitis), brain (VZV encephalitis), and eyes — each potentially fatal.",
+            "condition_causes": "Immunosuppression, whether from medications (corticosteroids, biologics, DMARDs), organ transplant, or primary immune deficiency, directly removes the T-cell surveillance that prevents VZV reactivation.",
+            "disease_worsens": "In immunocompromised patients, shingles can disseminate beyond dermatomes to involve the lungs (VZV pneumonitis), liver (VZV hepatitis), brain (VZV encephalitis), and eyes, each potentially fatal.",
             "plain_language": "When the immune system is suppressed by medication or disease, the chickenpox virus hiding in your nerves can wake up and cause severe, widespread shingles affecting multiple organs.",
             "if_not_vaccinated": "Disseminated zoster in severely immunocompromised patients has mortality rates of up to 10–15%. Recombinant vaccination reduces this risk by >90% even in this population.",
             "why_now": "PAPDI Satgas Imunisasi Dewasa 2025 specifically recommends Herpes Zoster Rekombinan (2 doses) for all immunocompromised adults. Because the vaccine is non-live, it is safe even during active immunosuppression."
@@ -596,7 +606,7 @@ VACCINE_DISEASE_RELATIONS = {
         "zoster": "Immune suppression allows latent VZV to reactivate. The recombinant herpes zoster vaccine is safe for immunocompromised patients and is specifically recommended by PAPDI 2025."
     },
     "asplenia": {
-        "pneumococcal": "The spleen filters encapsulated bacteria from blood. Asplenia leads to overwhelming post-splenectomy infection (OPSI) — pneumococcal sepsis with 50–70% mortality.",
+        "pneumococcal": "The spleen filters encapsulated bacteria from blood. Asplenia leads to overwhelming post-splenectomy infection (OPSI), pneumococcal sepsis with 50–70% mortality.",
         "meningococcal": "Without splenic filtration, Neisseria meningitidis causes fulminant meningococcaemia rapidly. Vaccination is mandatory post-splenectomy.",
         "zoster": "Asplenic patients have impaired cellular and humoral immunity, increasing susceptibility to disseminated VZV infections. PAPDI 2025 recommends herpes zoster vaccine."
     }
@@ -645,7 +655,7 @@ def calculate_risk_score(data):
         score += 3   # Outdated vaccination is an independent urgent risk factor
         factors.append({"factor": "No recent vaccinations", "points": 3, "icon": "💉"})
 
-    # ── Clinical interaction bonuses ──
+    # -- Clinical interaction bonuses --
     # Age 65+ with ANY chronic condition → immune senescence compounds vaccine-preventable risk
     high_risk_conditions = {"diabetes","heart_disease","lung_disease","cancer","hiv",
                             "kidney_disease","liver_disease","immunocompromised","asplenia"}
@@ -683,7 +693,7 @@ def calculate_risk_score(data):
         emoji = "🟢"
         advice = "Stay up to date with routine vaccines. Annual flu shot recommended for all adults."
 
-    # Prevention Score — same math, positive framing (higher = better protected)
+    # Prevention Score, same math, positive framing (higher = better protected)
     prevention_score = 100 - pct
     if prevention_score >= 63:
         prevention_label, prevention_color = "Good", "#2ED573"
@@ -726,7 +736,7 @@ def get_recommended_vaccines(data):
         if "all" in v["conditions"]:
             include = True
             if key == "influenza":
-                reasons.append("Annual priority for all adults — PAPDI, CDC, WHO")
+                reasons.append("Annual priority for all adults, PAPDI, CDC, WHO")
             else:
                 reasons.append("Recommended for all adults by CDC/WHO")
 
@@ -759,7 +769,7 @@ def get_recommended_vaccines(data):
                 include = True
                 cond_label = VACCINE_DATA['risk_factors'].get(cond, {}).get('label', cond)
                 if key in ("zoster", "rsv"):
-                    reasons.append(f"Recommended at any adult age due to {cond_label} — PAPDI Satgas Imunisasi Dewasa 2025")
+                    reasons.append(f"Recommended at any adult age due to {cond_label}, PAPDI Satgas Imunisasi Dewasa 2025")
                 else:
                     reasons.append(f"Strongly recommended due to {cond_label}")
 
@@ -806,13 +816,13 @@ def get_recommended_vaccines(data):
     return recommended
 
 
-# ── PREVENTIVE SCREENINGS ENGINE ──
+# -- PREVENTIVE SCREENINGS ENGINE --
 with open(os.path.join(os.path.dirname(__file__), "data", "screenings.json")) as _f:
     SCREENING_DATA = json.load(_f)
 
 
 def get_recommended_screenings(data):
-    """Guideline-backed health checks for this profile — same inputs as the vaccine engine."""
+    """Guideline-backed health checks for this profile, same inputs as the vaccine engine."""
     age = int(data.get("age", 30))
     sex = data.get("sex", "")
     conditions = set(data.get("conditions", []))
@@ -828,7 +838,7 @@ def get_recommended_screenings(data):
         # Profile that already has the condition doesn't need the screening for it
         if s.get("exclude_conditions") and (set(s["exclude_conditions"]) & conditions):
             continue
-        # Age gating — risk conditions can lower the entry age
+        # Age gating, risk conditions can lower the entry age
         age_min = s["age_min"]
         boosted = bool(s.get("conditions_boost") and (set(s["conditions_boost"]) & conditions))
         if boosted and s.get("conditions_min_age") is not None:
@@ -903,7 +913,7 @@ def login():
     return render_template("auth.html", mode="login", page_title="Sign In")
 
 
-# ── GOOGLE SIGN-IN (OAuth 2.0, no extra dependencies) ──
+# -- GOOGLE SIGN-IN (OAuth 2.0, no extra dependencies) --
 GOOGLE_CLIENT_ID     = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
@@ -915,7 +925,7 @@ def _inject_oauth_flag():
 
 
 def _google_redirect_uri():
-    # Behind Vercel's proxy the request scheme is http — force https there
+    # Behind Vercel's proxy the request scheme is http, force https there
     scheme = "https" if os.environ.get("VERCEL") else request.scheme
     return url_for("google_callback", _external=True, _scheme=scheme)
 
@@ -944,7 +954,7 @@ def google_callback():
     if not GOOGLE_OAUTH_ENABLED:
         return redirect(url_for("login"))
     if request.args.get("state") != session.pop("oauth_state", None):
-        flash("Sign-in session expired — please try again.", "error")
+        flash("Sign-in session expired, please try again.", "error")
         return redirect(url_for("login"))
     code = request.args.get("code")
     if not code:
@@ -967,7 +977,7 @@ def google_callback():
         name = userinfo.get("name") or email.split("@")[0]
     except Exception:
         logger.warning("Google OAuth exchange failed", exc_info=True)
-        flash("Google sign-in failed — please try again or use email.", "error")
+        flash("Google sign-in failed, please try again or use email.", "error")
         return redirect(url_for("login"))
 
     user = User.query.filter_by(email=email).first()
@@ -985,7 +995,7 @@ def google_callback():
     return redirect(url_for("dashboard"))
 
 
-# ── PASSWORD RESET ──
+# -- PASSWORD RESET --
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 def _reset_serializer():
@@ -1017,9 +1027,9 @@ def forgot_password():
                 except Exception:
                     logger.warning("Reset email failed for %s", email, exc_info=True)
             if not sent:
-                # No SMTP configured — surface the link in server logs for the operator
+                # No SMTP configured, surface the link in server logs for the operator
                 logger.info("Password reset link for %s: %s", email, reset_url)
-        # Same message whether or not the account exists — prevents email enumeration
+        # Same message whether or not the account exists, prevents email enumeration
         flash("If an account exists with that email, we've sent a password reset link.", "success")
         return redirect(url_for("login"))
     return render_template("auth.html", mode="forgot", page_title="Reset Password")
@@ -1032,7 +1042,7 @@ def reset_password(token):
     try:
         email = _reset_serializer().loads(token, max_age=3600)
     except SignatureExpired:
-        flash("That reset link has expired — please request a new one.", "error")
+        flash("That reset link has expired, please request a new one.", "error")
         return redirect(url_for("forgot_password"))
     except BadSignature:
         flash("Invalid reset link.", "error")
@@ -1053,7 +1063,7 @@ def reset_password(token):
         else:
             user.set_password(password)
             db.session.commit()
-            flash("Password updated — you can sign in now.", "success")
+            flash("Password updated, you can sign in now.", "success")
             return redirect(url_for("login"))
     return render_template("auth.html", mode="reset", page_title="Choose New Password", reset_token=token)
 
@@ -1125,6 +1135,12 @@ def dashboard():
     family = [{"child": c, "schedule": compute_child_schedule(c)} for c in children]
     lab_results = LabResult.query.filter_by(user_id=current_user.id)\
         .order_by(LabResult.date_taken.desc(), LabResult.created_at.desc()).all()
+    consultations = ConsultationSummary.query.filter_by(user_id=current_user.id)\
+        .order_by(ConsultationSummary.created_at.desc()).all()
+    today_checkin = DailyCheckin.query.filter_by(user_id=current_user.id, day=today).first()
+    checkin_streak = _checkin_streak(current_user.id)
+    wearable_device = WearableDevice.query.filter_by(user_id=current_user.id).first()
+    wearable = _simulated_wearable(current_user.id, today) if wearable_device else None
     # Heal rows saved before a test existed in the reference table: re-match + re-flag
     _healed = False
     for lab in lab_results:
@@ -1148,12 +1164,86 @@ def dashboard():
         vaccines=VACCINE_DATA["vaccines"],
         family=family,
         lab_results=lab_results,
-        lab_reference=LAB_REFERENCE
+        consultations=consultations,
+        today_checkin=today_checkin,
+        checkin_streak=checkin_streak,
+        lab_reference=LAB_REFERENCE,
+        wearable_device=wearable_device,
+        wearable=wearable
     )
 
 
+def _simulated_wearable(user_id, day):
+    """Demo-only: deterministic, plausible smartwatch metrics for a given day.
+    Stable across reloads (seeded by user + date) so it feels like real synced data."""
+    rnd = random.Random(user_id * 100000 + day.toordinal())
+    resting_hr = rnd.randint(54, 73)
+    sleep_min  = rnd.randint(330, 510)      # 5h30m to 8h30m
+    steps      = rnd.randint(3200, 12600)
+    hrv        = rnd.randint(34, 78)         # ms
+    spo2       = rnd.randint(96, 99)
+    active_min = rnd.randint(16, 78)
+
+    # Per-metric "health" fraction 0..1 (for the mini bars)
+    f_hr    = max(0.0, min((80 - resting_hr) / 30, 1.0))
+    f_sleep = min(sleep_min / 510, 1.0)
+    f_steps = min(steps / 12000, 1.0)
+    f_hrv   = min(hrv / 80, 1.0)
+
+    # Composite recovery score 0..100 (weighted toward sleep + HRV)
+    recovery = int(round(f_sleep * 40 + f_hrv * 25 + f_hr * 20 + f_steps * 15))
+    recovery = max(8, min(99, recovery))
+
+    if   recovery >= 80: label, wellness, color, mood = "Thriving",  5, "#2ED573", "thriving"
+    elif recovery >= 64: label, wellness, color, mood = "Strong",    4, "#2ED573", "feeling good"
+    elif recovery >= 46: label, wellness, color, mood = "Steady",    3, "#FF8E53", "steady"
+    elif recovery >= 30: label, wellness, color, mood = "Low",       2, "#FF6B6B", "a little tired"
+    else:                label, wellness, color, mood = "Run down",  1, "#E5484D", "run down"
+
+    return {
+        "resting_hr": resting_hr,
+        "sleep_min": sleep_min,
+        "sleep_label": f"{sleep_min // 60}h {sleep_min % 60:02d}m",
+        "steps": steps,
+        "steps_label": f"{steps:,}",
+        "hrv": hrv,
+        "spo2": spo2,
+        "active_min": active_min,
+        "wellness": wellness,
+        "recovery": recovery,
+        "label": label,
+        "color": color,
+        "mood": mood,
+        "arc": round(recovery / 100 * 327, 1),     # ring fill (circumference ~327)
+        "fills": {"hr": round(f_hr, 3), "sleep": round(f_sleep, 3),
+                  "steps": round(f_steps, 3), "hrv": round(f_hrv, 3)},
+    }
+
+
+@app.route("/api/wearable/connect", methods=["POST"])
+@login_required
+def wearable_connect():
+    provider = ((request.json or {}).get("provider") or "Apple Watch")[:60]
+    dev = WearableDevice.query.filter_by(user_id=current_user.id).first()
+    if dev:
+        dev.provider = provider
+        dev.connected_at = datetime.utcnow()
+    else:
+        db.session.add(WearableDevice(user_id=current_user.id, provider=provider))
+    db.session.commit()
+    return jsonify({"ok": True, "provider": provider})
+
+
+@app.route("/api/wearable/disconnect", methods=["POST"])
+@login_required
+def wearable_disconnect():
+    WearableDevice.query.filter_by(user_id=current_user.id).delete()
+    db.session.commit()
+    return jsonify({"ok": True})
+
+
 # ══════════════════════════════════════════════════════════
-#  LAB RESULTS — photo extraction + manual entry
+#  LAB RESULTS, photo extraction + manual entry
 # ══════════════════════════════════════════════════════════
 
 with open(os.path.join(os.path.dirname(__file__), "data", "lab_reference.json")) as _f:
@@ -1173,7 +1263,7 @@ def match_lab_test(name):
 
 
 def flag_lab_value(test_key, value):
-    """normal | high | low | unknown — informational only, never a diagnosis."""
+    """normal | high | low | unknown, informational only, never a diagnosis."""
     ref = LAB_REFERENCE.get(test_key)
     if not ref:
         return "unknown"
@@ -1219,7 +1309,7 @@ def add_lab_result():
 @login_required
 def upload_lab_photo():
     if not client:
-        flash("AI extraction needs an OpenAI key — you can still add results manually.", "error")
+        flash("AI extraction needs an OpenAI key, you can still add results manually.", "error")
         return redirect(url_for("dashboard"))
     f = request.files.get("lab_photo")
     if not f or not f.filename:
@@ -1230,7 +1320,7 @@ def upload_lab_photo():
         flash("Please upload a JPG, PNG or WebP photo.", "error")
         return redirect(url_for("dashboard"))
 
-    # Processed in memory only — the image itself is never stored
+    # Processed in memory only, the image itself is never stored
     img_b64 = base64.b64encode(f.read()).decode()
     mime = "image/png" if ext == "png" else ("image/webp" if ext == "webp" else "image/jpeg")
 
@@ -1253,7 +1343,7 @@ def upload_lab_photo():
         rows = json.loads(raw)
     except Exception:
         logger.warning("Lab photo extraction failed", exc_info=True)
-        flash("Couldn't read that photo — try a sharper, well-lit picture, or add values manually.", "error")
+        flash("Couldn't read that photo, try a sharper, well-lit picture, or add values manually.", "error")
         return redirect(url_for("dashboard"))
 
     saved = 0
@@ -1275,9 +1365,9 @@ def upload_lab_photo():
         saved += 1
     db.session.commit()
     if saved:
-        flash(f"Read {saved} value(s) from your report. Review them below — and discuss anything flagged with your doctor.", "success")
+        flash(f"Read {saved} value(s) from your report. Review them below, and discuss anything flagged with your doctor.", "success")
     else:
-        flash("No readable values found in that photo — try a clearer picture or add them manually.", "error")
+        flash("No readable values found in that photo, try a clearer picture or add them manually.", "error")
     return redirect(url_for("dashboard"))
 
 
@@ -1352,7 +1442,7 @@ def lab_recommendations_api():
     flag_lines = []
     for f in flag_summaries:
         flag_lines.append(
-            f"  • {f['test_name']}: {f['value']} {f['unit']} ({f['flag'].upper()}) — {f['message']}"
+            f"  • {f['test_name']}: {f['value']} {f['unit']} ({f['flag'].upper()}), {f['message']}"
         )
     vacc_lines = [f"  • {v['name']}: {v['reasons'][0]}" for v in vaccines_out]
     ft_lines = [f"  • {ft['name']}: {ft['reason']}" for ft in follow_up_out[:6]]
@@ -1379,7 +1469,7 @@ def lab_recommendations_api():
 
 
 # ══════════════════════════════════════════════════════════
-#  FAMILY — PEDIATRIC IMMUNIZATION (IDAI 2024)
+#  FAMILY, PEDIATRIC IMMUNIZATION (IDAI 2024)
 # ══════════════════════════════════════════════════════════
 
 with open(os.path.join(os.path.dirname(__file__), "data", "pediatric_schedule.json")) as _f:
@@ -1450,7 +1540,7 @@ def add_child():
 
     # Schedule a WhatsApp/email reminder for the next pending dose
     _ensure_child_reminder(child)
-    flash(f"{name} added — full IDAI immunization schedule generated.", "success")
+    flash(f"{name} added, full IDAI immunization schedule generated.", "success")
     return redirect(url_for("dashboard"))
 
 
@@ -1504,7 +1594,7 @@ def _ensure_child_reminder(child):
     db.session.add(VaccineReminder(
         user_id=child.user_id,
         vaccine_key=nxt["key"],
-        vaccine_name=f"{nxt['name']} (dose {nxt['dose']}) — {child.name}",
+        vaccine_name=f"{nxt['name']} (dose {nxt['dose']}), {child.name}",
         reminder_date=remind_on,
         message=f"{tag} {child.name}'s {nxt['name']} dose {nxt['dose']} is due on {nxt['due_date'].strftime('%d %b %Y')} (IDAI schedule).",
         channel="whatsapp" if child.parent.whatsapp_opt_in else "email"))
@@ -1580,6 +1670,33 @@ def dashboard_history():
                            today=date.today(), vaccines=VACCINE_DATA["vaccines"])
 
 
+@app.route("/dashboard/assessments")
+@login_required
+def dashboard_assessments():
+    assessments = Assessment.query.filter_by(user_id=current_user.id)\
+        .order_by(Assessment.created_at.desc()).all()
+    return render_template("dashboard_assessments.html",
+                           assessments=assessments, vaccines=VACCINE_DATA["vaccines"],
+                           risk_factors=VACCINE_DATA.get("risk_factors", {}))
+
+
+@app.route("/dashboard/records")
+@login_required
+def dashboard_records():
+    vaccination_records = VaccinationRecord.query.filter_by(user_id=current_user.id)\
+        .order_by(VaccinationRecord.date_given.desc()).all()
+    lab_results = LabResult.query.filter_by(user_id=current_user.id)\
+        .order_by(LabResult.date_taken.desc(), LabResult.created_at.desc()).all()
+    consultations = ConsultationSummary.query.filter_by(user_id=current_user.id)\
+        .order_by(ConsultationSummary.created_at.desc()).all()
+    return render_template("dashboard_records.html",
+                           vaccination_records=vaccination_records,
+                           lab_results=lab_results,
+                           consultations=consultations,
+                           lab_reference=LAB_REFERENCE,
+                           today=date.today())
+
+
 @app.route("/dashboard/settings", methods=["GET", "POST"])
 @login_required
 def dashboard_settings():
@@ -1599,6 +1716,117 @@ def dashboard_settings():
 @app.route("/references")
 def references():
     return render_template("references.html")
+
+
+def _checkin_streak(user_id):
+    """Count consecutive days (ending today) with a check-in."""
+    days = {c.day for c in DailyCheckin.query.filter_by(user_id=user_id).all()}
+    streak = 0
+    d = date.today()
+    while d in days:
+        streak += 1
+        d = d - timedelta(days=1)
+    return streak
+
+
+@app.route("/api/checkin", methods=["POST"])
+@login_required
+def daily_checkin():
+    data = request.json or {}
+    try:
+        body = max(1, min(5, int(data.get("body"))))
+        mind = max(1, min(5, int(data.get("mind"))))
+    except (TypeError, ValueError):
+        return jsonify({"error": "invalid"}), 400
+    today = date.today()
+    row = DailyCheckin.query.filter_by(user_id=current_user.id, day=today).first()
+    if not row:
+        row = DailyCheckin(user_id=current_user.id, day=today)
+        db.session.add(row)
+    row.body = body
+    row.mind = mind
+    row.note = (data.get("note") or "")[:280]
+    db.session.commit()
+    return jsonify({"ok": True, "streak": _checkin_streak(current_user.id)})
+
+
+def _summarize_consultation(transcript, doctor_name=""):
+    """Build a concise, friendly summary of a consultation from its transcript."""
+    if not transcript:
+        return None
+    lines = []
+    for m in transcript:
+        content = (m.get("content") or "").strip()
+        if not content:
+            continue
+        who = "Patient" if m.get("role") == "user" else "Doctor"
+        lines.append(f"{who}: {content}")
+    convo = "\n".join(lines)
+    if not convo.strip():
+        return None
+    # Prefer an AI-written summary; fall back to a simple extract if unavailable
+    if client:
+        try:
+            resp = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": (
+                        "You summarise a patient's teleconsultation for their personal health record. "
+                        "Write a concise, warm summary in 3 to 5 sentences covering: what the patient "
+                        "asked about, the key guidance the doctor gave, and any recommended next steps "
+                        "or vaccines. Use plain language and 'you'. Never use em-dashes (long-dash "
+                        "punctuation); use commas or periods instead."
+                    )},
+                    {"role": "user", "content": f"Consultation transcript:\n{convo}"},
+                ],
+                max_tokens=240,
+                temperature=0.5,
+            )
+            out = (resp.choices[0].message.content or "").strip()
+            if out:
+                return out
+        except Exception as e:
+            print(f"[Consult summary] AI failed: {e}")
+    # Fallback: first patient question + a trimmed doctor reply
+    first_q = next((m.get("content", "").strip() for m in transcript if m.get("role") == "user"), "")
+    last_a  = next((m.get("content", "").strip() for m in reversed(transcript) if m.get("role") != "user"), "")
+    parts = []
+    if first_q:
+        parts.append(f"You asked about: {first_q[:300]}")
+    if last_a:
+        parts.append(f"The doctor's guidance: {last_a[:400]}")
+    return " ".join(parts) or None
+
+
+@app.route("/api/consultation/save-summary", methods=["POST"])
+@login_required
+def save_consultation_summary():
+    data = request.json or {}
+    summary = (data.get("summary") or "").strip()
+    transcript = data.get("transcript")
+    # Auto-generate a clean summary from the transcript (preferred for auto-save)
+    if transcript and (data.get("autosummarize") or not summary):
+        generated = _summarize_consultation(transcript, data.get("doctor_name", ""))
+        if generated:
+            summary = generated
+    if not summary:
+        return jsonify({"error": "empty summary"}), 400
+    db.session.add(ConsultationSummary(
+        user_id=current_user.id,
+        doctor_name=(data.get("doctor_name") or "")[:120],
+        doctor_specialty=(data.get("doctor_specialty") or "")[:160],
+        summary=summary[:5000],
+        transcript=json.dumps(transcript)[:8000] if transcript else None,
+    ))
+    # If this session also has a Tavus video conversation, mark it saved so the
+    # transcript webhook doesn't create a duplicate record.
+    conv_id = data.get("conversation_id")
+    if conv_id:
+        sess = TavusSession.query.filter_by(conversation_id=conv_id, user_id=current_user.id).first()
+        if sess:
+            sess.saved = True
+    db.session.commit()
+    return jsonify({"ok": True})
 
 
 @app.route("/terms")
@@ -1824,10 +2052,10 @@ def recommend():
     vaccines = get_recommended_vaccines(data)
     screenings = get_recommended_screenings(data)
 
-    # Deterministic fallback — used when no AI key is configured or the call fails
+    # Deterministic fallback, used when no AI key is configured or the call fails
     fallback_summary = (
         f"Based on your health profile, we have identified {len(vaccines)} vaccines "
-        f"recommended for you. Your Prevention Score is {risk['prevention_score']}/100 — completing them raises it. "
+        f"recommended for you. Your Prevention Score is {risk['prevention_score']}/100, completing them raises it. "
         f"Please consult with "
         f"a healthcare provider to discuss your personalized immunization schedule."
     )
@@ -1848,7 +2076,7 @@ def recommend():
 - Vaccines they need: {vaccine_names}
 - Health checks due at their age: {screening_names}
 
-Write a personal, warm 3-4 sentence message directly to this patient — like a doctor talking to someone they genuinely care about. Mention their specific situation (age, conditions, travel), explain what their Prevention Score means in plain terms and what would raise it, and highlight the one or two vaccines that matter most for *them*. Sound like a real person, not a medical report. Use "you" and "your". No bullet points, no clinical jargon, no generic advice. Make it feel like it was written specifically for this person."""
+Write a personal, warm 3-4 sentence message directly to this patient, like a doctor talking to someone they genuinely care about. Mention their specific situation (age, conditions, travel), explain what their Prevention Score means in plain terms and what would raise it, and highlight the one or two vaccines that matter most for *them*. Sound like a real person, not a medical report. Use "you" and "your". No bullet points, no clinical jargon, no generic advice. Make it feel like it was written specifically for this person."""
 
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -1858,7 +2086,7 @@ Write a personal, warm 3-4 sentence message directly to this patient — like a 
             )
             ai_summary = response.choices[0].message.content or fallback_summary
         except Exception:
-            logger.warning("AI summary generation failed — using fallback", exc_info=True)
+            logger.warning("AI summary generation failed, using fallback", exc_info=True)
             ai_summary = fallback_summary
 
     # Persist assessment if a user is logged in
@@ -1899,21 +2127,22 @@ def chat():
     if not client:
         return jsonify({"reply": "⚠️ AI assistant not configured. Please add your OPENAI_API_KEY to the .env file to enable the chatbot.", "error": True})
 
-    system_prompt = """You're the CareMate assistant — a warm, knowledgeable companion for preventive health. CareMate helps people get ahead of disease, so you cover the whole picture of prevention: vaccines, health screenings and check-ups (which tests to do at what age), reading lab results in plain language, children's immunization schedules, and everyday prevention like nutrition, lifestyle and mental wellbeing. You're warm, straight-talking, and genuinely helpful — never a textbook.
+    system_prompt = """You're the CareMate assistant, a warm, knowledgeable companion for preventive health. CareMate helps people get ahead of disease, so you cover the whole picture of prevention: vaccines, health screenings and check-ups (which tests to do at what age), reading lab results in plain language, children's immunization schedules, and everyday prevention like nutrition, lifestyle and mental wellbeing. You're warm, straight-talking, and genuinely helpful, never a textbook.
 
 How you talk:
 - Conversational and direct. Say "you'll probably want to..." instead of "it is recommended that patients consider..."
-- Give real answers. If someone asks about a side effect or a lab value, tell them what it actually means — not just "consult your doctor"
+- Give real answers. If someone asks about a side effect or a lab value, tell them what it actually means, not just "consult your doctor"
 - It's fine to show a little personality. A light touch of warmth goes a long way
 - Short paragraphs, natural rhythm. Mix short punchy sentences with longer ones
+- Never use em-dashes (long-dash punctuation). Use commas, periods, or colons instead
 - Use actual numbers when they help ("about 1 in 10 people get a sore arm")
-- Don't open every message with "Great question!" — just answer
-- For diagnosing symptoms or big personal medical decisions, point them to a doctor — but still give the real information they came for, and you can suggest they try CareMate's free assessment for a personalised plan or book a teleconsultation
+- Don't open every message with "Great question!", just answer
+- For diagnosing symptoms or big personal medical decisions, point them to a doctor, but still give the real information they came for, and you can suggest they try CareMate's free assessment for a personalised plan or book a teleconsultation
 - Only step back if a question is truly unrelated to health or prevention
 
 When someone asks "what tests/screenings do I need at my age?", actually answer it. General guidance for adults:
 - Everyone: blood pressure yearly; cholesterol from ~35; blood sugar (HbA1c) from ~35 (earlier if overweight or family history)
-- Around 35: a good baseline — blood pressure, cholesterol panel, blood sugar, and a one-time hepatitis B/C and HIV screen (especially relevant in Indonesia)
+- Around 35: a good baseline, blood pressure, cholesterol panel, blood sugar, and a one-time hepatitis B/C and HIV screen (especially relevant in Indonesia)
 - Women: cervical cancer screening (Pap/HPV) from 21–25; mammograms from 40
 - Men: discuss prostate (PSA) screening from ~55
 - From 45: colorectal cancer screening
@@ -1921,7 +2150,7 @@ When someone asks "what tests/screenings do I need at my age?", actually answer 
 - Tailor to conditions: diabetics need yearly eye and kidney checks
 Encourage them to run CareMate's free assessment for a plan personalised to their exact age, sex, conditions and lifestyle.
 
-You also know vaccines inside out: Influenza, COVID-19, Tdap/Td, MMR, Varicella, Herpes Zoster, HPV, Pneumococcal, RSV, Hepatitis A & B, Meningococcal, Typhoid, Yellow Fever, Japanese Encephalitis, Rabies, Cholera, plus the IDAI children's schedule — schedules, catch-up timing, contraindications, pregnancy safety, and Indonesia-specific availability. Always educational, never a diagnosis."""
+You also know vaccines inside out: Influenza, COVID-19, Tdap/Td, MMR, Varicella, Herpes Zoster, HPV, Pneumococcal, RSV, Hepatitis A & B, Meningococcal, Typhoid, Yellow Fever, Japanese Encephalitis, Rabies, Cholera, plus the IDAI children's schedule, schedules, catch-up timing, contraindications, pregnancy safety, and Indonesia-specific availability. Always educational, never a diagnosis."""
 
     messages = [{"role": "system", "content": system_prompt}]
     for msg in conversation_history[-14:]:
@@ -1947,7 +2176,12 @@ def consultation(doctor_id):
     doctor = next((d for d in DOCTORS if d["id"] == doctor_id), DOCTORS[0])
     # Pass logged-in user's name so JS can pre-fill Tavus without asking
     user_name = current_user.name if current_user.is_authenticated else ""
-    return render_template("consultation.html", doctor=doctor, user_name=user_name)
+    # Only show the prevention score if the user has actually completed an assessment
+    has_assessment = False
+    if current_user.is_authenticated:
+        has_assessment = Assessment.query.filter_by(user_id=current_user.id).count() > 0
+    return render_template("consultation.html", doctor=doctor, user_name=user_name,
+                           has_assessment=has_assessment)
 
 
 @app.route("/api/consult", methods=["POST"])
@@ -1959,30 +2193,36 @@ def consult():
     history = data.get("history", [])
     doctor_id = data.get("doctor_id", 1)
     patient_name = data.get("patient_name", "")
+    # The logged-in user's name is the source of truth
+    if current_user.is_authenticated and current_user.name:
+        patient_name = current_user.name.split()[0]
 
     doctor = next((d for d in DOCTORS if d["id"] == doctor_id), DOCTORS[0])
 
     if not client:
         def no_key():
-            yield "AI doctor not available — please configure OPENAI_API_KEY in your .env file."
+            yield "AI doctor not available, please configure OPENAI_API_KEY in your .env file."
         return Response(stream_with_context(no_key()), content_type="text/plain; charset=utf-8")
 
-    name_line = f"The patient's name is {patient_name}. " if patient_name else ""
+    name_line = (f"The patient's name is {patient_name}. Always address them as {patient_name} "
+                 f"and never use any other name. ") if patient_name else ""
 
     system_prompt = f"""You are {doctor['name']}, a {doctor['specialty']} specialist with {doctor['experience']} of experience at {doctor['hospital']} in {doctor['city']}, Indonesia. You're having a live teleconsultation right now.
 {name_line}
 
-You're the kind of doctor patients love — you actually listen, you explain things in plain language, and you treat the person in front of you like an intelligent adult. You don't talk down to people, you don't hide behind jargon, and you don't make them feel rushed.
+You're the kind of doctor patients love, you actually listen, you explain things in plain language, and you treat the person in front of you like an intelligent adult. You don't talk down to people, you don't hide behind jargon, and you don't make them feel rushed.
 
 How you speak in this consultation:
-- Talk like a real doctor in a real appointment. Natural, flowing sentences — not bullet points or numbered lists
+- Talk like a real doctor in a real appointment. Natural, flowing sentences, not bullet points or numbered lists
 - React to what the patient actually says. If they seem worried, acknowledge it. If they're asking about something specific, go there with them
-- Share your clinical opinion directly: "Honestly, for someone your age with diabetes, I'd prioritise the pneumococcal vaccine first" — not "it may be considered appropriate"
-- It's okay to think out loud a little: "That's a good question, actually — the short answer is yes, but there's a nuance worth knowing..."
+- Share your clinical opinion directly: "Honestly, for someone your age with diabetes, I'd prioritise the pneumococcal vaccine first", not "it may be considered appropriate"
+- It's okay to think out loud a little: "That's a good question, actually, the short answer is yes, but there's a nuance worth knowing..."
 - Keep each turn to 3-5 sentences. This is a conversation, not a lecture
-- On your very first message, greet them warmly and naturally — don't just launch into medical content
+- Never use em-dashes (long-dash punctuation) in your messages. Use commas, periods, or colons instead
+- On your very first message, greet them warmly and naturally, don't just launch into medical content
 - Remember what they've told you earlier in the conversation and refer back to it naturally
 - You follow CDC, WHO, and Kemenkes guidelines and know Indonesian vaccine availability and pricing cold
+- CRITICAL: You give educational prevention guidance only. You must NEVER write or issue a prescription, and never tell the patient a specific medication and dose to take. If they ask for a prescription or medicine, gently explain you can't prescribe and that they should see a licensed clinician in person, then point them to what to discuss at that visit.
 
 You speak {'Indonesian and English naturally' if 'Bahasa Indonesia' in doctor['languages'] else 'English'}."""
 
@@ -2035,9 +2275,9 @@ def get_doctors():
 @app.route("/api/tts", methods=["POST"])
 @limiter.limit("30 per minute")
 def tts():
-    """OpenAI Text-to-Speech — returns MP3 audio bytes."""
+    """OpenAI Text-to-Speech, returns MP3 audio bytes."""
     if not client:
-        return jsonify({"error": "TTS not available — configure OPENAI_API_KEY"}), 503
+        return jsonify({"error": "TTS not available, configure OPENAI_API_KEY"}), 503
     data = request.json
     text = data.get("text", "")[:4096]   # OpenAI TTS max 4096 chars
     voice = data.get("voice", "nova")     # nova, shimmer, echo, onyx, alloy, fable
@@ -2055,7 +2295,7 @@ def tts():
         return jsonify({"error": str(e)}), 500
 
 
-# ─── D-ID REAL-TIME WEBRTC STREAMING AVATAR ──────────────────────────────────
+# --─ D-ID REAL-TIME WEBRTC STREAMING AVATAR ----------------------------------
 
 @app.route("/api/did/enabled", methods=["GET"])
 def did_enabled():
@@ -2071,9 +2311,9 @@ def did_cleanup():
         closed.append(sid)
     return jsonify({"closed": closed})
 
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 # TAVUS CVI ROUTES
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 
 @app.route("/api/tavus/enabled")
 def tavus_enabled():
@@ -2084,11 +2324,19 @@ def tavus_enabled():
 def tavus_create_conversation():
     """Create a Tavus CVI conversation for the selected doctor."""
     if not TAVUS_ENABLED:
-        return jsonify({"error": "Tavus not configured — add TAVUS_API_KEY and TAVUS_REPLICA_ID to .env"}), 503
+        return jsonify({"error": "Tavus not configured, add TAVUS_API_KEY and TAVUS_REPLICA_ID to .env"}), 503
 
     data       = request.json or {}
     doctor_id  = data.get("doctor_id", 1)
     doctor     = next((d for d in DOCTORS if d["id"] == doctor_id), DOCTORS[0])
+
+    # The logged-in user's name is the source of truth, never let the avatar
+    # invent or fall back to a placeholder name (e.g. "Sam").
+    if current_user.is_authenticated and current_user.name:
+        _auth_name = current_user.name.split()[0]
+        data["patient_name"] = _auth_name
+        if isinstance(data.get("patient_context"), dict):
+            data["patient_context"]["patient_name"] = _auth_name
 
     # Per-doctor replica → env override → gender-based doctor replica
     gender     = doctor.get("gender", "female")
@@ -2148,12 +2396,12 @@ def tavus_create_conversation():
 
         if speaks_id_eff:
             greeting_instr = (
-                f"INSTRUKSI PENTING — JANGAN BERTANYA DI AWAL. "
+                f"INSTRUKSI PENTING, JANGAN BERTANYA DI AWAL. "
                 f"{'Sapa pasien dengan nama ' + p_name + ' sepanjang percakapan. ' if p_name else ''}"
                 "Langsung berikan penjelasan lengkap dan terstruktur tentang hasil asesmen pasien. "
                 "Monolog pembuka Anda harus mencakup SEMUA hal berikut:\n"
                 "1. SEBUTKAN skor risiko yang tepat dan artinya bagi pasien secara personal.\n"
-                "2. JELASKAN setiap vaksin yang direkomendasikan satu per satu — nama vaksin, mengapa dibutuhkan berdasarkan usia dan kondisi pasien, dan penyakit apa yang dilindungi.\n"
+                "2. JELASKAN setiap vaksin yang direkomendasikan satu per satu, nama vaksin, mengapa dibutuhkan berdasarkan usia dan kondisi pasien, dan penyakit apa yang dilindungi.\n"
                 "3. SAMPAIKAN tingkat urgensi dan langkah selanjutnya.\n"
                 "4. BARU SETELAH ITU, tanyakan pertanyaan klinis spesifik per kondisi secara percakapan alami.\n"
                 "Jika pasien memotong pembicaraan Anda, SEGERA berhenti dan katakan 'Silakan, saya mendengarkan.' "
@@ -2162,15 +2410,15 @@ def tavus_create_conversation():
             )
         else:
             greeting_instr = (
-                f"CRITICAL INSTRUCTION — DO NOT ASK QUESTIONS AT THE START. "
+                f"CRITICAL INSTRUCTION, DO NOT ASK QUESTIONS AT THE START. "
                 f"{'Address the patient as ' + p_name + ' throughout. ' if p_name else ''}"
                 "Immediately deliver a complete, structured explanation of the patient's assessment. "
                 "Your opening monologue must cover ALL of the following:\n"
                 "1. STATE their exact risk score and what it means personally.\n"
-                "2. EXPLAIN each recommended vaccine one by one — name, why needed for their specific conditions, what it prevents.\n"
+                "2. EXPLAIN each recommended vaccine one by one, name, why needed for their specific conditions, what it prevents.\n"
                 "3. STATE urgency and next steps.\n"
                 "4. THEN ask condition-specific clinical questions conversationally, one at a time.\n"
-                "If the patient interrupts you at any point, IMMEDIATELY stop and say 'Please go ahead — I'm listening.' "
+                "If the patient interrupts you at any point, IMMEDIATELY stop and say 'Please go ahead, I'm listening.' "
                 "Never speak over the patient."
                 + cond_question_section
             )
@@ -2208,7 +2456,7 @@ def tavus_create_conversation():
                 f"Skor risiko Anda adalah {risk_pct}%, yang menempatkan Anda dalam kategori {risk_level}. "
                 f"{risk_advice} "
                 f"Berdasarkan profil kesehatan Anda, saya merekomendasikan vaksin-vaksin berikut: {vacc_list}. "
-                f"Saya akan menjelaskan masing-masing vaksin dan alasannya secara spesifik untuk Anda — "
+                f"Saya akan menjelaskan masing-masing vaksin dan alasannya secara spesifik untuk Anda, "
                 f"silakan tanyakan apa saja setelah saya selesai menjelaskan."
             )
         else:
@@ -2218,11 +2466,11 @@ def tavus_create_conversation():
                 f"Your risk score is {risk_pct}%, which places you in the {risk_level} category. "
                 f"{risk_advice} "
                 f"Based on your profile, the vaccines I'm recommending for you are: {vacc_list}. "
-                f"I'll explain each one and why it's important for you specifically — then please feel free to ask me anything."
+                f"I'll explain each one and why it's important for you specifically, then please feel free to ask me anything."
             )
     else:
         full_context = base_context
-        # No assessment context — greet by name if we have one, and ask how to help
+        # No assessment context, greet by name if we have one, and ask how to help
         p_name = (data.get("patient_name") or "").strip()
         if p_name:
             speaks_id = (lang_override == "indonesian") or \
@@ -2234,9 +2482,9 @@ def tavus_create_conversation():
                 greeting = (f"Hi {p_name}! I'm {doctor['name']}. "
                             f"It's good to meet you. How can I help you today?")
             full_context = base_context + (
-                f"\n\nThe patient's name is {p_name}. Greet them warmly by name and ask "
-                f"how you can help. They have not completed an assessment yet, so let them "
-                f"lead the conversation."
+                f"\n\nThe patient's name is {p_name}. Always address them as {p_name} and "
+                f"never use any other name. Greet them warmly by name and ask how you can "
+                f"help. They have not completed an assessment yet, so let them lead the conversation."
             )
         else:
             greeting = _doctor_greeting(doctor, lang_override)
@@ -2266,17 +2514,25 @@ def tavus_create_conversation():
 
     payload = {
         "replica_id":             replica_id,
-        "conversation_name":      f"CareMate Consult — {doctor['name']}",
+        "conversation_name":      f"CareMate Consult, {doctor['name']}",
         "conversational_context": full_context,
         "custom_greeting":        greeting,
         "properties": {
             "max_call_duration":        3600,
             "participant_left_timeout": 60,
             "enable_recording":         False,
+            "enable_transcription":     True,
             "apply_greenscreen":        False,
             "language":                 tavus_language
         }
     }
+    # Ask Tavus to POST conversation events (incl. the transcript) back to us,
+    # so a spoken-only video consult still gets saved to the dashboard.
+    if current_user.is_authenticated:
+        try:
+            payload["callback_url"] = url_for("tavus_webhook", _external=True) + "?k=" + TAVUS_WEBHOOK_SECRET
+        except Exception:
+            pass
 
     try:
         resp = http_req.post(
@@ -2286,7 +2542,22 @@ def tavus_create_conversation():
             timeout=20
         )
         result = resp.json()
-        print(f"[Tavus] Conversation created: {result.get('conversation_id')} status={resp.status_code}")
+        conv_id = result.get("conversation_id")
+        print(f"[Tavus] Conversation created: {conv_id} status={resp.status_code}")
+        # Remember which user this conversation belongs to (for the transcript webhook)
+        if conv_id and current_user.is_authenticated:
+            try:
+                if not TavusSession.query.filter_by(conversation_id=conv_id).first():
+                    db.session.add(TavusSession(
+                        conversation_id=conv_id,
+                        user_id=current_user.id,
+                        doctor_name=doctor.get("name", "")[:120],
+                        doctor_specialty=doctor.get("specialty", "")[:160],
+                    ))
+                    db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print(f"[Tavus] Could not store session mapping: {e}")
         return jsonify(result), resp.status_code
     except Exception as e:
         print(f"[Tavus] Error creating conversation: {e}")
@@ -2307,6 +2578,77 @@ def tavus_end_conversation(conversation_id):
         return jsonify({"status": "ended", "code": resp.status_code})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+def _extract_tavus_transcript(payload):
+    """Pull a [{role, content}] transcript out of a Tavus webhook payload, whatever
+    shape it arrives in."""
+    props = payload.get("properties") or {}
+    raw = (props.get("transcript") or payload.get("transcript") or
+           props.get("messages") or [])
+    transcript = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        content = (item.get("content") or item.get("text") or "").strip()
+        if not content:
+            continue
+        role = (item.get("role") or item.get("speaker") or "").lower()
+        transcript.append({
+            "role": "user" if role in ("user", "patient", "human") else "assistant",
+            "content": content,
+        })
+    return transcript
+
+
+@app.route("/api/tavus/webhook", methods=["POST"])
+def tavus_webhook():
+    """Receive Tavus conversation events. When the transcript is ready, summarise it
+    and save it to the patient's dashboard."""
+    # Reject anything that doesn't carry our shared secret
+    if request.args.get("k") != TAVUS_WEBHOOK_SECRET:
+        return jsonify({"error": "unauthorized"}), 403
+    payload = request.get_json(silent=True) or {}
+    event_type = (payload.get("event_type") or payload.get("type") or "").lower()
+    conv_id = (payload.get("conversation_id") or
+               (payload.get("properties") or {}).get("conversation_id") or "")
+    print(f"[Tavus webhook] event={event_type} conv={conv_id}")
+
+    transcript = _extract_tavus_transcript(payload)
+    # Only act once we actually have transcript content
+    if not conv_id or not transcript:
+        return jsonify({"ok": True, "ignored": True})
+
+    session = TavusSession.query.filter_by(conversation_id=conv_id).first()
+    if not session or session.saved:
+        return jsonify({"ok": True, "duplicate_or_unknown": True})
+
+    # Need at least one patient turn to be worth saving
+    if not any(m["role"] == "user" for m in transcript):
+        return jsonify({"ok": True, "no_patient_turn": True})
+
+    summary = _summarize_consultation(transcript, session.doctor_name)
+    if not summary:
+        return jsonify({"ok": True, "no_summary": True})
+
+    try:
+        db.session.add(ConsultationSummary(
+            user_id=session.user_id,
+            doctor_name=session.doctor_name or "",
+            doctor_specialty=session.doctor_specialty or "",
+            summary=summary[:5000],
+            transcript=json.dumps(transcript)[:8000],
+        ))
+        session.saved = True
+        db.session.commit()
+        print(f"[Tavus webhook] Saved consultation for user {session.user_id}")
+    except Exception as e:
+        db.session.rollback()
+        print(f"[Tavus webhook] Save failed: {e}")
+        return jsonify({"ok": False}), 500
+
+    return jsonify({"ok": True, "saved": True})
+
 
 @app.route("/api/prescription", methods=["POST"])
 @limiter.limit("5 per minute")
@@ -2571,7 +2913,7 @@ def download_certificate(record_id):
 
 @app.route("/verify/<cert_id>")
 def verify_certificate(cert_id):
-    """Public verification page — anyone can scan the QR code to verify."""
+    """Public verification page, anyone can scan the QR code to verify."""
     try:
         record_id = int(cert_id.replace("CM-", ""))
     except ValueError:
@@ -2638,7 +2980,7 @@ def onboarding_profile():
 @app.route("/dashboard/referrals")
 @login_required
 def referral_dashboard():
-    """Personal referral tracking — bookings made, estimated revenue."""
+    """Personal referral tracking, bookings made, estimated revenue."""
     bookings = Booking.query.filter_by(user_id=current_user.id)\
         .order_by(Booking.appointment_date.desc()).all()
     total_referral = sum(b.referral_fee or 0 for b in bookings)
@@ -2661,7 +3003,7 @@ def referral_dashboard():
 @app.route("/admin/referrals")
 def admin_referrals():
     """Admin-level view: all bookings and referral revenue across all users."""
-    # Simple admin check via secret param — replace with proper admin auth in prod
+    # Simple admin check via secret param, replace with proper admin auth in prod
     if request.args.get("key") != os.environ.get("ADMIN_KEY", "caremate-admin"):
         return "Unauthorised", 403
 
@@ -2703,9 +3045,9 @@ def send_email_reminder(to_email, user_name, vaccine_name, reminder_date, days_u
             reminder_date=reminder_date.strftime("%d %B %Y"),
             days_until=days_until
         )
-        subject = {0: f"⏰ Hari Ini — Jadwal Vaksin {vaccine_name}",
-                   1: f"🔔 Besok — Vaksin {vaccine_name}",
-                  }.get(days_until, f"📅 {days_until} Hari Lagi — Vaksin {vaccine_name}")
+        subject = {0: f"⏰ Hari Ini, Jadwal Vaksin {vaccine_name}",
+                   1: f"🔔 Besok, Vaksin {vaccine_name}",
+                  }.get(days_until, f"📅 {days_until} Hari Lagi, Vaksin {vaccine_name}")
 
         msg = MailMessage(subject=subject, recipients=[to_email], html=html)
         mail.send(msg)
@@ -2719,7 +3061,12 @@ def send_email_reminder(to_email, user_name, vaccine_name, reminder_date, days_u
 app.send_email_reminder = send_email_reminder
 
 
-# Exempt all /api/* routes from CSRF — they're called via fetch() with JSON,
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html"), 404
+
+
+# Exempt all /api/* routes from CSRF, they're called via fetch() with JSON,
 # not HTML form submissions. Must be done after all routes are registered.
 for _rule in app.url_map.iter_rules():
     if _rule.rule.startswith('/api/'):

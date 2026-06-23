@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Health Records, CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
+</head>
+<body class="dash-body">
+
+<button class="dash-burger" aria-label="Open menu" onclick="document.body.classList.add(&apos;nav-open&apos;)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="dash-backdrop" onclick="document.body.classList.remove(&apos;nav-open&apos;)"></div>
+<aside class="dash-sidebar">
+  <div class="dash-logo"><a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span>Mate</span></a></div>
+  <nav class="dash-nav">
+    <a href="/dashboard" class="dash-nav-item">Overview</a>
+    <a href="/dashboard/assessments" class="dash-nav-item">Health Assessment</a>
+    <a href="/dashboard/records" class="dash-nav-item active">My Health Records</a>
+    <a href="/teleconsultation" class="dash-nav-item">Talk to a Doctor</a>
+    <a href="/clinics" class="dash-nav-item">Find Care</a>
+    <a href="/dashboard/reminders" class="dash-nav-item">Reminders</a>
+  </nav>
+  <div class="dash-sidebar-footer">
+    <div class="dash-user-pill">
+      <div class="dash-avatar">{{ current_user.name[0].upper() if current_user.name else 'U' }}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ current_user.name or 'User' }}</div>
+        <div style="font-size:11px;color:var(--text-muted)">{{ current_user.email }}</div>
+      </div>
+    </div>
+    <a href="/logout" class="dash-logout-btn">Sign Out</a>
+  </div>
+</aside>
+
+<main class="dash-main">
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-title"><i class="ti ti-folder-heart" style="color:var(--coral)"></i> My Health Records</h1>
+      <p class="dash-sub">Everything in one place: vaccinations, lab results, and doctor consultations.</p>
+    </div>
+  </div>
+
+  <!-- Lab results -->
+  <div class="dash-card" style="margin-bottom:20px">
+    <div class="dash-card-header"><div class="dash-card-title"><i class="ti ti-flask" style="color:var(--coral)"></i> Lab Results</div></div>
+    {% if lab_results %}
+    <div>
+      {% for lab in lab_results %}
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13.5px;font-weight:700;flex:1">{{ lab.test_name }} <span style="color:var(--text-muted);font-weight:500">{{ lab.value }} {{ lab.unit }}</span></span>
+        {% if lab.flag == 'high' %}<span style="font-size:10.5px;font-weight:700;padding:2px 10px;border-radius:20px;background:rgba(239,68,68,0.1);color:#dc2626">HIGH</span>
+        {% elif lab.flag == 'low' %}<span style="font-size:10.5px;font-weight:700;padding:2px 10px;border-radius:20px;background:rgba(245,158,11,0.12);color:#d97706">LOW</span>
+        {% elif lab.flag == 'normal' %}<span style="font-size:10.5px;font-weight:700;padding:2px 10px;border-radius:20px;background:rgba(16,185,129,0.1);color:#059669">IN RANGE</span>{% endif %}
+        <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">{{ lab.date_taken.strftime('%d %b %Y') }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="dash-empty" style="padding:18px 0"><div style="font-size:13px;color:var(--text-muted)">No lab results yet. Add them from your Overview to track your values.</div></div>
+    {% endif %}
+  </div>
+
+  <!-- Consultations -->
+  <div class="dash-card" style="margin-bottom:20px">
+    <div class="dash-card-header"><div class="dash-card-title"><i class="ti ti-video" style="color:var(--coral)"></i> Doctor Consultations</div>
+      <a class="dash-action-btn" href="/teleconsultation" style="text-decoration:none">Talk to a Doctor</a></div>
+    {% if consultations %}
+    <div>
+      {% for c in consultations %}
+      <div style="border-bottom:1px solid var(--border);padding:12px 0">
+        <div style="font-size:13.5px;font-weight:700;color:var(--text-primary)">{{ c.doctor_name or 'Virtual Doctor' }}<span style="font-size:11px;color:var(--text-muted);font-weight:500"> · {{ c.created_at.strftime('%d %b %Y, %H:%M') }}</span></div>
+        <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.55;margin-top:4px">{{ c.summary }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="dash-empty" style="padding:18px 0"><div style="font-size:13px;color:var(--text-muted)">No consultations saved yet.</div></div>
+    {% endif %}
+  </div>
+
+  <!-- Vaccinations -->
+  <div class="dash-card">
+    <div class="dash-card-header"><div class="dash-card-title"><i class="ti ti-vaccine" style="color:var(--coral)"></i> Vaccination History</div>
+      <a class="dash-action-btn" href="/dashboard/history" style="text-decoration:none">Manage</a></div>
+    {% if vaccination_records %}
+    <div>
+      {% for rec in vaccination_records %}
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="width:30px;height:30px;border-radius:9px;background:rgba(255,107,107,0.12);color:var(--coral);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-vaccine"></i></span>
+        <div style="flex:1">
+          <div style="font-size:13.5px;font-weight:700">{{ rec.vaccine_name }}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Dose {{ rec.dose_number }} · {{ rec.date_given.strftime('%d %b %Y') }}{% if rec.clinic_name %} · {{ rec.clinic_name }}{% endif %}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="dash-empty" style="padding:18px 0"><div style="font-size:13px;color:var(--text-muted)">No vaccines logged yet.</div></div>
+    {% endif %}
+  </div>
+</main>
+</body>
+</html>

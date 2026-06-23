@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
   <link rel="apple-touch-icon" href="/static/img/favicon-192.png" />
-  <title>Teleconsultation — CareMate</title>
-  <meta name="description" content="Talk to certified Indonesian doctors about vaccines, screenings, lab results and everyday prevention — live video consultation from anywhere." />
+  <title>Teleconsultation, CareMate</title>
+  <meta name="description" content="Talk to a virtual AI doctor about vaccines, screenings, lab results and everyday prevention, live video consultation from anywhere, anytime." />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
   <style>
-    /* Fix Available Now badge — inline chip above the doctor name */
+    /* Fix Available Now badge, inline chip above the doctor name */
     .doctor-status-chip {
       display: inline-flex; align-items: center; gap: 5px;
       font-size: 11px; font-weight: 700; padding: 3px 10px;
@@ -20,6 +20,66 @@
       width: fit-content;
     }
     .doctor-status-chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: #059669; }
+
+    /* Coral step icons (replacing emoji) */
+    .how-step-icon { color: var(--coral); font-size: 30px; line-height: 1; }
+    .how-arrow { color: var(--coral); font-size: 22px; display: flex; align-items: center; align-self: center; }
+    /* Equal-size step cards */
+    .steps-grid { align-items: stretch; }
+    .how-step { width: 224px; max-width: 224px; flex: 0 0 224px; display: flex; flex-direction: column; }
+    .how-step p { margin-top: auto; }
+
+    /* Two ways to consult */
+    .consult-options { max-width: 980px; margin: -10px auto 0; padding: 0 24px; }
+    .consult-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .consult-card {
+      position: relative; display: flex; align-items: flex-start; gap: 16px;
+      background: #fff; border: 1.5px solid rgba(255,107,107,0.16); border-radius: 20px;
+      padding: 24px; text-decoration: none; transition: all 0.22s ease;
+    }
+    .consult-available { cursor: pointer; }
+    .consult-available:hover { transform: translateY(-4px); border-color: var(--coral); box-shadow: 0 20px 44px rgba(255,107,107,0.18); }
+    .consult-soon { opacity: 0.72; cursor: default; }
+    .consult-ic {
+      width: 52px; height: 52px; flex-shrink: 0; border-radius: 15px;
+      background: linear-gradient(135deg, var(--coral), #FF8E53); color: #fff;
+      display: flex; align-items: center; justify-content: center; font-size: 26px;
+      box-shadow: 0 10px 22px rgba(255,107,107,0.35);
+    }
+    .consult-soon .consult-ic { background: #e7d9d0; color: #8a6a4e; box-shadow: none; }
+    .consult-title { font-size: 17px; font-weight: 800; color: #1A0A00; margin-bottom: 5px; }
+    .consult-desc { font-size: 13px; color: #8a6a4e; line-height: 1.55; margin-bottom: 12px; }
+    .consult-cta { font-size: 14px; font-weight: 800; color: var(--coral); display: inline-flex; align-items: center; gap: 6px; }
+    .consult-cta.muted { color: #a07850; font-weight: 700; }
+    .consult-badge { position: absolute; top: 18px; right: 18px; font-size: 11px; font-weight: 800; padding: 4px 11px; border-radius: 20px; }
+    .consult-badge.available { background: rgba(16,185,129,0.13); color: #059669; }
+    .consult-badge.soon { background: rgba(160,120,80,0.14); color: #8a6a4e; }
+    @media (max-width: 720px) { .consult-grid { grid-template-columns: 1fr; } }
+
+    /* Start-consultation flow modal */
+    .vd-overlay { position: fixed; inset: 0; z-index: 9500; background: rgba(26,10,0,0.55);
+      display: none; align-items: center; justify-content: center; padding: 20px; }
+    .vd-overlay.open { display: flex; }
+    .vd-box { position: relative; background: #fff; border-radius: 22px; padding: 34px 30px;
+      width: min(94vw, 420px); text-align: center; box-shadow: 0 30px 70px -20px rgba(193,58,29,0.4); }
+    .vd-close { position: absolute; top: 14px; right: 16px; background: none; border: none;
+      font-size: 24px; color: #a07850; cursor: pointer; line-height: 1; }
+    .vd-ic { width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 16px;
+      background: linear-gradient(135deg, var(--coral), #FF8E53); color: #fff;
+      display: flex; align-items: center; justify-content: center; font-size: 28px;
+      box-shadow: 0 10px 24px rgba(255,107,107,0.35); }
+    .vd-title { font-size: 20px; font-weight: 800; color: #1A0A00; margin-bottom: 8px; }
+    .vd-sub { font-size: 13.5px; color: #8a6a4e; line-height: 1.55; margin-bottom: 22px; }
+    .vd-input { width: 100%; border: 1.5px solid rgba(255,107,107,0.25); border-radius: 13px;
+      padding: 13px 15px; font-size: 15px; color: #1A0A00; outline: none; margin-bottom: 16px;
+      font-family: inherit; }
+    .vd-input:focus { border-color: var(--coral); }
+    .vd-btn { display: block; width: 100%; border: none; border-radius: 13px; padding: 14px;
+      font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; margin-bottom: 10px; }
+    .vd-primary { background: linear-gradient(135deg, var(--coral), #FF8E53); color: #fff;
+      box-shadow: 0 12px 26px rgba(255,107,107,0.4); }
+    .vd-ghost { background: transparent; color: #8a6a4e; border: 1.5px solid rgba(255,107,107,0.2); }
+    .vd-ghost:hover { border-color: var(--coral); color: var(--coral); }
   </style>
 </head>
 <body class="telecon-page">
@@ -48,142 +108,101 @@
   <div class="blob blob-1"></div>
   <div class="blob blob-2"></div>
   <div class="telecon-hero-content">
-    <div class="hero-badge"><span class="badge-dot"></span>Indonesia · {{ available_count }} Specialists Available Now</div>
-    <h1 class="hero-title">Talk to a <span class="gradient-text">Prevention Expert</span></h1>
-    <p class="hero-subtitle">Connect with certified Indonesian doctors for vaccines, screenings, lab results, and everyday prevention — from anywhere, anytime.</p>
+    <h1 class="hero-title">Talk to a <span class="gradient-text">Virtual Doctor</span></h1>
+    <p class="hero-subtitle">An AI prevention doctor you can talk to about vaccines, screenings, lab results, and everyday prevention, from anywhere, anytime.</p>
     <div class="telecon-stats">
-      <div class="tstat"><span class="tstat-num">{{ available_count }}</span><span class="tstat-label">Doctors Available</span></div>
+      <div class="tstat"><span class="tstat-num">24/7</span><span class="tstat-label">Always available</span></div>
       <div class="tstat-div"></div>
       <div class="tstat"><span class="tstat-num">Free</span><span class="tstat-label">Consultation</span></div>
     </div>
   </div>
 </section>
 
-<!-- GEOLOCATION BANNER -->
-<div class="geo-banner" id="geoBanner">
-  <div class="geo-content">
-    <span class="geo-icon">📍</span>
-    <span id="geoText">Detecting your location to show nearest doctors...</span>
-    <button class="geo-btn" onclick="getUserLocation()">Use My Location</button>
-  </div>
-</div>
+<!-- WAYS TO CONSULT -->
+<section class="consult-options">
+  <div class="consult-grid">
+    <a class="consult-card consult-available" href="#" onclick="startVirtualDoctor(event)">
+      <div class="consult-ic"><i class="ti ti-video"></i></div>
+      <div class="consult-body">
+        <div class="consult-title">Talk to a virtual doctor online</div>
+        <div class="consult-desc">Start a live AI video consultation right now, discuss your vaccines, screenings and lab results.</div>
+        <span class="consult-cta">Start consultation <i class="ti ti-arrow-right"></i></span>
+      </div>
+    </a>
 
-<!-- FILTERS -->
-<section class="filters-section">
-  <div class="filters-container">
-    <div class="filter-group">
-      <label>City</label>
-      <select id="cityFilter" onchange="filterDoctors()">
-        <option value="">All Cities</option>
-        <option value="jakarta">Jakarta</option>
-        <option value="tangerang">Tangerang</option>
-        <option value="bekasi">Bekasi</option>
-        <option value="surabaya">Surabaya</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <label>Specialty</label>
-      <select id="specialtyFilter" onchange="filterDoctors()">
-        <option value="">All Specialties</option>
-        <option value="vaccinology">Vaccinology</option>
-        <option value="internal">Internal Medicine</option>
-        <option value="travel">Travel Medicine</option>
-        <option value="family">Family Medicine</option>
-      </select>
-    </div>
-    <div class="filter-group filter-toggle">
-      <label class="toggle-label">
-        <input type="checkbox" id="availableOnly" onchange="filterDoctors()" />
-        <span class="toggle-switch"></span>
-        Available Now Only
-      </label>
-    </div>
-    <div class="filter-group filter-search">
-      <input type="text" id="searchDoctor" placeholder="🔍 Search by name or hospital..." oninput="filterDoctors()" />
+    <div class="consult-card consult-soon" aria-disabled="true">
+      <div class="consult-ic"><i class="ti ti-calendar-clock"></i></div>
+      <div class="consult-body">
+        <div class="consult-title">Book an appointment with a doctor online</div>
+        <div class="consult-desc">Schedule a video appointment with a human doctor at a time that suits you.</div>
+        <span class="consult-cta muted">Coming soon</span>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- MAP BANNER -->
-<div class="map-banner">
-  <div class="map-container" style="position:relative;">
-    <div id="doctorMap" style="width:100%;height:180px;"></div>
+<!-- START-CONSULTATION FLOW MODAL -->
+<div class="vd-overlay" id="vdModal" onclick="if(event.target===this)closeVdModal()">
+  <div class="vd-box">
+    <button class="vd-close" onclick="closeVdModal()" aria-label="Close">&times;</button>
+
+    <!-- Step 1: assessment? -->
+    <div class="vd-step" id="vdStep1">
+      <div class="vd-ic"><i class="ti ti-clipboard-heart"></i></div>
+      <h3 class="vd-title">Take a quick assessment first?</h3>
+      <p class="vd-sub">It takes about 2 minutes. Your doctor can then walk you through your results live.</p>
+      <button class="vd-btn vd-primary" onclick="vdAssessment(true)">Yes, take the assessment</button>
+      <button class="vd-btn vd-ghost" onclick="vdAssessment(false)">No, just start talking</button>
+    </div>
+
+    <!-- Step 2: name -->
+    <div class="vd-step" id="vdStep2" style="display:none">
+      <div class="vd-ic"><i class="ti ti-user"></i></div>
+      <h3 class="vd-title">What's your name?</h3>
+      <p class="vd-sub">So your doctor can greet you when the consultation starts.</p>
+      <input type="text" id="vdName" class="vd-input" placeholder="e.g. Budi Santoso" onkeydown="if(event.key==='Enter')vdStartWithName()" />
+      <button class="vd-btn vd-primary" onclick="vdStartWithName()">Start consultation</button>
+    </div>
   </div>
 </div>
 
-<!-- DOCTORS GRID -->
-<section class="doctors-section">
-  <div class="doctors-header">
-    <h2>Available Specialists</h2>
-    <span class="doctors-count" id="doctorsCount">{{ available_count }} doctors available</span>
-  </div>
-  <div class="doctors-grid" id="doctorsGrid">
-    {% for doctor in doctors %}
-    {% if doctor.available %}
-    <div class="doctor-card"
-         data-city="{{ doctor.city | lower }}"
-         data-specialty="{{ doctor.specialty | lower }}"
-         data-available="true"
-         data-name="{{ doctor.name | lower }}"
-         data-hospital="{{ doctor.hospital | lower }}">
+<script>
+  const VD_LOGGED_IN = {{ 'true' if current_user.is_authenticated else 'false' }};
+  const VD_DOCTOR_ID = 1;  // default available virtual doctor
 
-      <div class="doctor-card-top">
-        <div class="doctor-photo-wrap">
-          <!-- Professional headshot — same face shown live in the consultation -->
-          <img class="doctor-photo" src="{{ doctor.did_photo or doctor.photo }}"
-               alt="{{ doctor.name }}" loading="lazy"
-               style="object-fit:cover;object-position:center top;" />
-          <div class="doctor-online-dot online"></div>
-        </div>
-        <div class="doctor-info">
-          <!-- Available Now chip — inline, above doctor name, no overlap -->
-          <div class="doctor-status-chip"><div class="chip-dot"></div>Available Now</div>
-          <h3 class="doctor-name">{{ doctor.name }}</h3>
-          <p class="doctor-specialty">{{ doctor.specialty }}</p>
-          <p class="doctor-hospital">🏥 {{ doctor.hospital }}</p>
-          <p class="doctor-city">📍 {{ doctor.city }}</p>
-        </div>
-      </div>
-
-      <div class="doctor-meta">
-        <div class="doctor-meta-item">
-          <span class="meta-label">Experience</span>
-          <span class="meta-val">{{ doctor.experience }}</span>
-        </div>
-        <div class="doctor-meta-item">
-          <span class="meta-label">Rating</span>
-          <span class="meta-val rating">⭐ {{ doctor.rating }} ({{ doctor.reviews }})</span>
-        </div>
-        <div class="doctor-meta-item">
-          <span class="meta-label">Languages</span>
-          <span class="meta-val">{{ doctor.languages | join(' · ') }}</span>
-        </div>
-        <div class="doctor-meta-item">
-          <span class="meta-label">Consultation Fee</span>
-          <span class="meta-val fee">{{ doctor.fee }}</span>
-        </div>
-      </div>
-
-      <div class="doctor-slots">
-        <p class="slots-label">Available slots today:</p>
-        <div class="slots-grid">
-          {% for slot in doctor.slots %}
-          <button class="slot-btn" onclick="bookSlot('{{ doctor.name }}', '{{ slot }}')">{{ slot }}</button>
-          {% endfor %}
-        </div>
-      </div>
-
-      <div class="doctor-actions">
-        <a href="/consultation/{{ doctor.id }}" class="btn-consult" style="text-decoration:none;text-align:center">
-          Start Consultation
-        </a>
-        <button class="btn-profile" onclick="viewProfile({{ doctor.id }})">View Profile</button>
-      </div>
-    </div>
-    {% endif %}
-    {% endfor %}
-  </div>
-</section>
+  function startVirtualDoctor(e) {
+    if (e) e.preventDefault();
+    document.getElementById('vdStep1').style.display = 'block';
+    document.getElementById('vdStep2').style.display = 'none';
+    document.getElementById('vdModal').classList.add('open');
+  }
+  function closeVdModal() {
+    document.getElementById('vdModal').classList.remove('open');
+  }
+  function vdAssessment(yes) {
+    if (yes) {
+      // Take the assessment first, results then explained by the doctor
+      window.location.href = '/#assessment';
+      return;
+    }
+    // No assessment. Registered users go straight in (greeted by their account name).
+    if (VD_LOGGED_IN) {
+      window.location.href = '/consultation/' + VD_DOCTOR_ID;
+      return;
+    }
+    // Guests: ask for a name so the doctor can greet them.
+    document.getElementById('vdStep1').style.display = 'none';
+    document.getElementById('vdStep2').style.display = 'block';
+    setTimeout(() => document.getElementById('vdName').focus(), 50);
+  }
+  function vdStartWithName() {
+    const name = (document.getElementById('vdName').value || '').trim();
+    if (!name) { document.getElementById('vdName').focus(); return; }
+    try { localStorage.setItem('patientName', name); } catch (e) {}
+    window.location.href = '/consultation/' + VD_DOCTOR_ID;
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVdModal(); });
+</script>
 
 <!-- HOW TELECONSULTATION WORKS -->
 <section class="how-telecon">
@@ -191,30 +210,30 @@
   <div class="steps-grid">
     <div class="how-step">
       <div class="how-step-num">01</div>
-      <div class="how-step-icon">🔬</div>
-      <h4>Complete Assessment</h4>
-      <p>Use our AI tool to get your personalized vaccine recommendations first.</p>
+      <div class="how-step-icon"><i class="ti ti-clipboard-heart"></i></div>
+      <h4>Complete your assessment</h4>
+      <p>Get your personalized prevention plan, vaccines, screenings and lab insights.</p>
     </div>
-    <div class="how-arrow">→</div>
+    <div class="how-arrow"><i class="ti ti-arrow-right"></i></div>
     <div class="how-step">
       <div class="how-step-num">02</div>
-      <div class="how-step-icon">👨‍⚕️</div>
-      <h4>Choose Your Doctor</h4>
-      <p>Select a specialist based on location, specialty, and availability.</p>
+      <div class="how-step-icon"><i class="ti ti-video"></i></div>
+      <h4>Talk to a virtual doctor</h4>
+      <p>Start a live AI video consultation, your results loaded in automatically.</p>
     </div>
-    <div class="how-arrow">→</div>
+    <div class="how-arrow"><i class="ti ti-arrow-right"></i></div>
     <div class="how-step">
       <div class="how-step-num">03</div>
-      <div class="how-step-icon">📹</div>
-      <h4>Video Consultation</h4>
-      <p>Connect via secure video call and discuss your vaccination plan.</p>
+      <div class="how-step-icon"><i class="ti ti-list-check"></i></div>
+      <h4>Get your next steps</h4>
+      <p>Follow-up tests, vaccines and prevention actions explained in plain language.</p>
     </div>
-    <div class="how-arrow">→</div>
+    <div class="how-arrow"><i class="ti ti-arrow-right"></i></div>
     <div class="how-step">
       <div class="how-step-num">04</div>
-      <div class="how-step-icon">💉</div>
-      <h4>Get Vaccinated</h4>
-      <p>Receive your prescription and schedule your vaccinations at a nearby clinic.</p>
+      <div class="how-step-icon"><i class="ti ti-calendar-check"></i></div>
+      <h4>Take action</h4>
+      <p>Book a clinic or home visit nearby to complete your recommended care.</p>
     </div>
   </div>
 </section>
@@ -222,9 +241,9 @@
 <!-- BOOKING MODAL -->
 <div class="modal-overlay hidden" id="bookingModal" onclick="closeBookingModal()">
   <div class="booking-modal" onclick="event.stopPropagation()">
-    <button class="modal-close" onclick="closeBookingModal()">✕</button>
+    <button class="modal-close" onclick="closeBookingModal()"><i class="ti ti-x"></i></button>
     <div class="booking-header">
-      <div class="booking-icon">📹</div>
+      <div class="booking-icon"><i class="ti ti-video" style="color:var(--coral)"></i></div>
       <h3>Book Teleconsultation</h3>
     </div>
     <div class="booking-body" id="bookingBody">
@@ -252,7 +271,7 @@
         </div>
       </div>
       <button class="btn-primary booking-submit" onclick="confirmBooking()">
-        Confirm Booking — Send via WhatsApp 📱
+        Confirm Booking, Send via WhatsApp <i class="ti ti-device-mobile" style="color:var(--coral)"></i>
       </button>
       <p class="booking-note">You'll receive a confirmation link via WhatsApp within 5 minutes.</p>
     </div>
@@ -262,7 +281,7 @@
 <!-- Chatbot -->
 <div class="chatbot-widget" id="chatbotWidget">
   <div class="chatbot-header" onclick="toggleChat()">
-    <img class="chatbot-avatar" src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=160&h=160&q=75&auto=format&fit=facearea&facepad=2.2" alt="CareMate doctor" />
+    <img class="chatbot-avatar" src="https://images.pexels.com/photos/4227090/pexels-photo-4227090.jpeg?auto=compress&cs=tinysrgb&w=160&h=160&fit=crop" alt="CareMate doctor" />
     <div class="chatbot-title">
       <span>CareMate Assistant</span>
       <span class="chatbot-status">Online · Ask me anything</span>
@@ -280,14 +299,14 @@
     <div class="chat-input-area">
       <input type="text" id="chatInput" placeholder="Ask about teleconsultation..." class="chat-input"
              onkeypress="if(event.key==='Enter') sendMessage()" />
-      <button class="chat-send-btn" onclick="sendMessage()" aria-label="Send message">➤</button>
+      <button class="chat-send-btn" onclick="sendMessage()" aria-label="Send message"><i class="ti ti-send"></i></button>
     </div>
   </div>
 </div>
 
 <footer class="footer">
   <div class="footer-bottom">
-    <p>⚕️ CareMate connects you with licensed Indonesian medical professionals.</p>
+    <p>CareMate's virtual doctor is AI-powered and for educational prevention guidance, not a substitute for a licensed medical professional.</p>
     <p>© 2025 CareMate · <a href="/">Back to Assessment</a></p>
   </div>
 </footer>
@@ -328,9 +347,9 @@
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         document.getElementById('geoText').textContent =
-          `📍 Location detected — showing doctors near you (${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E)`;
+          `Location detected, showing doctors near you (${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E)`;
       }, () => {
-        document.getElementById('geoText').textContent = '📍 Defaulting to Jakarta area doctors';
+        document.getElementById('geoText').textContent = 'Defaulting to Jakarta area doctors';
       });
     }
   }
@@ -381,12 +400,10 @@
   function viewProfile(doctorId) {
     const doctor = allDoctors.find(d => d.id === doctorId);
     if (!doctor) return;
-    alert(`Dr. ${doctor.name}\n${doctor.specialty}\n${doctor.hospital}, ${doctor.city}\nExperience: ${doctor.experience}\nRating: ⭐ ${doctor.rating} (${doctor.reviews} reviews)\nLanguages: ${doctor.languages.join(', ')}\nFee: ${doctor.fee}`);
+    alert(`Dr. ${doctor.name}\n${doctor.specialty}\n${doctor.hospital}, ${doctor.city}\nExperience: ${doctor.experience}\nRating: ${doctor.rating} (${doctor.reviews} reviews)\nLanguages: ${doctor.languages.join(', ')}\nFee: ${doctor.fee}`);
   }
 </script>
 
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ── LEAFLET DOCTOR MAP ── initialised after page fully loads
 const _doctors = {{ doctors | tojson }};
@@ -434,7 +451,7 @@ function initMap() {
       zoomControl: true
     });
 
-    // CartoDB Voyager tiles — reliable, no API key, looks polished
+    // CartoDB Voyager tiles, reliable, no API key, looks polished
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '© <a href="https://carto.com/">CARTO</a> © <a href="https://www.openstreetmap.org/copyright">OSM</a>',
       subdomains: 'abcd',
@@ -448,10 +465,10 @@ function initMap() {
         <div style="min-width:190px;line-height:1.5">
           <div style="font-weight:800;font-size:14px;margin-bottom:3px">${doc.name}</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px">${doc.specialty}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:2px">🏥 ${doc.hospital}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px">📍 ${doc.city}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:2px">${doc.hospital}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px">${doc.city}</div>
           ${doc.available
-            ? `<a href="/consultation/${doc.id}" style="display:block;background:linear-gradient(135deg,#7c3aed,#3b82f6);color:#fff;text-align:center;padding:8px 12px;border-radius:9px;text-decoration:none;font-size:12px;font-weight:700">📹 Start Consultation →</a>`
+            ? `<a href="/consultation/${doc.id}" style="display:block;background:linear-gradient(135deg,#7c3aed,#3b82f6);color:#fff;text-align:center;padding:8px 12px;border-radius:9px;text-decoration:none;font-size:12px;font-weight:700">Start Consultation →</a>`
             : `<div style="background:rgba(107,114,128,0.25);color:rgba(255,255,255,0.35);text-align:center;padding:8px;border-radius:9px;font-size:12px">Next available: ${doc.slots[0]}</div>`
           }
         </div>

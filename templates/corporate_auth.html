@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
   <link rel="apple-touch-icon" href="/static/img/favicon-192.png" />
-  <title>{{ page_title }} — CareMate Business</title>
+  <title>{{ page_title }}, CareMate Business</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <style>
     body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-secondary); }
@@ -31,6 +31,7 @@
     .tab-btn.active { background: white; color: var(--text-primary); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
     .corp-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(124,58,237,0.08); color: #7c3aed; border: 1px solid rgba(124,58,237,0.2); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 700; margin-bottom: 20px; }
   </style>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
 </head>
 <body>
 <div class="auth-wrap">
@@ -43,7 +44,7 @@
 
   <div class="auth-card">
     <div style="text-align:center;margin-bottom:20px">
-      <div class="corp-badge">🏢 Corporate / HR Portal</div>
+      <div class="corp-badge"><i class="ti ti-building" style="color:var(--coral)"></i> Corporate / HR Portal</div>
     </div>
 
     <div class="tab-switch">

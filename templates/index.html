@@ -5,15 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
   <link rel="apple-touch-icon" href="/static/img/favicon-192.png" />
-  <title>CareMate — Your Family's Preventive Health Companion</title>
-  <meta name="description" content="Personalised vaccination plans for you and your children — risk assessment, IDAI/CDC/WHO schedules, clinic booking and reminders, in one place." />
-  <meta property="og:title" content="CareMate — Your Family's Preventive Health Companion" />
-  <meta property="og:description" content="Get your personalised vaccine plan in 60 seconds, book a clinic, and talk to certified doctors — all in one place." />
+  <title>CareMate, Your Family's Preventive Health Companion</title>
+  <meta name="description" content="Personalised vaccination plans for you and your children, risk assessment, IDAI/CDC/WHO schedules, clinic booking and reminders, in one place." />
+  <meta property="og:title" content="CareMate, Your Family's Preventive Health Companion" />
+  <meta property="og:description" content="Get your personalised vaccine plan in 60 seconds, book a clinic, and talk to certified doctors, all in one place." />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ request.url_root }}" />
+  <meta property="og:image" content="{{ url_for('static', filename='img/logo-full.png', _external=True) }}" />
+  <meta property="og:site_name" content="CareMate" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="CareMate, Your Family's Preventive Health Companion" />
+  <meta name="twitter:description" content="Get your personalised vaccine plan in 60 seconds, book a clinic, and talk to an AI prevention doctor, all in one place." />
+  <meta name="twitter:image" content="{{ url_for('static', filename='img/logo-full.png', _external=True) }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
 </head>
 <body>
 <a href="#main" class="skip-link">Skip to main content</a>
@@ -35,7 +43,7 @@
         <a href="/register" class="nav-cta">Sign Up Free</a>
       {% endif %}
     </div>
-    <button class="menu-toggle" id="menuToggle" aria-label="Open navigation menu">☰</button>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open navigation menu"><i class="ti ti-menu-2"></i></button>
   </div>
 </nav>
 
@@ -64,74 +72,46 @@
         Get My Prevention Plan <span class="btn-arrow">→</span>
       </button>
       <a href="/teleconsultation" class="btn-secondary">
-        👨‍⚕️ Talk to a Doctor
+        Talk to a Doctor
       </a>
     </div>
     <div class="hero-stats">
       <div class="stat">
-        <div class="stat-value"><span class="stat-num" data-count="15000">0</span><span class="stat-suffix">+</span></div>
-        <span class="stat-label">Assessments Done</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <div class="stat-value"><span class="stat-num" data-count="13">0</span></div>
-        <span class="stat-label">Vaccines Covered</span>
+        <div class="stat-value"><span class="stat-num" data-count="100">0</span><span class="stat-suffix">%</span></div>
+        <span class="stat-label">Free, always</span>
       </div>
       <div class="stat-divider"></div>
       <div class="stat">
         <div class="stat-value"><span class="stat-num" data-count="60">0</span><span class="stat-suffix">s</span></div>
-        <span class="stat-label">Average Assessment</span>
+        <span class="stat-label">Average assessment</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <div class="stat-value"><span class="stat-num" data-count="24">0</span><span class="stat-suffix">/7</span></div>
+        <span class="stat-label">AI doctor access</span>
       </div>
     </div>
   </div>
 
   <!-- RIGHT: Dashboard mockup (no float cards) -->
   <div class="hero-visual">
-    <div class="hero-mock" aria-hidden="true">
-      <svg width="0" height="0" style="position:absolute">
-        <defs>
-          <linearGradient id="mockRingGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#2ED573"/>
-            <stop offset="100%" stop-color="#63E6BE"/>
-          </linearGradient>
-        </defs>
-      </svg>
-      <div class="mock-header">
-        <span class="mock-title">Your Prevention Plan</span>
-        <span class="mock-badge">✓ Complete</span>
+    <div class="tc-card" aria-label="Live teleconsultation with your prevention score on screen">
+      <div class="tc-vid"></div>
+      <span class="tc-live">LIVE</span>
+      <div class="tc-score">
+        <div class="tc-ring">
+          <svg viewBox="0 0 60 60"><circle class="tc-ring-bg" cx="30" cy="30" r="25"/><circle class="tc-ring-fill" cx="30" cy="30" r="25"/></svg>
+          <b>78</b>
+        </div>
+        <div class="tc-sx"><b>Prevention</b><small>Good</small></div>
       </div>
-      <div class="mock-risk-ring">
-        <svg class="ring-svg" viewBox="0 0 110 110">
-          <circle class="ring-bg" cx="55" cy="55" r="46"/>
-          <circle class="ring-fill" cx="55" cy="55" r="46"/>
-        </svg>
-        <div class="ring-center">
-          <span class="ring-pct">78</span>
-          <span class="ring-sub">Good</span>
-        </div>
+      <div class="tc-share">
+        <div class="tc-sh"><i class="ti ti-share"></i>Shared with your doctor</div>
+        <div class="tc-ln"><span>HbA1c · 9.0%</span><span class="tc-t red">HIGH</span></div>
+        <div class="tc-ln"><span>Flu &amp; Pneumococcal</span><span class="tc-t amb">DUE</span></div>
       </div>
-      <div class="mock-vax-list">
-        <div class="mock-vax-item">
-          <div class="mvax-dot" style="background:#f87171"></div>
-          <span class="mvax-name">Flu Vaccine</span>
-          <span class="mvax-chip chip-urgent">Due Now</span>
-        </div>
-        <div class="mock-vax-item">
-          <div class="mvax-dot" style="background:#fbbf24"></div>
-          <span class="mvax-name">Blood Pressure Check</span>
-          <span class="mvax-chip chip-soon">Yearly</span>
-        </div>
-        <div class="mock-vax-item">
-          <div class="mvax-dot" style="background:#fbbf24"></div>
-          <span class="mvax-name">Cholesterol Panel</span>
-          <span class="mvax-chip chip-soon">Due Soon</span>
-        </div>
-        <div class="mock-vax-item">
-          <div class="mvax-dot" style="background:#63E6BE"></div>
-          <span class="mvax-name">HbA1c (Blood Sugar)</span>
-          <span class="mvax-chip chip-ok">Up to date</span>
-        </div>
-      </div>
+      <div class="tc-nm"><b>Dr. Sari Dewi, Sp.PD</b><span>Internal Medicine · Jakarta</span></div>
+      <a href="/teleconsultation" class="tc-bar"><i class="ti ti-video"></i>Talk to a Doctor</a>
     </div>
   </div>
 
@@ -179,7 +159,7 @@
         <span class="hiw-step-num">3</span>
       </div>
       <h3 class="hiw-step-title">Book a Clinic</h3>
-      <p class="hiw-step-desc">Browse verified clinics near you, check live availability, and book your appointment — all in one place.</p>
+      <p class="hiw-step-desc">Browse verified clinics near you, check live availability, and book your appointment, all in one place.</p>
     </div>
 
     <div class="hiw-step reveal">
@@ -205,7 +185,7 @@
     <p class="section-subtitle" style="max-width:680px;margin-top:14px">
       From vaccines and early detection to nutrition, mental well-being, lifestyle habits,
       and family health, CareMate helps you understand what to do, when to do it, and why
-      it matters — so prevention becomes part of everyday life, not an emergency reaction.
+      it matters, so prevention becomes part of everyday life, not an emergency reaction.
     </p>
   </div>
 
@@ -329,27 +309,27 @@
             <label class="option-card">
               <input type="radio" name="sex" value="male" />
               <div class="option-content">
-                <span class="option-icon">♂️</span>
+                <span class="option-icon"><i class="ti ti-gender-male"></i></span>
                 <span>Male</span>
               </div>
             </label>
             <label class="option-card">
               <input type="radio" name="sex" value="female" />
               <div class="option-content">
-                <span class="option-icon">♀️</span>
+                <span class="option-icon"><i class="ti ti-gender-female"></i></span>
                 <span>Female</span>
               </div>
             </label>
             <label class="option-card">
               <input type="radio" name="sex" value="other" />
               <div class="option-content">
-                <span class="option-icon">⚧</span>
+                <span class="option-icon"><i class="ti ti-gender-bigender"></i></span>
                 <span>Other</span>
               </div>
             </label>
           </div>
           <p id="sexHint" style="display:none;font-size:12px;color:#ef4444;margin-top:6px;font-weight:600">
-            ⚠️ Please select a biological sex to continue.
+            <i class="ti ti-alert-triangle" style="color:var(--coral)"></i> Please select a biological sex to continue.
           </p>
         </div>
 
@@ -358,25 +338,31 @@
           <div class="option-group">
             <label class="option-card">
               <input type="radio" name="pregnant" value="yes" />
-              <div class="option-content"><span class="option-icon">🤰</span><span>Yes</span></div>
+              <div class="option-content"><span class="option-icon"><i class="ti ti-baby-carriage"></i></span><span>Yes</span></div>
             </label>
             <label class="option-card">
               <input type="radio" name="pregnant" value="no" checked />
-              <div class="option-content"><span class="option-icon">✗</span><span>No</span></div>
+              <div class="option-content"><span class="option-icon"><i class="ti ti-x"></i></span><span>No</span></div>
             </label>
           </div>
         </div>
 
         <div class="form-group">
           <label class="form-label">Vaccination history</label>
-          <div class="option-group">
-            <label class="option-card">
+          <div class="vax-group">
+            <label class="vax-card">
               <input type="radio" name="vaccinated_recently" value="yes" />
-              <div class="option-content"><span class="option-icon">✓</span><span>Up to date</span></div>
+              <div class="vax-content">
+                <span class="vax-ic"><i class="ti ti-circle-check"></i></span>
+                <span class="vax-tx"><b>Up to date</b><span>All current</span></span>
+              </div>
             </label>
-            <label class="option-card">
+            <label class="vax-card">
               <input type="radio" name="vaccinated_recently" value="no" checked />
-              <div class="option-content"><span class="option-icon">?</span><span>Not sure / outdated</span></div>
+              <div class="vax-content">
+                <span class="vax-ic"><i class="ti ti-help-circle"></i></span>
+                <span class="vax-tx"><b>Not sure</b><span>Or outdated</span></span>
+              </div>
             </label>
           </div>
         </div>
@@ -518,35 +504,35 @@
           <div class="regions-grid">
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="Southeast Asia" />
-              <div class="region-content"><span>🌏</span><span>Southeast Asia</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>Southeast Asia</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="South Asia" />
-              <div class="region-content"><span>🌏</span><span>South Asia</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>South Asia</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="East Asia" />
-              <div class="region-content"><span>🌏</span><span>East Asia</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>East Asia</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="Sub-Saharan Africa" />
-              <div class="region-content"><span>🌍</span><span>Sub-Saharan Africa</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>Sub-Saharan Africa</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="Latin America" />
-              <div class="region-content"><span>🌎</span><span>Latin America</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>Latin America</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="Middle East" />
-              <div class="region-content"><span>🌍</span><span>Middle East</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>Middle East</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="Europe" />
-              <div class="region-content"><span>🇪🇺</span><span>Europe</span></div>
+              <div class="region-content"><span>Europe</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="North America" />
-              <div class="region-content"><span>🌎</span><span>North America</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>North America</span></div>
             </label>
           </div>
         </div>
@@ -555,7 +541,7 @@
           <button class="btn-back" onclick="goToStep(2)">← Back</button>
           <button class="btn-submit" onclick="submitAssessment()">
             <span class="btn-submit-text">Get My Results</span>
-            <span class="btn-submit-icon">🔬</span>
+            <span class="btn-submit-icon"><i class="ti ti-microscope" style="color:var(--coral)"></i></span>
           </button>
         </div>
       </div>
@@ -580,7 +566,7 @@
     <div class="risk-card">
       <div class="risk-header">
         <h3>Your Prevention Score</h3>
-        <span class="risk-badge" id="riskBadge">—</span>
+        <span class="risk-badge" id="riskBadge"></span>
       </div>
       <!-- Centered gauge -->
       <div class="risk-gauge-center">
@@ -619,7 +605,7 @@
     <!-- CTA -->
     <div class="results-cta">
       <div class="cta-card">
-        <div class="cta-icon">👨‍⚕️</div>
+        <div class="cta-icon"><i class="ti ti-stethoscope" style="color:var(--coral)"></i></div>
         <div class="cta-text">
           <h4>Ready to get vaccinated?</h4>
           <p>Connect with a certified vaccine specialist for your personalized immunization plan.</p>
@@ -627,7 +613,7 @@
         <a href="/teleconsultation" class="btn-primary" target="_blank">Book Teleconsultation</a>
       </div>
       <div class="cta-card secondary">
-        <div class="cta-icon">🔄</div>
+        <div class="cta-icon"><i class="ti ti-refresh" style="color:var(--coral)"></i></div>
         <div class="cta-text">
           <h4>Reassess your profile</h4>
           <p>Update your health information for a fresh analysis.</p>
@@ -651,7 +637,7 @@
       <div class="footer-col">
         <h5>Platform</h5>
         <a href="#assessment">Free Assessment</a>
-        <a href="/clinics">📍 Find a Clinic</a>
+        <a href="/clinics"><i class="ti ti-map-pin" style="color:var(--coral)"></i> Find a Clinic</a>
         <a href="/teleconsultation">Teleconsultation</a>
         <a href="#how-it-works">How It Works</a>
       </div>
@@ -664,7 +650,7 @@
       </div>
       <div class="footer-col">
         <h5>For Business</h5>
-        <a href="/corporate/register">🏢 Corporate Portal</a>
+        <a href="/corporate/register"><i class="ti ti-building" style="color:var(--coral)"></i> Corporate Portal</a>
         <a href="/corporate/login">HR Dashboard</a>
         <a href="/references">PAPDI 2025 Sources</a>
         <a href="/references">CDC / WHO Guidelines</a>
@@ -672,7 +658,7 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <p>⚕️ CareMate is for informational purposes only and does not replace professional medical advice.</p>
+    <p>CareMate is for informational purposes only and does not replace professional medical advice.</p>
     <p>© 2025 CareMate. All rights reserved.</p>
   </div>
 </footer>
@@ -680,7 +666,7 @@
 <!-- ===== CHATBOT ===== -->
 <div class="chatbot-widget" id="chatbotWidget">
   <div class="chatbot-header" onclick="toggleChat()">
-    <img class="chatbot-avatar" src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=160&h=160&q=75&auto=format&fit=facearea&facepad=2.2" alt="CareMate doctor" />
+    <img class="chatbot-avatar" src="https://images.pexels.com/photos/4227090/pexels-photo-4227090.jpeg?auto=compress&cs=tinysrgb&w=160&h=160&fit=crop" alt="CareMate doctor" />
     <div class="chatbot-title">
       <span>CareMate Assistant</span>
       <span class="chatbot-status">Online · Ask me anything</span>
@@ -698,7 +684,7 @@
     <div class="chat-input-area">
       <input type="text" id="chatInput" placeholder="Ask about vaccines..." class="chat-input"
              onkeypress="if(event.key==='Enter') sendMessage()" />
-      <button class="chat-send-btn" onclick="sendMessage()" aria-label="Send message">➤</button>
+      <button class="chat-send-btn" onclick="sendMessage()" aria-label="Send message"><i class="ti ti-send"></i></button>
     </div>
   </div>
 </div>
@@ -717,7 +703,7 @@
 <!-- Vaccine detail modal -->
 <div class="modal-overlay hidden" id="vaccineModal" onclick="closeModal()">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <button class="modal-close" onclick="closeModal()" aria-label="Close dialog">✕</button>
+    <button class="modal-close" onclick="closeModal()" aria-label="Close dialog"><i class="ti ti-x"></i></button>
     <div id="modalContent"></div>
   </div>
 </div>

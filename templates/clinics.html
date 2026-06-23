@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
   <link rel="apple-touch-icon" href="/static/img/favicon-192.png" />
-  <title>Find a Clinic — CareMate</title>
+  <title>Find a Clinic, CareMate</title>
   <meta name="description" content="Find verified vaccination clinics across Jakarta with live availability, transparent pricing and instant booking." />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
 </head>
 <body class="clinics-body">
 
@@ -34,8 +35,8 @@
 <!-- ── HERO ── -->
 <div class="clinics-hero">
   <div class="clinics-hero-inner">
-    <h1 class="clinics-title">Get Vaccinated, Your Way</h1>
-    <p class="clinics-subtitle">Choose how you'd like to receive your vaccination.</p>
+    <h1 class="clinics-title">Find the care you need</h1>
+    <p class="clinics-subtitle">Vaccinations, screenings, lab tests and consultations, at a clinic near you or at home.</p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in messages %}
@@ -46,14 +47,24 @@
     <!-- MODE CHOOSER -->
     <div class="vax-mode-chooser" id="modeChooser">
       <button class="vax-mode-card" onclick="chooseMode('clinic')">
-        <span class="vax-mode-title">Visit a Vaccination Point</span>
-        <span class="vax-mode-desc">See hospitals and clinics around you, sorted by distance. Book a visit or go straight to their website.</span>
-        <span class="vax-mode-cta">Find clinics near me →</span>
+        <span class="vmc-img vmc-clinic"><span class="vmc-pin"><i class="ti ti-building-hospital"></i></span><span class="vmc-h">Visit a Clinic</span></span>
+        <span class="vmc-bd">
+          <span class="vmc-srv"><i class="ti ti-vaccine"></i>Vaccinations</span>
+          <span class="vmc-srv"><i class="ti ti-stethoscope"></i>Health screenings &amp; check-ups</span>
+          <span class="vmc-srv"><i class="ti ti-flask"></i>Lab tests</span>
+          <span class="vmc-srv"><i class="ti ti-user-heart"></i>Doctor consultations</span>
+          <span class="vax-mode-cta">Find clinics near me →</span>
+        </span>
       </button>
       <button class="vax-mode-card" onclick="chooseMode('home')">
-        <span class="vax-mode-title">Home Vaccination</span>
-        <span class="vax-mode-desc">A certified nurse or doctor comes to you. Ideal for families, elderly patients, or busy schedules.</span>
-        <span class="vax-mode-cta">See home services →</span>
+        <span class="vmc-img vmc-home"><span class="vmc-pin"><i class="ti ti-ambulance"></i></span><span class="vmc-h">Care at Home</span></span>
+        <span class="vmc-bd">
+          <span class="vmc-srv"><i class="ti ti-vaccine"></i>Home vaccination</span>
+          <span class="vmc-srv"><i class="ti ti-test-pipe"></i>Sample collection for labs</span>
+          <span class="vmc-srv"><i class="ti ti-heart-handshake"></i>Elderly &amp; family care</span>
+          <span class="vmc-srv"><i class="ti ti-nurse"></i>Nurse &amp; doctor visits</span>
+          <span class="vax-mode-cta">See home services →</span>
+        </span>
       </button>
     </div>
 
@@ -72,44 +83,61 @@
 </div>
 
 <!-- ── CLINIC GRID ── -->
+{% set home_meta = {
+  'Halodoc':     {'logo': 'img/logos/halodoc.png',     'services': ['Home vaccination (adult & child)', 'Lab tests at home', 'Doctor teleconsultation', 'Medicine delivery', 'Nursing care at home']},
+  'Kavacare':    {'logo': 'img/logos/kavacare.png',    'services': ['Home nursing care', 'Doctor home visits', 'Physiotherapy at home', 'Home lab tests', 'Home vaccination']},
+  'Vaxine Care': {'logo': 'img/logos/vaxinecare.png',  'services': ['Child & adult vaccination', 'Travel vaccines', 'Premarital vaccination', 'Corporate vaccination', 'Vitamin boost & IV drips']},
+  'Imuni':       {'logo': 'img/logos/imuni.png',       'services': ['Baby & child vaccination', 'Adult vaccination', 'Senior (golden age) vaccination', 'Premarital vaccination', 'Corporate vaccination']},
+  'InHarmony':   {'logo': 'img/logos/inharmony.png',   'services': ['Baby & child immunization', 'Adult & travel vaccines', 'Premarital & Hajj/Umrah vaccines', 'Genetic screening & MCU', 'Corporate vaccination']}
+} %}
+{% set clinic_meta = {
+  'Prodia':      {'logo': 'img/logos/logo_prodia.png',     'services': ['Lab tests & diagnostics', 'Health check-up (MCU)', 'Vaccination', 'Genetic & specialty testing', 'Wellness screening']},
+  'Kimia Farma': {'logo': 'img/logos/logo_kimiafarma.png', 'services': ['Clinic consultation', 'Vaccination', 'Lab tests', 'Pharmacy & prescriptions', 'Health screening']},
+  'RSPI':        {'logo': 'img/logos/logo_rspi.png',       'services': ['Specialist consultations', 'Vaccination', 'Medical check-up (MCU)', 'Lab & radiology', 'Emergency care']},
+  'Siloam':      {'logo': 'img/logos/logo_siloam.png',     'services': ['Specialist care', 'Vaccination', 'Medical check-up', 'Lab & diagnostics', 'Emergency & surgery']},
+  'Pramita':     {'logo': 'img/logos/logo_pramita.png',    'services': ['Lab tests & diagnostics', 'Health check-up', 'Vaccination', 'Imaging & radiology', 'Specialty screening']},
+  'PAPDI':       {'logo': 'img/logos/logo_papdi.png',      'services': ['Adult vaccination', 'Travel vaccination', 'Vaccine consultation', 'Immunization clinic', 'Pre-travel health advice']}
+} %}
 <div class="clinics-grid" id="clinicsGrid">
   {% for clinic in clinics %}
   {% set voffered = clinic.vaccines_offered | from_json %}
-  <div class="clinic-card" data-name="{{ clinic.name }} {{ clinic.branch }} {{ clinic.network }}" data-vaccines="{{ clinic.vaccines_offered }}"
+  <div class="clinic-card{% if clinic.home_service %} clinic-card-home{% endif %}" data-name="{{ clinic.name }} {{ clinic.branch }} {{ clinic.network }}" data-vaccines="{{ clinic.vaccines_offered }}"
        data-home="{{ 'true' if clinic.home_service else 'false' }}" data-lat="{{ clinic.latitude }}" data-lng="{{ clinic.longitude }}" style="display:none">
-    <div class="clinic-card-top">
-      <div class="clinic-logo">{{ clinic.logo or '🏥' }}</div>
-      <div style="flex:1">
+
+    {% if clinic.home_service %}
+    {% set hm = home_meta.get(clinic.network) %}
+    <div class="home-logo">
+      {% if hm %}<img src="{{ url_for('static', filename=hm.logo) }}" alt="{{ clinic.name }}" />{% else %}<span class="clinic-name">{{ clinic.name }}</span>{% endif %}
+    </div>
+    <div class="home-area"><i class="ti ti-map-pin"></i>{{ clinic.address }}</div>
+    <div class="home-services">
+      {% for s in (hm.services if hm else [])[:5] %}
+      <span class="home-srv"><i class="ti ti-circle-check"></i>{{ s }}</span>
+      {% endfor %}
+    </div>
+    <div class="clinic-actions">
+      <a class="btn-book" href="{{ clinic.website }}" target="_blank" rel="noopener">Book on {{ clinic.network }} →</a>
+      <a class="btn-directions" href="https://wa.me/{{ clinic.phone | replace('+','') }}" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+
+    {% else %}
+    {% set cm = clinic_meta.get(clinic.network) %}
+    <div class="clinic-head">
+      <div class="clinic-brand">
+        {% if cm %}<img src="{{ url_for('static', filename=cm.logo) }}" alt="{{ clinic.network }}" />{% else %}<i class="ti ti-building-hospital" style="color:var(--coral)"></i>{% endif %}
+      </div>
+      <div style="flex:1;min-width:0">
         <div class="clinic-name">{{ clinic.name }}</div>
         <div class="clinic-branch">{{ clinic.branch }}</div>
       </div>
-      <div style="text-align:right">
-        <div class="clinic-rating">⭐ {{ clinic.rating }}</div>
-        <div class="clinic-distance" style="font-size:11px;font-weight:700;color:var(--coral);margin-top:4px"></div>
-      </div>
     </div>
-
-    <div class="clinic-meta">
-      <span>📍 {{ clinic.address }}</span>
-      <span>📞 {{ clinic.phone }}</span>
-      <span>🕐 {{ clinic.opening_hours }}</span>
-      <span>💰 {{ clinic.price_range }}</span>
-    </div>
-
-    <div class="clinic-vaccines">
-      {% for vkey in voffered[:6] %}
-      <span class="clinic-vaccine-tag">{{ vaccines.get(vkey, {}).get('name', vkey) if vaccines.get(vkey) else vkey }}</span>
+    <div class="home-area"><i class="ti ti-map-pin"></i>{{ clinic.address }}</div>
+    <div class="home-services">
+      {% for s in (cm.services if cm else [])[:5] %}
+      <span class="home-srv"><i class="ti ti-circle-check"></i>{{ s }}</span>
       {% endfor %}
-      {% if voffered|length > 6 %}
-      <span class="clinic-vaccine-tag" style="background:var(--bg-secondary);color:var(--text-muted);border-color:var(--border)">+{{ voffered|length - 6 }} more</span>
-      {% endif %}
     </div>
-
     <div class="clinic-actions">
-      {% if clinic.home_service %}
-      <a class="btn-book" href="{{ clinic.website }}" target="_blank" rel="noopener">Book on {{ clinic.network }} →</a>
-      <a class="btn-directions" href="https://wa.me/{{ clinic.phone | replace('+','') }}" target="_blank" rel="noopener">WhatsApp</a>
-      {% else %}
       {% if current_user.is_authenticated %}
       <button class="btn-book" onclick="openBookingModal({{ clinic.id }}, '{{ clinic.name }} {{ clinic.branch }}')">Book Appointment</button>
       {% else %}
@@ -119,8 +147,9 @@
       <a class="btn-directions" href="{{ clinic.website }}" target="_blank" rel="noopener">Website</a>
       {% endif %}
       <a class="btn-directions" href="https://www.google.com/maps/search/?api=1&query={{ clinic.latitude }},{{ clinic.longitude }}" target="_blank" rel="noopener">Map</a>
-      {% endif %}
     </div>
+    {% endif %}
+
   </div>
   {% endfor %}
 </div>
@@ -129,7 +158,7 @@
 <div class="modal-overlay hidden" id="bookingModal">
   <div class="modal-box" style="max-width:500px">
     <div class="modal-header">
-      <div style="font-size:18px;font-weight:800">📅 Book Appointment</div>
+      <div style="font-size:18px;font-weight:800"><i class="ti ti-calendar" style="color:var(--coral)"></i> Book Appointment</div>
       <button onclick="closeBookingModal()" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--text-muted)">×</button>
     </div>
     <form method="POST" action="/clinics/book" style="padding:0 24px 24px">
@@ -163,7 +192,7 @@
       </div>
 
       <div style="background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.15);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--text-secondary)">
-        💉 After booking, CareMate will automatically set WhatsApp reminders 7 days, 1 day, and the morning of your appointment.
+        <i class="ti ti-vaccine" style="color:var(--coral)"></i> After booking, CareMate will automatically set WhatsApp reminders 7 days, 1 day, and the morning of your appointment.
       </div>
 
       <button type="submit" class="auth-btn">Confirm Booking →</button>
@@ -176,7 +205,7 @@
 <div class="modal-overlay" id="confirmModal">
   <div class="modal-box" style="max-width:420px">
     <div class="booking-confirm-box">
-      <div class="booking-confirm-icon">🎉</div>
+      <div class="booking-confirm-icon"><i class="ti ti-confetti" style="color:var(--coral)"></i></div>
       <div style="font-size:20px;font-weight:900;margin-bottom:8px">Booking Confirmed!</div>
       <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px">Your booking reference number:</div>
       <div class="booking-confirm-code">{{ booking_confirmed }}</div>
@@ -283,7 +312,7 @@ function requestLocation() {
     status.textContent = 'Sorted by distance from your location.';
     setTimeout(() => status.classList.add('hidden'), 4000);
   }, () => {
-    status.textContent = 'Location access denied — showing all clinics unsorted.';
+    status.textContent = 'Location access denied, showing all clinics unsorted.';
     setTimeout(() => status.classList.add('hidden'), 4000);
   }, { timeout: 10000 });
 }

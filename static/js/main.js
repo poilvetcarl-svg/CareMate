@@ -1,5 +1,5 @@
 /* =============================================
-   VAXAI — Main JavaScript
+   VAXAI, Main JavaScript
    ============================================= */
 
 // ===== STATE =====
@@ -325,7 +325,7 @@ function renderScreenings(screenings) {
       Health Checks for Your Age
       <span class="vaccines-count">${screenings.length}</span>
     </h3>
-    <p style="font-size:13px;color:#6B4423;margin:-12px 0 16px">Start with these ${top.length} — they matter most for your profile.</p>
+    <p style="font-size:13px;color:#6B4423;margin:-12px 0 16px">Start with these ${top.length}, they matter most for your profile.</p>
     <div style="border:1px solid rgba(255,107,107,0.12);border-radius:14px;overflow:hidden">
       ${top.map(s => row(s, true)).join('')}
       ${restHtml}
@@ -360,13 +360,13 @@ function renderDoctorOffer(result) {
     padding: 28px;
   ">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <span style="font-size:22px">🎙️</span>
+      <span style="font-size:22px"><i class="ti ti-microphone" style="color:var(--accent)"></i></span>
       <h3 style="font-size:19px;font-weight:800;color:#1e293b;margin:0">Talk to a Doctor About Your Results</h3>
     </div>
     <p style="font-size:14px;color:#64748b;margin:0 0 22px;line-height:1.6">
       Your AI doctor already knows your <strong>${riskLevel}</strong> profile and
       your ${result.vaccines.length} recommended vaccines.
-      Start a live video consultation — no need to repeat yourself.
+      Start a live video consultation, no need to repeat yourself.
     </p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
       ${renderOfferDoctorCard(1, 'Dr. Budi Santoso', 'Internal Medicine & Infectious Disease', 'male')}
@@ -410,13 +410,13 @@ function renderOfferDoctorCard(id, name, specialty, gender) {
                 text-align:center;padding:10px 14px;border-radius:10px;text-decoration:none;
                 font-size:13px;font-weight:700;transition:opacity .2s"
          onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
-        📹 Discuss My Results
+        <i class="ti ti-video"></i> Discuss My Results
       </a>
     </div>`;
 }
 
 function saveContextAndGo(event, doctorId) {
-  // Assessment is already saved — just let the link navigate naturally
+  // Assessment is already saved, just let the link navigate naturally
   // (localStorage was set in renderResults)
 }
 
@@ -461,7 +461,7 @@ function renderRiskScore(risk) {
     setTimeout(() => { arc.style.strokeDashoffset = offset; }, 200);
   }
 
-  // Factors — no emoji, no point numbers. Tag each as improvable or fixed.
+  // Factors, no emoji, no point numbers. Tag each as improvable or fixed.
   const improvable = [
     /vaccin/i, /overdue/i, /smoking/i, /obesity/i, /travel/i,
   ];
@@ -536,10 +536,10 @@ function renderVaccines(vaccines) {
                 <div class="vc-int-col-text">${cd.disease_worsens}</div>
               </div>
             </div>
-            <div class="vc-plain-language">🗩 <em>In plain language:</em> ${cd.plain_language}</div>
+            <div class="vc-plain-language"><i class="ti ti-message-circle" style="color:var(--accent)"></i> <em>In plain language:</em> ${cd.plain_language}</div>
           </div>
           <div class="vc-risk-block">
-            <div class="vc-risk-label">⚠ If Not Vaccinated, What's The Risk?</div>
+            <div class="vc-risk-label"><i class="ti ti-alert-triangle" style="color:var(--accent)"></i> If Not Vaccinated, What's The Risk?</div>
             <div class="vc-risk-text">${cd.if_not_vaccinated}</div>
           </div>
           <div class="vc-why-block">
@@ -550,7 +550,7 @@ function renderVaccines(vaccines) {
       }).join('');
 
       const reasonsHtml = !isCondBased && v.reasons.length > 0
-        ? `<div class="vr-expand-reasons">${v.reasons.map(r => `<div class="vr-reason-item">✓ ${r}</div>`).join('')}</div>`
+        ? `<div class="vr-expand-reasons">${v.reasons.map(r => `<div class="vr-reason-item"><i class="ti ti-check" style="color:var(--accent)"></i> ${r}</div>`).join('')}</div>`
         : '';
 
       const sourcesHtml = v.sources && v.sources.length > 0
@@ -579,7 +579,7 @@ function renderVaccines(vaccines) {
           </div>
           <div class="vr-expand-panel" id="${expandId}">
             <div class="vr-expand-inner">
-              <div class="vr-schedule-chip">📅 ${v.schedule}</div>
+              <div class="vr-schedule-chip"><i class="ti ti-calendar"></i> ${v.schedule}</div>
               ${clinicalHtml}
               ${reasonsHtml}
               ${sourcesHtml}
@@ -611,7 +611,7 @@ function renderVaccines(vaccines) {
   }
 
   if (others.length > 0) {
-    // Collapsed by default — most people only need to act on the priority list
+    // Collapsed by default, most people only need to act on the priority list
     const section = document.createElement('div');
     section.className = 'vr-section';
     section.innerHTML = `
@@ -654,7 +654,7 @@ function showVaccineModal(vaccine) {
 
   const relHtml = Object.keys(vaccine.disease_relations).length > 0
     ? `<div style="margin-top:20px">
-        <h4 style="font-size:14px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">⚠️ Your Condition Connections</h4>
+        <h4 style="font-size:14px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px"><i class="ti ti-alert-triangle" style="color:var(--accent)"></i> Your Condition Connections</h4>
         ${Object.entries(vaccine.disease_relations).map(([cond, explanation]) => `
           <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:14px;margin-bottom:10px">
             <div style="font-size:12px;font-weight:700;color:#f87171;text-transform:uppercase;margin-bottom:6px">${cond.replace(/_/g,' ')}</div>
@@ -675,17 +675,17 @@ function showVaccineModal(vaccine) {
     </div>
     <p style="font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">${vaccine.description}</p>
     <div style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:12px;padding:14px;margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">📅 Schedule</div>
+      <div style="font-size:12px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px"><i class="ti ti-calendar" style="color:var(--accent)"></i> Schedule</div>
       <div style="font-size:14px">${vaccine.schedule}</div>
     </div>
     <div style="margin-bottom:16px">
       <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Why it's recommended for you</div>
-      ${vaccine.reasons.map(r => `<div style="display:flex;gap:8px;font-size:13px;color:var(--text-secondary);margin-bottom:6px"><span style="color:var(--accent)">✓</span>${r}</div>`).join('')}
+      ${vaccine.reasons.map(r => `<div style="display:flex;gap:8px;font-size:13px;color:var(--text-secondary);margin-bottom:6px"><span style="color:var(--accent)"><i class="ti ti-check"></i></span>${r}</div>`).join('')}
     </div>
     ${relHtml}
     ${vaccine.sources && vaccine.sources.length > 0 ? `
     <div class="vaccine-sources" style="margin-top:20px">
-      <div style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">📚 Sources</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px"><i class="ti ti-book" style="color:var(--accent)"></i> Sources</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${vaccine.sources.map(s => `<span class="source-tag">${s}</span>`).join('')}
       </div>
@@ -720,7 +720,7 @@ function scrollToAssessment() {
 function initChatbot() {
   const widget = document.getElementById('chatbotWidget');
   if (!widget) return;
-  // Start collapsed everywhere — the assistant shouldn't cover page content uninvited
+  // Start collapsed everywhere, the assistant shouldn't cover page content uninvited
   widget.classList.add('collapsed');
   chatOpen = false;
 }
@@ -761,7 +761,7 @@ async function sendMessage() {
     }
   } catch {
     thinking.remove();
-    appendMessage('bot', 'Connection error — please check your internet and try again.');
+    appendMessage('bot', 'Connection error, please check your internet and try again.');
   } finally {
     input.disabled = false;
     input.focus();

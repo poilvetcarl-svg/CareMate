@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
+  <title>{{ 'Terms of Use' if doc == 'terms' else 'Privacy Policy' }}, CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    .legal-wrap { max-width: 760px; margin: 0 auto; padding: 110px 24px 80px; }
+    .legal-wrap h1 { font-size: 32px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.02em; }
+    .legal-updated { font-size: 13px; color: var(--text-muted); margin: 6px 0 28px; }
+    .legal-wrap h2 { font-size: 19px; font-weight: 800; color: var(--text-primary); margin: 32px 0 10px; }
+    .legal-wrap p, .legal-wrap li { font-size: 15px; line-height: 1.7; color: var(--text-secondary); }
+    .legal-wrap ul { margin: 8px 0 8px 20px; }
+    .legal-wrap li { margin-bottom: 6px; }
+    .legal-note { background: #FFF0EB; border: 1px solid rgba(255,107,107,0.2); border-radius: 14px; padding: 16px 18px; font-size: 14px; color: var(--text-secondary); margin-bottom: 28px; }
+    .legal-back { display: inline-flex; align-items: center; gap: 6px; color: var(--coral); font-weight: 700; font-size: 14px; text-decoration: none; margin-bottom: 24px; }
+    .legal-wrap a { color: var(--coral); }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span class="logo-accent">Mate</span></a>
+    <div class="nav-links">
+      <a href="/clinics" class="nav-link">Clinics</a>
+      <a href="/teleconsultation" class="nav-link">Doctors</a>
+      <a href="/login" class="nav-cta">Sign In</a>
+    </div>
+  </div>
+</nav>
+
+<div class="legal-wrap">
+  <a href="/register" class="legal-back">← Back</a>
+
+  {% if doc == 'terms' %}
+  <h1>Terms of Use</h1>
+  <p class="legal-updated">Last updated: June 2026</p>
+
+  <div class="legal-note">
+    CareMate is a preventive-health information tool. It is <strong>not a medical provider</strong> and does not deliver diagnosis or treatment. In a medical emergency, contact your local emergency services immediately.
+  </div>
+
+  <h2>1. What CareMate is</h2>
+  <p>CareMate helps you stay ahead of disease with educational prevention guidance, risk assessments, vaccine and screening recommendations, lab-result explanations, and a virtual AI doctor. All content is for general informational and educational purposes only.</p>
+
+  <h2>2. Not medical advice</h2>
+  <p>The information and the AI "virtual doctor" provide general educational guidance and are <strong>not a substitute for advice from a licensed healthcare professional</strong>. Using CareMate does not create a doctor–patient relationship. Always consult a qualified clinician before acting on any recommendation, and never disregard professional medical advice because of something you read or heard here.</p>
+
+  <h2>3. The virtual doctor is AI</h2>
+  <p>Our virtual doctor is an AI-powered assistant. It can make mistakes and may not reflect your full medical situation. Do not use it for emergencies or for decisions that require an in-person examination.</p>
+
+  <h2>4. Your account</h2>
+  <p>You are responsible for keeping your login details secure and for the accuracy of the information you provide. You must be old enough to consent to use the service, or have a parent or guardian act on your behalf.</p>
+
+  <h2>5. Clinics and third-party providers</h2>
+  <p>CareMate lists clinics and home-service providers as a directory and links to their booking pages. Any appointment, payment, or service is solely between you and that provider. We do not guarantee their availability, pricing, or quality.</p>
+
+  <h2>6. Limitation of liability</h2>
+  <p>CareMate is provided "as is", without warranties of any kind. To the maximum extent permitted by law, we are not liable for any loss or harm arising from your use of the service or reliance on its content.</p>
+
+  <h2>7. Changes</h2>
+  <p>We may update these terms from time to time. Continued use of CareMate after changes means you accept the updated terms.</p>
+
+  <h2>8. Contact</h2>
+  <p>Questions about these terms? Email us at <a href="mailto:privacy@mycaremate.me">privacy@mycaremate.me</a>.</p>
+
+  {% else %}
+  <h1>Privacy Policy</h1>
+  <p class="legal-updated">Last updated: June 2026</p>
+
+  <div class="legal-note">
+    We collect health information to give you personalised prevention guidance. We <strong>do not sell your data</strong>. You can request deletion of your data at any time.
+  </div>
+
+  <h2>1. Information we collect</h2>
+  <ul>
+    <li><strong>Account details:</strong> name, date of birth, email, and (optionally) WhatsApp number.</li>
+    <li><strong>Health inputs:</strong> assessment answers (age, sex, conditions, lifestyle, travel), vaccination records, and any lab values you choose to add.</li>
+    <li><strong>Wellbeing check-ins:</strong> the daily body and mind ratings you log with your companion, used to show your streak and reflect how you are doing.</li>
+    <li><strong>Connected devices:</strong> if you connect a wearable, activity and recovery metrics such as sleep, resting heart rate, steps and heart-rate variability. In the current demo version these values are simulated and no real device data is read.</li>
+    <li><strong>Consultation records:</strong> when you save a virtual-doctor consultation, we store a summary and transcript of that conversation in your records.</li>
+    <li><strong>Usage data:</strong> basic technical information needed to run and secure the service.</li>
+  </ul>
+
+  <h2>2. How we use your information</h2>
+  <ul>
+    <li>To generate your personalised prevention plan, scores, and recommendations.</li>
+    <li>To power the virtual AI doctor consultation and explain your results.</li>
+    <li>To power your wellbeing companion and reflect your check-ins and recovery.</li>
+    <li>To save consultation summaries to your records when you choose to.</li>
+    <li>To send the reminders you opt in to (e.g. via WhatsApp).</li>
+    <li>To improve and secure the service.</li>
+  </ul>
+
+  <h2>3. AI processing</h2>
+  <p>To provide the assessment, lab-reading, virtual-doctor, and consultation-summary features, some inputs are processed by trusted AI service providers. <strong>Lab-report photos are read in memory to extract values and are not stored</strong> after processing.</p>
+
+  <h2>4. Reminders</h2>
+  <p>WhatsApp reminders are sent only if you opt in. You can turn them off at any time from your profile.</p>
+
+  <h2>5. Sharing</h2>
+  <p>We do not sell your personal data. We share information only with the service providers needed to operate CareMate (e.g. hosting, AI, messaging), or where required by law. When you choose to book with a clinic or provider, the details you share go to that provider.</p>
+
+  <h2>6. Data retention and your choices</h2>
+  <p>You can view, update, or delete your information from your dashboard, or by emailing us. We keep your data only as long as needed to provide the service or as required by law.</p>
+
+  <h2>7. Security</h2>
+  <p>We use reasonable technical and organisational measures to protect your information. No system is perfectly secure, so please use a strong, unique password.</p>
+
+  <h2>8. Children</h2>
+  <p>Children's records (for the family schedule) should only be added by a parent or legal guardian.</p>
+
+  <h2>9. Contact</h2>
+  <p>To exercise your privacy rights or ask a question, email <a href="mailto:privacy@mycaremate.me">privacy@mycaremate.me</a>.</p>
+  {% endif %}
+</div>
+</body>
+</html>

@@ -3,24 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Dashboard — CareMate</title>
+  <title>My Dashboard, CareMate</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
 </head>
 <body class="dash-body">
 
 <!-- ── SIDEBAR ── -->
+<button class="dash-burger" aria-label="Open menu" onclick="document.body.classList.add(&apos;nav-open&apos;)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="dash-backdrop" onclick="document.body.classList.remove(&apos;nav-open&apos;)"></div>
 <aside class="dash-sidebar">
   <div class="dash-logo">
-    <a href="/" class="nav-logo">Care<span>Mate</span></a>
+    <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span>Mate</span></a>
   </div>
   <nav class="dash-nav">
     <a href="/dashboard" class="dash-nav-item active">Overview</a>
-    <a href="/dashboard/history" class="dash-nav-item">Vaccination History</a>
+    <a href="/dashboard/assessments" class="dash-nav-item">Health Assessment</a>
+    <a href="/dashboard/records" class="dash-nav-item">My Health Records</a>
+    <a href="/teleconsultation" class="dash-nav-item">Talk to a Doctor</a>
+    <a href="/clinics" class="dash-nav-item">Find Care</a>
     <a href="/dashboard/reminders" class="dash-nav-item">Reminders</a>
-    <a href="/clinics" class="dash-nav-item">Book a Clinic</a>
-    <a href="/#assessment" class="dash-nav-item">New Assessment</a>
-    <a href="/dashboard/referrals" class="dash-nav-item">Revenue</a>
   </nav>
   <div class="dash-sidebar-footer">
     <div class="dash-user-pill">
@@ -40,12 +43,8 @@
   <!-- Header -->
   <div class="dash-header">
     <div>
-      <h1 class="dash-title">Hello, {{ current_user.name.split()[0] if current_user.name else 'there' }} 👋</h1>
-      <p class="dash-sub">Here's your vaccination health overview.</p>
-    </div>
-    <div style="display:flex;gap:10px">
-      <a href="/clinics" class="btn-primary" style="padding:10px 20px;font-size:13px">📍 Book Vaccine</a>
-      <a href="/#assessment" class="btn-outline" style="padding:10px 20px;font-size:13px">📋 New Assessment</a>
+      <h1 class="dash-title">Hello, {{ current_user.name.split()[0] if current_user.name else 'there' }} <i class="ti ti-hand-stop" style="color:var(--coral)"></i></h1>
+      <p class="dash-sub">Here's your prevention overview: vaccines, screenings, labs and everyday health.</p>
     </div>
   </div>
 
@@ -55,12 +54,12 @@
   {% if ob_done < 3 %}
   <div style="background:linear-gradient(135deg,rgba(5,150,105,0.08),rgba(2,132,199,0.06));border:1px solid rgba(5,150,105,0.2);border-radius:16px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
     <div style="flex:1;min-width:200px">
-      <div style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px">🚀 Complete your profile — {{ ob_done + 1 }}/4 steps done</div>
+      <div style="font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:4px"><i class="ti ti-rocket" style="color:var(--coral)"></i> Complete your profile, {{ ob_done + 1 }}/4 steps done</div>
       <div style="background:var(--bg-secondary);border-radius:20px;height:6px;margin-bottom:6px">
         <div style="background:var(--accent);height:6px;border-radius:20px;width:{{ ((ob_done + 1) / 4 * 100)|int }}%"></div>
       </div>
       <div style="font-size:12px;color:var(--text-muted)">
-        {% if not current_user.date_of_birth or not current_user.sex %}Add your DOB & sex for better recommendations{% elif not assessments %}Run your first vaccine assessment{% else %}Log a vaccine or book a clinic{% endif %}
+        {% if not current_user.date_of_birth or not current_user.sex %}Add your DOB & sex for better recommendations{% elif not assessments %}Run your first health assessment{% else %}Add a health record or book a clinic{% endif %}
       </div>
     </div>
     <a href="/onboarding" style="padding:9px 18px;border-radius:10px;background:var(--accent);color:white;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap">Continue Setup →</a>
@@ -70,28 +69,28 @@
   <!-- Stat cards -->
   <div class="dash-stats">
     <div class="dash-stat-card">
-      <div class="dash-stat-icon" style="background:rgba(5,150,105,0.1);color:var(--accent)">💉</div>
+      <div class="dash-stat-icon" style="background:rgba(255,107,107,0.1);color:var(--coral)"><i class="ti ti-vaccine"></i></div>
       <div>
         <div class="dash-stat-value">{{ vaccination_records|length }}</div>
         <div class="dash-stat-label">Vaccines Recorded</div>
       </div>
     </div>
     <div class="dash-stat-card">
-      <div class="dash-stat-icon" style="background:rgba(245,158,11,0.1);color:#d97706">🔔</div>
+      <div class="dash-stat-icon" style="background:rgba(255,107,107,0.1);color:var(--coral)"><i class="ti ti-bell"></i></div>
       <div>
         <div class="dash-stat-value">{{ pending_reminders|length }}</div>
         <div class="dash-stat-label">Upcoming Reminders</div>
       </div>
     </div>
     <div class="dash-stat-card">
-      <div class="dash-stat-icon" style="background:rgba(2,132,199,0.1);color:#0284c7">📋</div>
+      <div class="dash-stat-icon" style="background:rgba(255,107,107,0.1);color:var(--coral)"><i class="ti ti-clipboard-heart"></i></div>
       <div>
         <div class="dash-stat-value">{{ assessments|length }}</div>
         <div class="dash-stat-label">Assessments Done</div>
       </div>
     </div>
     <div class="dash-stat-card">
-      <div class="dash-stat-icon" style="background:rgba(124,58,237,0.1);color:#7c3aed">📍</div>
+      <div class="dash-stat-icon" style="background:rgba(255,107,107,0.1);color:var(--coral)"><i class="ti ti-map-pin"></i></div>
       <div>
         <div class="dash-stat-value">{{ bookings|length }}</div>
         <div class="dash-stat-label">Clinic Bookings</div>
@@ -104,7 +103,134 @@
     <!-- Left: Vaccination timeline -->
     <div class="dash-col-main">
 
-      <!-- MY FAMILY — pediatric immunization (IDAI 2024) -->
+      <!-- WELLBEING COMPANION (Tomo the pet) -->
+      <div class="dash-card mate-card" style="margin-bottom:20px"
+           data-checked="{{ '1' if today_checkin else '' }}"
+           data-body="{{ today_checkin.body if today_checkin else '' }}"
+           data-mind="{{ today_checkin.mind if today_checkin else '' }}"
+           data-streak="{{ checkin_streak }}"
+           data-name="{{ (current_user.name.split()[0] if current_user.name else 'friend') }}"
+           data-wear="{{ wearable.wellness if wearable else '' }}"
+           data-wear-sleep="{{ wearable.sleep_label if wearable else '' }}"
+           data-wear-steps="{{ wearable.steps_label if wearable else '' }}">
+        <div class="mate-row">
+          <div class="mate-pet" id="matePet">{% include "_mate_pet.svg" %}</div>
+          <div class="mate-info">
+            <div class="mate-headline">
+              <span class="mate-title">I'm Tomo, your prevention mate</span>
+              <span class="mate-streak" id="mateStreak"><i class="ti ti-flame"></i> <b id="mateStreakNum">0</b>-day bond</span>
+            </div>
+            <div class="mate-state" id="mateState">Tap to check in. I grow happier each day you do.</div>
+            <button class="mate-btn" id="mateBtn" onclick="openMate()">Check in</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MATE CHECK-IN POP-UP -->
+      <div class="mate-overlay" id="mateOverlay" onclick="if(event.target===this)closeMate()">
+        <div class="mate-modal">
+          <button class="mate-modal-close" onclick="closeMate()" aria-label="Close">&times;</button>
+          <div class="mate-pet xl" id="matePetBig">{% include "_mate_pet.svg" %}</div>
+          <div class="mate-speech" id="mateSpeech">Hi! How are you feeling today?</div>
+
+          <div class="mate-slider-block">
+            <div class="mate-slider-row"><span class="mate-slider-label">Body</span><span class="mate-slider-val" id="bodyVal"></span></div>
+            <input type="range" min="1" max="5" step="1" value="3" class="mate-slider" id="bodySlider" />
+          </div>
+          <div class="mate-slider-block">
+            <div class="mate-slider-row"><span class="mate-slider-label">Mind</span><span class="mate-slider-val" id="mindVal"></span></div>
+            <input type="range" min="1" max="5" step="1" value="3" class="mate-slider" id="mindSlider" />
+          </div>
+
+          <button class="mate-save" id="mateSave" onclick="saveMate()">Save how I feel</button>
+          <div class="mate-action" id="mateAction" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- MINDFUL MINUTE (low-mood CTA, no doctor) -->
+      <div class="mate-overlay" id="breatheOverlay" onclick="if(event.target===this)closeBreathe()">
+        <div class="mate-modal" style="max-width:340px">
+          <button class="mate-modal-close" onclick="closeBreathe()" aria-label="Close">&times;</button>
+          <div class="breathe-circle"><span id="breatheText">Breathe in</span></div>
+          <div class="breathe-sub">Follow Tomo. In through your nose, out through your mouth. Just a minute for you.</div>
+          <button class="mate-save" onclick="closeBreathe()" style="margin-top:18px">I feel a little better</button>
+        </div>
+      </div>
+
+      <!-- CONNECTED DEVICE (smartwatch) -->
+      {% if wearable_device and wearable %}
+      <div class="dash-card wear2" style="margin-bottom:20px" data-wellness="{{ wearable.wellness }}">
+        <div class="wear2-head">
+          <div class="wear2-device"><i class="ti ti-device-watch"></i> {{ wearable_device.provider }}
+            <span class="wear2-live"><span class="wear2-dot"></span>live</span>
+            <span class="wear2-demo" title="Sample data, shown for demonstration">Demo data</span></div>
+          <button class="wear2-disc" onclick="disconnectWatch()">Disconnect</button>
+        </div>
+
+        <div class="wear2-hero">
+          <div class="wear2-ring-wrap">
+            <svg viewBox="0 0 120 120" class="wear2-ring">
+              <circle cx="60" cy="60" r="52" class="wear2-track"/>
+              <circle cx="60" cy="60" r="52" class="wear2-arc"
+                      stroke="{{ wearable.color }}"
+                      stroke-dasharray="{{ wearable.arc }} 327"
+                      transform="rotate(-90 60 60)"/>
+            </svg>
+            <div class="wear2-center">
+              <div class="wear2-score" style="color:{{ wearable.color }}">{{ wearable.recovery }}</div>
+              <div class="wear2-score-sub">Recovery</div>
+            </div>
+          </div>
+
+          <div class="wear2-tomo">
+            <div class="wear2-tomo-face" id="wearTomo">{% include "_mate_pet.svg" %}</div>
+            <div class="wear2-tomo-text">
+              <div class="wear2-tomo-badge" style="background:{{ wearable.color }}1f;color:{{ wearable.color }}">{{ wearable.label }}</div>
+              <div class="wear2-tomo-line">Tomo is <b>{{ wearable.mood }}</b> today</div>
+              <div class="wear2-tomo-sub">Powered by your {{ wearable_device.provider }} recovery</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wear2-chips">
+          <div class="wear2-chip">
+            <div class="wear2-chip-top"><i class="ti ti-heartbeat" style="color:#FF6B6B"></i><span class="wear2-chip-lbl">Resting HR</span></div>
+            <div class="wear2-chip-val">{{ wearable.resting_hr }}<span>bpm</span></div>
+            <div class="wear2-bar"><i style="width:{{ (wearable.fills.hr*100)|int }}%;background:#FF6B6B"></i></div>
+          </div>
+          <div class="wear2-chip">
+            <div class="wear2-chip-top"><i class="ti ti-moon" style="color:#6366f1"></i><span class="wear2-chip-lbl">Sleep</span></div>
+            <div class="wear2-chip-val">{{ wearable.sleep_label }}</div>
+            <div class="wear2-bar"><i style="width:{{ (wearable.fills.sleep*100)|int }}%;background:#6366f1"></i></div>
+          </div>
+          <div class="wear2-chip">
+            <div class="wear2-chip-top"><i class="ti ti-walk" style="color:#f59e0b"></i><span class="wear2-chip-lbl">Steps</span></div>
+            <div class="wear2-chip-val">{{ wearable.steps_label }}</div>
+            <div class="wear2-bar"><i style="width:{{ (wearable.fills.steps*100)|int }}%;background:#f59e0b"></i></div>
+          </div>
+          <div class="wear2-chip">
+            <div class="wear2-chip-top"><i class="ti ti-activity-heartbeat" style="color:#10b981"></i><span class="wear2-chip-lbl">HRV</span></div>
+            <div class="wear2-chip-val">{{ wearable.hrv }}<span>ms</span></div>
+            <div class="wear2-bar"><i style="width:{{ (wearable.fills.hrv*100)|int }}%;background:#10b981"></i></div>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="dash-card wear2-empty-card" style="margin-bottom:20px">
+        <div class="wear2-empty-glow"></div>
+        <div class="wear2-empty-ic"><i class="ti ti-device-watch"></i></div>
+        <div class="wear2-empty-title">Connect a wearable</div>
+        <div class="wear2-empty-sub">Sync sleep, heart rate, steps and HRV. Tomo will use your recovery to reflect how your body is really doing. <b style="color:#9a7a5e">This is a demo and shows sample data.</b></div>
+        <div class="wear2-connect-row">
+          <button class="wear2-connect" onclick="connectWatch('Apple Watch')"><i class="ti ti-brand-apple"></i> Apple Watch</button>
+          <button class="wear2-connect" onclick="connectWatch('Fitbit Sense')"><i class="ti ti-activity"></i> Fitbit</button>
+          <button class="wear2-connect" onclick="connectWatch('Garmin')"><i class="ti ti-device-watch"></i> Garmin</button>
+          <button class="wear2-connect" onclick="connectWatch('Oura Ring')"><i class="ti ti-circle"></i> Oura</button>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- MY FAMILY, pediatric immunization (IDAI 2024) -->
       <div class="dash-card" style="margin-bottom:20px">
         <div class="dash-card-header">
           <div class="dash-card-title">My Family</div>
@@ -125,7 +251,7 @@
             </div>
             <div class="form-row" style="margin:0">
               <label>Sex</label>
-              <select name="sex"><option value="">—</option><option value="female">Girl</option><option value="male">Boy</option></select>
+              <select name="sex"><option value="">Select…</option><option value="female">Girl</option><option value="male">Boy</option></select>
             </div>
             <button type="submit" class="dash-action-btn" style="height:42px">Add</button>
           </div>
@@ -162,7 +288,7 @@
             <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:700">{{ d.name }} <span style="font-weight:500;color:var(--text-muted)">· dose {{ d.dose }}</span></div>
               <div style="font-size:11.5px;color:{{ '#dc2626' if d.status == 'overdue' else 'var(--text-muted)' }}">
-                {{ 'Overdue — was due' if d.status == 'overdue' else 'Due' }} {{ d.due_date.strftime('%d %b %Y') }}
+                {{ 'Overdue, was due' if d.status == 'overdue' else 'Due' }} {{ d.due_date.strftime('%d %b %Y') }}
                 {% if d.notes %} · {{ d.notes }}{% endif %}
               </div>
             </div>
@@ -172,7 +298,7 @@
               <input type="hidden" name="vaccine_key" value="{{ d.key }}">
               <input type="hidden" name="vaccine_name" value="{{ d.name }}">
               <input type="hidden" name="dose_number" value="{{ d.dose }}">
-              <button type="submit" class="dash-action-btn" style="font-size:11px;padding:5px 12px">✓ Mark done</button>
+              <button type="submit" class="dash-action-btn" style="font-size:11px;padding:5px 12px"><i class="ti ti-check"></i> Mark done</button>
             </form>
           </div>
           {% endfor %}
@@ -181,12 +307,12 @@
         {% else %}
         <div class="dash-empty" style="padding:20px 0">
           <div style="font-size:15px;font-weight:700;margin-bottom:6px">Track your children's immunizations</div>
-          <div style="font-size:13px;color:var(--text-muted)">Add a child to get their complete IDAI 2024 schedule — every dose from birth to 18, with reminders before each one.</div>
+          <div style="font-size:13px;color:var(--text-muted)">Add a child to get their complete IDAI 2024 schedule, every dose from birth to 18, with reminders before each one.</div>
         </div>
         {% endif %}
       </div>
 
-      <!-- LAB RESULTS — photo upload or manual entry -->
+      <!-- LAB RESULTS, photo upload or manual entry -->
       <div class="dash-card" style="margin-bottom:20px">
         <div class="dash-card-header">
           <div class="dash-card-title">Lab Results</div>
@@ -195,7 +321,7 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="file" name="lab_photo" id="labPhotoInput" accept="image/jpeg,image/png,image/webp"
                      style="display:none" onchange="this.form.submit()">
-              <button type="button" class="dash-action-btn" onclick="document.getElementById('labPhotoInput').click()">📷 Upload Photo</button>
+              <button type="button" class="dash-action-btn" onclick="document.getElementById('labPhotoInput').click()"><i class="ti ti-camera" style="vertical-align:-2px"></i> Upload Photo</button>
             </form>
             <button class="dash-action-btn" onclick="document.getElementById('addLabForm').classList.toggle('hidden')">+ Add Manually</button>
           </div>
@@ -230,21 +356,21 @@
 
         {% if lab_results %}
 
-        <!-- Talk to Doctor CTA — always visible when lab results exist -->
+        <!-- Talk to Doctor CTA, always visible when lab results exist -->
         <div style="margin-bottom:14px;padding:14px;border-radius:12px;background:linear-gradient(135deg,#fff1f0,#fff7f6);border:1.5px solid var(--coral);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:160px">
             <div style="font-size:13.5px;font-weight:700;color:var(--text-primary)">Talk to an AI Doctor</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Discuss your results live — flagged values, next tests & vaccines explained by a doctor in a real video call.</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Discuss your results live, flagged values, next tests & vaccines explained by a doctor in a real video call.</div>
           </div>
           <button onclick="startLabTeleconsult()" style="flex-shrink:0;background:var(--coral);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap">
-            🎥 Talk to Doctor
+            <i class="ti ti-video" style="color:var(--coral)"></i> Talk to Doctor
           </button>
         </div>
 
         <!-- Dynamic flags + recommendations (shown by JS if any results flagged) -->
         <div id="labRecoPanel" style="display:none;margin-bottom:14px;border-radius:12px;overflow:hidden;border:1.5px solid var(--border)">
           <div id="labRecoPanelHeader" style="padding:12px 14px;background:linear-gradient(135deg,#fff7ed,#fef3c7);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-            <span id="labRecoIcon" style="font-size:20px">⚠️</span>
+            <span id="labRecoIcon" style="font-size:20px"><i class="ti ti-alert-triangle" style="color:var(--coral)"></i></span>
             <div>
               <div style="font-size:13.5px;font-weight:700;color:#92400e" id="labRecoTitle">Some results need follow-up</div>
               <div style="font-size:12px;color:#b45309" id="labRecoSubtitle"></div>
@@ -278,10 +404,10 @@
               {% elif lab.flag == 'normal' %}
               <span style="font-size:10.5px;font-weight:700;padding:2px 10px;border-radius:20px;background:rgba(16,185,129,0.1);color:#059669">IN RANGE</span>
               {% endif %}
-              <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">{{ lab.date_taken.strftime('%d %b %Y') }}{% if lab.source == 'photo' %} · 📷{% endif %}</span>
+              <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">{{ lab.date_taken.strftime('%d %b %Y') }}{% if lab.source == 'photo' %} · <i class="ti ti-camera" style="vertical-align:-1px"></i>{% endif %}</span>
               <form method="POST" action="/labs/delete/{{ lab.id }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" style="background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer" title="Delete">✕</button>
+                <button type="submit" style="background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer" title="Delete"><i class="ti ti-x"></i></button>
               </form>
             </div>
             {% if ref %}
@@ -295,8 +421,8 @@
                 <div style="margin-bottom:6px"><strong>What below range can mean:</strong> {{ ref.low_means }}</div>
                 {% endif %}
                 <div><strong>What's next:</strong>
-                  {% if lab.flag == 'normal' %}In range — nothing to do. Re-check at your next routine test.
-                  {% elif lab.flag in ['high','low'] %}This is not a diagnosis on its own. Note it, and bring it to your doctor — especially if it stays out of range on a repeat test.
+                  {% if lab.flag == 'normal' %}In range, nothing to do. Re-check at your next routine test.
+                  {% elif lab.flag in ['high','low'] %}This is not a diagnosis on its own. Note it, and bring it to your doctor, especially if it stays out of range on a repeat test.
                   {% else %}Keep this on record and review it with your doctor.{% endif %}
                 </div>
               </div>
@@ -306,7 +432,7 @@
           {% endfor %}
         </div>
         <p style="font-size:11px;color:var(--text-muted);margin-top:10px">
-          Tap any test to see what it means. Ranges are standard adult references — informational only, not a diagnosis. Discuss abnormal values with your doctor.
+          Tap any test to see what it means. Ranges are standard adult references, informational only, not a diagnosis. Discuss abnormal values with your doctor.
         </p>
 
         <!-- Teleconsult modal -->
@@ -318,18 +444,18 @@
                 <div style="font-size:15px;font-weight:700">AI Doctor Consultation</div>
                 <div style="font-size:12px;color:var(--text-muted)" id="labTeleconDoctorName">Connecting to doctor…</div>
               </div>
-              <button onclick="closeLabTeleconModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted)">✕</button>
+              <button onclick="closeLabTeleconModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted)"><i class="ti ti-x"></i></button>
             </div>
 
             <!-- Doctor picker -->
             <div id="labTeleconDoctorPicker" style="padding:16px 20px;overflow-y:auto">
-              <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Choose your doctor — your lab results will be shared automatically:</div>
+              <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Choose your doctor, your lab results will be shared automatically:</div>
               <div id="labDoctorCards" style="display:flex;flex-direction:column;gap:10px"></div>
             </div>
 
             <!-- Loading/redirect state -->
             <div id="labTeleconLoading" style="display:none;padding:32px 20px;text-align:center">
-              <div style="font-size:28px;margin-bottom:10px">🎥</div>
+              <div style="font-size:28px;margin-bottom:10px"><i class="ti ti-video" style="color:var(--coral)"></i></div>
               <div style="font-size:14px;font-weight:600" id="labTeleconLoadingText">Opening your consultation…</div>
               <div style="font-size:12px;color:var(--text-muted);margin-top:5px">Your lab results are being shared with the doctor</div>
             </div>
@@ -339,14 +465,44 @@
         {% else %}
         <div class="dash-empty" style="padding:20px 0">
           <div style="font-size:15px;font-weight:700;margin-bottom:6px">Track your lab values</div>
-          <div style="font-size:13px;color:var(--text-muted)">Snap a photo of any lab report — we'll read the values — or type them in. Photos are processed in memory and never stored.</div>
+          <div style="font-size:13px;color:var(--text-muted)">Snap a photo of any lab report, we'll read the values, or type them in. Photos are processed in memory and never stored.</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- DOCTOR CONSULTATIONS (saved AI consultation summaries) -->
+      <div class="dash-card" style="margin-bottom:20px">
+        <div class="dash-card-header">
+          <div class="dash-card-title">Doctor Consultations</div>
+          <a class="dash-action-btn" href="/teleconsultation" style="text-decoration:none">Talk to a Doctor</a>
+        </div>
+        {% if consultations %}
+        <div>
+          {% for c in consultations %}
+          <div style="border-bottom:1px solid var(--border);padding:12px 0">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">
+              <span style="width:30px;height:30px;border-radius:9px;background:rgba(255,107,107,0.12);color:var(--coral);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-video"></i></span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13.5px;font-weight:700;color:var(--text-primary)">{{ c.doctor_name or 'Virtual Doctor' }}</div>
+                <div style="font-size:11px;color:var(--text-muted)">{{ c.doctor_specialty }}{% if c.doctor_specialty %} · {% endif %}{{ c.created_at.strftime('%d %b %Y, %H:%M') }}</div>
+              </div>
+            </div>
+            <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.55;padding-left:40px">{{ c.summary }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:10px">Summaries are saved from your AI consultations. They are educational guidance only, not a prescription or diagnosis.</p>
+        {% else %}
+        <div class="dash-empty" style="padding:20px 0">
+          <div style="font-size:15px;font-weight:700;margin-bottom:6px">No consultations yet</div>
+          <div style="font-size:13px;color:var(--text-muted)">Talk to a virtual doctor and save the summary here for your records.</div>
         </div>
         {% endif %}
       </div>
 
       <div class="dash-card">
         <div class="dash-card-header">
-          <div class="dash-card-title">💉 Vaccination History</div>
+          <div class="dash-card-title">Vaccination History</div>
           <button class="dash-action-btn" onclick="openLogModal()">+ Log Vaccine</button>
         </div>
 
@@ -368,17 +524,17 @@
             <a href="/dashboard/certificate/{{ rec.id }}"
                title="Download PDF Certificate"
                style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;background:rgba(5,150,105,0.08);color:var(--accent);border:1px solid rgba(5,150,105,0.2);text-decoration:none;white-space:nowrap">
-              📄 Certificate
+              <i class="ti ti-file-text" style="color:var(--coral)"></i> Certificate
             </a>
           </div>
           {% endfor %}
         </div>
         {% else %}
         <div class="dash-empty">
-          <div style="font-size:40px;margin-bottom:12px">💉</div>
+          <div style="font-size:40px;margin-bottom:12px;color:var(--coral)"><i class="ti ti-vaccine"></i></div>
           <div style="font-size:15px;font-weight:700;margin-bottom:6px">No vaccines recorded yet</div>
           <div style="font-size:13px;color:var(--text-muted)">Log vaccines you've already received, or book a new one below.</div>
-          <button class="dash-action-btn" style="margin-top:16px" onclick="openLogModal()">+ Log Your First Vaccine</button>
+          <button class="dash-action-btn" style="margin-top:16px" onclick="openLogModal()">+ Log your first vaccine</button>
         </div>
         {% endif %}
       </div>
@@ -387,7 +543,7 @@
       {% if last_assessment %}
       <div class="dash-card" style="margin-top:20px">
         <div class="dash-card-header">
-          <div class="dash-card-title">📋 Last Assessment</div>
+          <div class="dash-card-title">Last Assessment</div>
           <span style="font-size:12px;color:var(--text-muted)">{{ last_assessment.created_at.strftime('%d %b %Y') }}</span>
         </div>
         <div style="display:flex;align-items:center;gap:20px;padding:4px 0 16px">
@@ -413,72 +569,6 @@
       {% endif %}
     </div>
 
-    <!-- Right: Reminders + Bookings -->
-    <div class="dash-col-side">
-
-      <!-- Upcoming reminders -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <div class="dash-card-title">🔔 Upcoming Reminders</div>
-          <a href="/dashboard/reminders" style="font-size:12px;color:var(--accent);font-weight:700;text-decoration:none">View all</a>
-        </div>
-        {% if pending_reminders %}
-        <div class="reminder-list">
-          {% for r in pending_reminders[:4] %}
-          <div class="reminder-item">
-            <div class="reminder-dot {% if r.reminder_date == today %}dot-today{% elif (r.reminder_date - today).days <= 3 %}dot-soon{% else %}dot-future{% endif %}"></div>
-            <div>
-              <div class="reminder-name">{{ r.vaccine_name }}</div>
-              <div class="reminder-date">
-                {% set diff = (r.reminder_date - today).days %}
-                {% if diff == 0 %}Today{% elif diff == 1 %}Tomorrow{% else %}{{ r.reminder_date.strftime('%d %b') }} ({{ diff }} days){% endif %}
-              </div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-        {% if not current_user.phone or not current_user.whatsapp_opt_in %}
-        <div class="dash-wa-prompt">
-          <span style="font-size:18px">📱</span>
-          <div>
-            <div style="font-size:13px;font-weight:700">Enable WhatsApp reminders</div>
-            <a href="/dashboard/settings" style="font-size:12px;color:var(--accent);font-weight:600;text-decoration:none">Add your number →</a>
-          </div>
-        </div>
-        {% endif %}
-        {% else %}
-        <div class="dash-empty" style="padding:20px 0">
-          <div>No reminders set yet.</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Book a vaccine to automatically set reminders.</div>
-        </div>
-        {% endif %}
-      </div>
-
-      <!-- Recent bookings -->
-      <div class="dash-card" style="margin-top:16px">
-        <div class="dash-card-header">
-          <div class="dash-card-title">📍 Recent Bookings</div>
-          <a href="/clinics" style="font-size:12px;color:var(--accent);font-weight:700;text-decoration:none">Book new</a>
-        </div>
-        {% if bookings %}
-        {% for b in bookings[:3] %}
-        <div class="booking-item">
-          <div class="booking-status status-{{ b.status }}">{{ b.status }}</div>
-          <div>
-            <div class="booking-name">{{ b.vaccine_name }}</div>
-            <div class="booking-meta">{{ b.clinic.name }} · {{ b.appointment_date.strftime('%d %b %Y, %H:%M') }}</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Booking #{{ b.confirmation_code }}</div>
-          </div>
-        </div>
-        {% endfor %}
-        {% else %}
-        <div class="dash-empty" style="padding:20px 0">
-          <div>No bookings yet.</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px"><a href="/clinics" style="color:var(--accent);font-weight:600;text-decoration:none">Find a clinic near you →</a></div>
-        </div>
-        {% endif %}
-      </div>
-    </div>
   </div>
 </main>
 
@@ -487,7 +577,7 @@
   <div class="modal-box" style="max-width:480px">
     <div class="modal-header">
       <div style="font-size:18px;font-weight:800">Log a Vaccine</div>
-      <button onclick="closeLogModal()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted)">×</button>
+      <button onclick="closeLogModal()" aria-label="Close" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted)">×</button>
     </div>
     <form method="POST" action="/dashboard/log-vaccine" style="padding:0 24px 24px">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -527,7 +617,7 @@
       <div class="form-row">
         <label>Set WhatsApp Reminder for Next Dose?</label>
         <select name="set_reminder">
-          <option value="yes">Yes — remind me</option>
+          <option value="yes">Yes, remind me</option>
           <option value="no">No thanks</option>
         </select>
       </div>
@@ -561,7 +651,7 @@ function updateVaccineName(sel) {
   const opt = sel.options[sel.selectedIndex];
   document.getElementById('logVaccineName').value = opt.dataset.name || '';
 }
-document.getElementById('logModal').addEventListener('click', function(e) {
+document.getElementById('logModal')?.addEventListener('click', function(e) {
   if (e.target === this) closeLogModal();
 });
 
@@ -587,14 +677,14 @@ let _labRecoData = null;
     });
 
     const colorMap = {urgent:'#dc2626', soon:'#d97706', check:'#059669'};
-    const iconMap  = {urgent:'🔴', soon:'⚠️', check:'🟡'};
+    const iconMap  = {urgent:'<i class="ti ti-alert-octagon"></i>', soon:'<i class="ti ti-alert-triangle"></i>', check:'<i class="ti ti-info-circle"></i>'};
     const labelMap = {urgent:'Action needed soon', soon:'Follow-up recommended', check:'Worth discussing with a doctor'};
 
-    document.getElementById('labRecoIcon').textContent = iconMap[topUrgency];
+    document.getElementById('labRecoIcon').innerHTML = iconMap[topUrgency];
     document.getElementById('labRecoTitle').style.color = colorMap[topUrgency];
     document.getElementById('labRecoTitle').textContent = labelMap[topUrgency];
     document.getElementById('labRecoSubtitle').textContent =
-      `${data.flags.length} result${data.flags.length>1?'s':''} flagged — see recommended next steps below`;
+      `${data.flags.length} result${data.flags.length>1?'s':''} flagged, see recommended next steps below`;
 
     if (topUrgency === 'urgent') {
       document.getElementById('labRecoPanelHeader').style.background = 'linear-gradient(135deg,#fef2f2,#fee2e2)';
@@ -646,7 +736,7 @@ let _labRecoData = null;
         const div = document.createElement('div');
         div.style.cssText = 'padding:8px 10px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;margin-bottom:7px;display:flex;align-items:flex-start;gap:8px';
         div.innerHTML = `
-          <span style="font-size:16px;flex-shrink:0">💉</span>
+          <span style="font-size:16px;flex-shrink:0;color:var(--coral)"><i class="ti ti-vaccine"></i></span>
           <div>
             <div style="font-size:13px;font-weight:600;color:#166534">${v.name}</div>
             <div style="font-size:12px;color:#15803d;margin-top:2px">${v.reasons[0]}</div>
@@ -679,7 +769,7 @@ function startLabTeleconsult() {
     card.style.cssText = `padding:12px 14px;border-radius:12px;border:1.5px solid ${doc.available ? 'var(--coral)' : 'var(--border)'};background:var(--bg-card);display:flex;align-items:center;gap:12px;cursor:${doc.available?'pointer':'default'};opacity:${doc.available?1:0.5}`;
     card.innerHTML = `
       <div style="width:40px;height:40px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">
-        ${doc.gender==='female'?'👩‍⚕️':'👨‍⚕️'}
+        <i class="ti ti-stethoscope"></i>
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13.5px;font-weight:700">${doc.name}</div>
@@ -729,9 +819,156 @@ function closeLabTeleconModal() {
   document.getElementById('labTeleconDoctorPicker').style.display = 'block';
 }
 
-document.getElementById('labTeleconModal').addEventListener('click', function(e) {
+document.getElementById('labTeleconModal')?.addEventListener('click', function(e) {
   if (e.target === this) closeLabTeleconModal();
 });
+// ── Connected device (smartwatch) ──
+async function connectWatch(provider){
+  try{
+    const r = await fetch('/api/wearable/connect', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({provider})});
+    if (r.ok) location.reload();
+  }catch(e){}
+}
+async function disconnectWatch(){
+  try{
+    const r = await fetch('/api/wearable/disconnect', {method:'POST', headers:{'Content-Type':'application/json'}});
+    if (r.ok) location.reload();
+  }catch(e){}
+}
+
+// ── Tomo, the wellbeing companion pet ──
+(function(){
+  const card = document.querySelector('.mate-card');
+  if (!card) return;
+  const name   = card.dataset.name || 'friend';
+  let streak   = parseInt(card.dataset.streak) || 0;
+  let saved    = { body: parseInt(card.dataset.body)||null, mind: parseInt(card.dataset.mind)||null };
+
+  const MOUTH = {1:'M57 89 Q65 82 73 89', 2:'M58 88 Q65 84 72 88', 3:'M58 87 H72', 4:'M58 85 Q65 91 72 85', 5:'M56 84 Q65 94 74 84'};
+  const ORB   = {1:'#d9b8a4', 2:'#FF8E76', 3:'#FF6B6B', 4:'url(#mateBody)', 5:'url(#mateBody)'};
+
+  // morph a pet SVG to an expression level 1..5
+  function setFace(root, level){
+    if (!root) return;
+    const lv = Math.max(1, Math.min(5, Math.round(level)));
+    const mouth = root.querySelector('.mate-mouth');
+    if (mouth) mouth.setAttribute('d', MOUTH[lv]);
+    const orb = root.querySelector('.mate-orb');
+    if (orb) orb.setAttribute('fill', ORB[lv]);
+    root.querySelectorAll('.mate-cheek').forEach(c => c.setAttribute('opacity', lv>=4 ? 0.5 : 0));
+    root.querySelectorAll('.mate-pupil').forEach(p => p.setAttribute('cy', lv<=2 ? 78 : 76));
+    const leaf = root.querySelector('.mate-leaf');
+    if (leaf) leaf.classList.toggle('wilt', lv<=2);
+  }
+  function celebrate(root){ const s=root&&root.querySelector('.mate-svg'); if(s){ s.classList.add('celebrate'); setTimeout(()=>s.classList.remove('celebrate'),650); } }
+
+  const petSmall = document.getElementById('matePet');
+  const petBig   = document.getElementById('matePetBig');
+  const stateEl  = document.getElementById('mateState');
+  const streakEl = document.getElementById('mateStreak');
+  const streakNum= document.getElementById('mateStreakNum');
+
+  function moodLine(avg){
+    if (avg <= 2) return "I'm a little worried about you. Let's take it gently. Rest and be kind to yourself.";
+    if (avg < 4)  return "Thanks for checking in. A steady day, and the small habits add up.";
+    return "Yay! You're doing great today. I'm so happy we're in this together.";
+  }
+  const wear = parseInt(card.dataset.wear) || null;   // smartwatch recovery 1..5
+  const petWear = document.querySelector('#wearTomo');
+  if (petWear && wear) setFace(petWear, wear);         // mini Tomo on the device card
+  function refreshCard(){
+    if (streak>0){ streakNum.textContent = streak; streakEl.style.display='inline-flex'; }
+    else streakEl.style.display='none';
+    if (saved.body && saved.mind){
+      const avg=(saved.body+saved.mind)/2;
+      // The watch blends into how Tomo feels, so his body signal counts too
+      const shown = wear ? (avg + wear) / 2 : avg;
+      setFace(petSmall, shown);
+      stateEl.textContent = wear
+        ? "Checked in today, blended with your watch. " + moodLine(shown)
+        : "Checked in today. " + moodLine(avg);
+      document.getElementById('mateBtn').textContent = 'Update how I feel';
+    } else if (wear) {
+      // No check-in yet, reflect the smartwatch recovery signal
+      setFace(petSmall, wear);
+      const sleep = card.dataset.wearSleep, steps = card.dataset.wearSteps;
+      stateEl.textContent = "From your watch: " + sleep + " sleep, " + steps + " steps. Tap to tell me how you feel too.";
+    } else {
+      setFace(petSmall, 4);
+      stateEl.textContent = "Tap to check in. I grow happier each day you do.";
+    }
+  }
+
+  // pop-up
+  const overlay = document.getElementById('mateOverlay');
+  const bodyS = document.getElementById('bodySlider'), mindS = document.getElementById('mindSlider');
+  const bodyV = document.getElementById('bodyVal'), mindV = document.getElementById('mindVal');
+  const speech = document.getElementById('mateSpeech');
+  const WORD = {1:'Rough',2:'Low',3:'Okay',4:'Good',5:'Great'};
+  function fill(el){ el.style.setProperty('--fill', ((el.value-1)/4*100)+'%'); }
+  function liveUpdate(){
+    const b=+bodyS.value, m=+mindS.value, avg=(b+m)/2;
+    bodyV.textContent=WORD[b]; mindV.textContent=WORD[m];
+    fill(bodyS); fill(mindS); setFace(petBig, avg);
+    speech.textContent = avg<=2 ? "Oh no… thanks for telling me. Let's look after you."
+                       : avg<4 ? "Got it, a steady kind of day." : "That makes me so happy to hear!";
+  }
+  window.openMate = function(){
+    bodyS.value = saved.body || 3; mindS.value = saved.mind || 3;
+    speech.textContent = "Hi " + name + "! How are you feeling today?";
+    document.getElementById('mateAction').style.display='none';
+    liveUpdate();
+    overlay.classList.add('open');
+  };
+  window.closeMate = function(){ overlay.classList.remove('open'); };
+  bodyS.addEventListener('input', liveUpdate);
+  mindS.addEventListener('input', liveUpdate);
+
+  window.saveMate = async function(){
+    const b=+bodyS.value, m=+mindS.value, avg=(b+m)/2;
+    const btn=document.getElementById('mateSave'); btn.disabled=true; btn.textContent='Saving…';
+    try {
+      const r = await fetch('/api/checkin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({body:b,mind:m}) });
+      if (r.ok){ const d=await r.json(); streak=d.streak||streak; saved={body:b,mind:m}; }
+    } catch(e){}
+    celebrate(petBig);
+    const act=document.getElementById('mateAction');
+    let html;
+    if (avg<=2){
+      speech.textContent = "Thanks for telling me. Let's slow down together.";
+      html = '<button onclick="openBreathe()" class="mate-cta-btn"><i class="ti ti-wind"></i> Take a mindful minute</button>'
+           + '<div class="mate-cta-note">Be gentle with yourself today.</div>';
+    } else if (avg<4){
+      speech.textContent = "Nice, a steady day. Small steps count.";
+      html = '<a href="/dashboard/assessments" class="mate-cta-btn"><i class="ti ti-sparkles"></i> See what lifts your score</a>'
+           + '<div class="mate-cta-note">One quick win keeps me growing.</div>';
+    } else {
+      speech.textContent = "You're glowing! I'm so happy we're in this together.";
+      html = '<a href="/clinics" class="mate-cta-btn"><i class="ti ti-arrow-right"></i> Take your next prevention step</a>'
+           + '<div class="mate-cta-note">Come back tomorrow to keep your ' + (streak||1) + '-day streak.</div>';
+    }
+    act.innerHTML = html; act.style.display='block';
+    btn.disabled=false; btn.textContent='Update how I feel';
+    refreshCard();
+  };
+
+  // mindful minute (the low-mood CTA, not a doctor)
+  let breatheTimer=null;
+  window.openBreathe = function(){
+    closeMate();
+    document.getElementById('breatheOverlay').classList.add('open');
+    const txt=document.getElementById('breatheText'); let out=false;
+    txt.textContent='Breathe in';
+    clearInterval(breatheTimer);
+    breatheTimer=setInterval(()=>{ out=!out; txt.textContent = out ? 'Breathe out' : 'Breathe in'; }, 4000);
+  };
+  window.closeBreathe = function(){
+    document.getElementById('breatheOverlay').classList.remove('open');
+    clearInterval(breatheTimer);
+  };
+
+  refreshCard();
+})();
 </script>
 </body>
 </html>

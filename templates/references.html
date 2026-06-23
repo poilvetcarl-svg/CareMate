@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
   <link rel="apple-touch-icon" href="/static/img/favicon-192.png" />
-  <title>References &amp; Sources — CareMate</title>
+  <title>References &amp; Sources, CareMate</title>
   <meta name="description" content="CareMate recommendations are derived exclusively from PAPDI 2025, CDC ACIP, WHO and Kemenkes RI guidelines. Full evidence base and sources." />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -73,6 +73,7 @@
     }
     .refs-back:hover { gap: 12px; }
   </style>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
 </head>
 <body>
 
@@ -93,7 +94,7 @@
         <a href="/register" class="nav-cta">Sign Up Free</a>
       {% endif %}
     </div>
-    <button class="menu-toggle" id="menuToggle">☰</button>
+    <button class="menu-toggle" id="menuToggle"><i class="ti ti-menu-2" style="color:var(--coral)"></i></button>
   </div>
 </nav>
 
@@ -111,33 +112,33 @@
   <!-- PAPDI 2025 -->
   <div class="ref-category">
     <div class="ref-category-header ref-cat-papdi">
-      <span class="ref-cat-icon">⚕️</span>
+      <span class="ref-cat-icon"><i class="ti ti-stethoscope" style="color:var(--coral)"></i></span>
       <div>
-        <div class="ref-cat-title">PAPDI — Satgas Imunisasi Dewasa</div>
+        <div class="ref-cat-title">PAPDI, Satgas Imunisasi Dewasa</div>
         <div class="ref-cat-sub">Indonesian Society of Internal Medicine · 2025</div>
       </div>
     </div>
     <div class="ref-items">
       <div class="ref-item">
-        <div class="ref-item-icon">📋</div>
+        <div class="ref-item-icon"><i class="ti ti-clipboard-heart" style="color:var(--coral)"></i></div>
         <div class="ref-item-body">
-          <div class="ref-item-title">Jadwal Imunisasi Dewasa — Satgas Imunisasi Dewasa PAPDI 2025</div>
+          <div class="ref-item-title">Jadwal Imunisasi Dewasa, Satgas Imunisasi Dewasa PAPDI 2025</div>
           <div class="ref-item-desc">Official adult immunization schedule for Indonesia. Primary source for condition-based recommendations including Herpes Zoster, RSV, Influenza, and Pneumococcal as priority vaccines for adults with chronic conditions.</div>
           <div class="ref-item-tags"><span class="ref-tag">Herpes Zoster</span><span class="ref-tag">RSV</span><span class="ref-tag">Influenza</span><span class="ref-tag">Pneumococcal</span></div>
         </div>
       </div>
       <div class="ref-item">
-        <div class="ref-item-icon">📗</div>
+        <div class="ref-item-icon"><i class="ti ti-book" style="color:var(--coral)"></i></div>
         <div class="ref-item-body">
-          <div class="ref-item-title">Buku Saku Vaksinasi Dewasa — PAPDI 2025</div>
+          <div class="ref-item-title">Buku Saku Vaksinasi Dewasa, PAPDI 2025</div>
           <div class="ref-item-desc">Pocket reference guide for adult vaccination in Indonesia. Provides clinical context, dosing schedules, and contraindications for all recommended adult vaccines including newly approved RSV and recombinant Herpes Zoster vaccines.</div>
           <div class="ref-item-tags"><span class="ref-tag">Clinical Reference</span><span class="ref-tag">Dosing</span><span class="ref-tag">Contraindications</span></div>
         </div>
       </div>
       <div class="ref-item">
-        <div class="ref-item-icon">🪪</div>
+        <div class="ref-item-icon"><i class="ti ti-id" style="color:var(--coral)"></i></div>
         <div class="ref-item-body">
-          <div class="ref-item-title">Kartu Vaksinasi Dewasa — PAPDI 2025</div>
+          <div class="ref-item-title">Kartu Vaksinasi Dewasa, PAPDI 2025</div>
           <div class="ref-item-desc">Adult vaccination card identifying the four vaccines prioritized for adults with comorbidities: Herpes Zoster (Recombinant), RSV, Influenza, and Pneumococcal. Basis for the "Vaccines to Prioritise Now" section in CareMate's output.</div>
           <div class="ref-item-tags"><span class="ref-tag">Priority Vaccines</span><span class="ref-tag">Comorbidities</span></div>
         </div>
@@ -148,33 +149,33 @@
   <!-- CDC -->
   <div class="ref-category">
     <div class="ref-category-header ref-cat-cdc">
-      <span class="ref-cat-icon">🏥</span>
+      <span class="ref-cat-icon"><i class="ti ti-building-hospital" style="color:var(--coral)"></i></span>
       <div>
-        <div class="ref-cat-title">CDC — Advisory Committee on Immunization Practices (ACIP)</div>
+        <div class="ref-cat-title">CDC, Advisory Committee on Immunization Practices (ACIP)</div>
         <div class="ref-cat-sub">U.S. Centers for Disease Control and Prevention · 2022–2024</div>
       </div>
     </div>
     <div class="ref-items">
       <div class="ref-item">
-        <div class="ref-item-icon">📄</div>
+        <div class="ref-item-icon"><i class="ti ti-file-text" style="color:var(--coral)"></i></div>
         <div class="ref-item-body">
-          <div class="ref-item-title">ACIP Recommended Adult Immunization Schedule — United States, 2024</div>
+          <div class="ref-item-title">ACIP Recommended Adult Immunization Schedule, United States, 2024</div>
           <div class="ref-item-desc">Annual age- and condition-based vaccination schedule covering all recommended vaccines for adults 19 years and older. Used for routine scheduling logic and catch-up recommendations.</div>
           <div class="ref-item-tags"><span class="ref-tag">Adult Schedule</span><span class="ref-tag">Age Groups</span><span class="ref-tag">Catch-up</span></div>
         </div>
       </div>
       <div class="ref-item">
-        <div class="ref-item-icon">📄</div>
+        <div class="ref-item-icon"><i class="ti ti-file-text" style="color:var(--coral)"></i></div>
         <div class="ref-item-body">
-          <div class="ref-item-title">ACIP Recommendations — Herpes Zoster Vaccine (Shingrix), 2022</div>
+          <div class="ref-item-title">ACIP Recommendations, Herpes Zoster Vaccine (Shingrix), 2022</div>
           <div class="ref-item-desc">Guidelines recommending recombinant zoster vaccine for adults ≥50 and immunocompromised adults ≥19. Informed the age-based and condition-based zoster recommendation thresholds in CareMate.</div>
           <div class="ref-item-tags"><span class="ref-tag">Herpes Zoster</span><span class="ref-tag">Immunocompromised</span></div>
         </div>
       </div>
       <div class="ref-item">
-        <div class="ref-item-icon">📄</div>
+        <div class="ref-item-icon"><i class="ti ti-file-text" style="color:var(--coral)"></i></div>
         <div class="ref-item-body">
-          <div class="ref-item-title">ACIP Recommendations — RSV Vaccine for Older Adults, 2023</div>
+          <div class="ref-item-title">ACIP Recommendations, RSV Vaccine for Older Adults, 2023</div>
           <div class="ref-item-desc">First ACIP recommendations for RSV vaccines in adults ≥60 and high-risk younger adults. Used to define RSV eligibility criteria in CareMate's recommendation engine.</div>
           <div class="ref-item-tags"><span class="ref-tag">RSV</span><span class="ref-tag">Adults ≥60</span></div>
         </div>
@@ -185,41 +186,41 @@
   <!-- WHO -->
   <div class="ref-category">
     <div class="ref-category-header ref-cat-who">
-      <span class="ref-cat-icon">🌍</span>
+      <span class="ref-cat-icon"><i class="ti ti-world" style="color:var(--coral)"></i></span>
       <div>
-        <div class="ref-cat-title">WHO — World Health Organization</div>
+        <div class="ref-cat-title">WHO, World Health Organization</div>
         <div class="ref-cat-sub">Position Papers &amp; Global Vaccine Action Plan · 2012–2024</div>
       </div>
     </div>
     <div class="ref-items">
       <div class="ref-item">
-        <div class="ref-item-icon">📄</div>
+        <div class="ref-item-icon"><i class="ti ti-file-text" style="color:var(--coral)"></i></div>
         <div class="ref-item-body">
-          <div class="ref-item-title">WHO Position Paper — Influenza Vaccines, 2023</div>
+          <div class="ref-item-title">WHO Position Paper, Influenza Vaccines, 2023</div>
           <div class="ref-item-desc">Global recommendations for influenza vaccine use in adults, including priority groups and annual revaccination rationale. Basis for influenza as a universal annual priority in CareMate.</div>
           <div class="ref-item-tags"><span class="ref-tag">Influenza</span><span class="ref-tag">Annual</span></div>
         </div>
       </div>
       <div class="ref-item">
-        <div class="ref-item-icon">📄</div>
+        <div class="ref-item-icon"><i class="ti ti-file-text" style="color:var(--coral)"></i></div>
         <div class="ref-item-body">
-          <div class="ref-item-title">WHO Position Paper — Herpes Zoster Vaccines, 2014 (updated 2022)</div>
+          <div class="ref-item-title">WHO Position Paper, Herpes Zoster Vaccines, 2014 (updated 2022)</div>
           <div class="ref-item-desc">Global guidance on zoster vaccine use, safety in immunocompromised patients, and priority populations. Supports PAPDI's condition-based recommendations in CareMate.</div>
           <div class="ref-item-tags"><span class="ref-tag">Herpes Zoster</span><span class="ref-tag">Safety</span></div>
         </div>
       </div>
       <div class="ref-item">
-        <div class="ref-item-icon">📄</div>
+        <div class="ref-item-icon"><i class="ti ti-file-text" style="color:var(--coral)"></i></div>
         <div class="ref-item-body">
-          <div class="ref-item-title">WHO Position Paper — Pneumococcal Vaccines, 2019</div>
+          <div class="ref-item-title">WHO Position Paper, Pneumococcal Vaccines, 2019</div>
           <div class="ref-item-desc">Guidance for PCV use in older adults and high-risk groups. Used to define pneumococcal eligibility for adults with diabetes, lung disease, heart disease, and immunocompromising conditions.</div>
           <div class="ref-item-tags"><span class="ref-tag">Pneumococcal</span><span class="ref-tag">High-risk Adults</span></div>
         </div>
       </div>
       <div class="ref-item">
-        <div class="ref-item-icon">📄</div>
+        <div class="ref-item-icon"><i class="ti ti-file-text" style="color:var(--coral)"></i></div>
         <div class="ref-item-body">
-          <div class="ref-item-title">WHO Position Paper — RSV Vaccines, 2024</div>
+          <div class="ref-item-title">WHO Position Paper, RSV Vaccines, 2024</div>
           <div class="ref-item-desc">First WHO global guidance on RSV vaccines for adults, providing evidence base for RSV as a priority vaccine in adults with underlying conditions.</div>
           <div class="ref-item-tags"><span class="ref-tag">RSV</span><span class="ref-tag">New Recommendation</span></div>
         </div>
@@ -230,25 +231,25 @@
   <!-- Kemenkes -->
   <div class="ref-category">
     <div class="ref-category-header ref-cat-kemenkes">
-      <span class="ref-cat-icon">🇮🇩</span>
+      <span class="ref-cat-icon"><i class="ti ti-flag" style="color:var(--coral)"></i></span>
       <div>
-        <div class="ref-cat-title">Kemenkes RI — Ministry of Health Indonesia</div>
+        <div class="ref-cat-title">Kemenkes RI, Ministry of Health Indonesia</div>
         <div class="ref-cat-sub">National Immunization Program &amp; Health Regulations · 2021–2024</div>
       </div>
     </div>
     <div class="ref-items">
       <div class="ref-item">
-        <div class="ref-item-icon">📄</div>
+        <div class="ref-item-icon"><i class="ti ti-file-text" style="color:var(--coral)"></i></div>
         <div class="ref-item-body">
-          <div class="ref-item-title">Program Imunisasi Nasional Dewasa — Kemenkes RI, 2023</div>
+          <div class="ref-item-title">Program Imunisasi Nasional Dewasa, Kemenkes RI, 2023</div>
           <div class="ref-item-desc">Indonesian national immunization program guidelines for adults, including locally relevant vaccines and schedules adapted to Indonesia's epidemiological context.</div>
           <div class="ref-item-tags"><span class="ref-tag">Indonesia</span><span class="ref-tag">National Program</span></div>
         </div>
       </div>
       <div class="ref-item">
-        <div class="ref-item-icon">📄</div>
+        <div class="ref-item-icon"><i class="ti ti-file-text" style="color:var(--coral)"></i></div>
         <div class="ref-item-body">
-          <div class="ref-item-title">BPOM RI — Vaccine Authorization &amp; Safety Surveillance, 2024</div>
+          <div class="ref-item-title">BPOM RI, Vaccine Authorization &amp; Safety Surveillance, 2024</div>
           <div class="ref-item-desc">Indonesian Food and Drug Authority authorizations for COVID-19, RSV, and Herpes Zoster vaccines in Indonesia. Ensures all vaccines recommended by CareMate are locally approved.</div>
           <div class="ref-item-tags"><span class="ref-tag">Authorization</span><span class="ref-tag">Safety</span></div>
         </div>
@@ -258,7 +259,7 @@
 
   <!-- Disclaimer -->
   <div class="ref-disclaimer">
-    <span class="ref-disc-icon">ℹ️</span>
+    <span class="ref-disc-icon"><i class="ti ti-info-circle" style="color:var(--coral)"></i></span>
     <p>CareMate synthesizes these guidelines into personalized recommendations. It does <strong>not</strong> replace a consultation with a qualified healthcare provider. Always confirm your vaccination plan with your doctor.</p>
   </div>
 
@@ -274,7 +275,7 @@
       <div class="footer-col">
         <h5>Platform</h5>
         <a href="/#assessment">Free Assessment</a>
-        <a href="/clinics">📍 Find a Clinic</a>
+        <a href="/clinics"><i class="ti ti-map-pin" style="color:var(--coral)"></i> Find a Clinic</a>
         <a href="/teleconsultation">Teleconsultation</a>
         <a href="/#how-it-works">How It Works</a>
       </div>
@@ -287,7 +288,7 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <p>⚕️ CareMate is for informational purposes only and does not replace professional medical advice.</p>
+    <p><i class="ti ti-stethoscope" style="color:var(--coral)"></i> CareMate is for informational purposes only and does not replace professional medical advice.</p>
     <p>© 2025 CareMate. All rights reserved.</p>
   </div>
 </footer>

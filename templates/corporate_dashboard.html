@@ -3,16 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Corporate Dashboard — CareMate</title>
+  <title>Corporate Dashboard, CareMate</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
 </head>
 <body class="dash-body">
 
 <!-- ── SIDEBAR ── -->
+<button class="dash-burger" aria-label="Open menu" onclick="document.body.classList.add(&apos;nav-open&apos;)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="dash-backdrop" onclick="document.body.classList.remove(&apos;nav-open&apos;)"></div>
 <aside class="dash-sidebar">
   <div class="dash-logo">
-    <a href="/" class="nav-logo">Care<span>Mate</span></a>
+    <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span>Mate</span></a>
   </div>
   <nav class="dash-nav">
     <a href="/corporate/dashboard" class="dash-nav-item active">Overview</a>
@@ -39,7 +42,7 @@
   <!-- Header -->
   <div class="corp-header">
     <div>
-      <h1 class="dash-title">{{ company.name }} 🏢</h1>
+      <h1 class="dash-title">{{ company.name }} <i class="ti ti-building" style="color:var(--coral)"></i></h1>
       <p class="dash-sub">Employee vaccination compliance dashboard</p>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
@@ -58,14 +61,14 @@
   <!-- Stat cards -->
   <div class="dash-stats">
     <div class="dash-stat-card">
-      <div class="dash-stat-icon" style="background:rgba(2,132,199,0.1);color:#0284c7">👥</div>
+      <div class="dash-stat-icon" style="background:rgba(2,132,199,0.1);color:#0284c7"><i class="ti ti-users" style="color:var(--coral)"></i></div>
       <div>
         <div class="dash-stat-value">{{ employees|length }}</div>
         <div class="dash-stat-label">Total Employees</div>
       </div>
     </div>
     <div class="dash-stat-card">
-      <div class="dash-stat-icon" style="background:rgba(5,150,105,0.1);color:var(--accent)">✅</div>
+      <div class="dash-stat-icon" style="background:rgba(5,150,105,0.1);color:var(--accent)"><i class="ti ti-circle-check" style="color:var(--coral)"></i></div>
       <div>
         <div class="dash-stat-value">
           {% if employees %}
@@ -78,14 +81,14 @@
       </div>
     </div>
     <div class="dash-stat-card">
-      <div class="dash-stat-icon" style="background:rgba(245,158,11,0.1);color:#d97706">🔔</div>
+      <div class="dash-stat-icon" style="background:rgba(245,158,11,0.1);color:#d97706"><i class="ti ti-bell" style="color:var(--coral)"></i></div>
       <div>
         <div class="dash-stat-value">{{ total_pending_reminders }}</div>
         <div class="dash-stat-label">Pending Reminders</div>
       </div>
     </div>
     <div class="dash-stat-card">
-      <div class="dash-stat-icon" style="background:rgba(124,58,237,0.1);color:#7c3aed">📋</div>
+      <div class="dash-stat-icon" style="background:rgba(124,58,237,0.1);color:#7c3aed"><i class="ti ti-clipboard-heart" style="color:var(--coral)"></i></div>
       <div>
         <div class="dash-stat-value">{{ total_assessments }}</div>
         <div class="dash-stat-label">Assessments Done</div>
@@ -99,7 +102,7 @@
     <div class="dash-col-main">
       <div class="dash-card">
         <div class="dash-card-header">
-          <div class="dash-card-title">💉 Vaccine Coverage</div>
+          <div class="dash-card-title"><i class="ti ti-vaccine" style="color:var(--coral)"></i> Vaccine Coverage</div>
           <span style="font-size:12px;color:var(--text-muted)">% employees with vaccine recorded</span>
         </div>
 
@@ -115,7 +118,7 @@
         {% endfor %}
         {% else %}
         <div class="dash-empty">
-          <div style="font-size:36px;margin-bottom:8px">💉</div>
+          <div style="font-size:36px;margin-bottom:8px"><i class="ti ti-vaccine" style="color:var(--coral)"></i></div>
           <div>No vaccination data yet.</div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Employees will appear here once they log vaccines.</div>
         </div>
@@ -125,7 +128,7 @@
       <!-- Employee List -->
       <div class="dash-card" style="margin-top:20px">
         <div class="dash-card-header">
-          <div class="dash-card-title">👥 Employee List</div>
+          <div class="dash-card-title"><i class="ti ti-users" style="color:var(--coral)"></i> Employee List</div>
           <a href="/corporate/dashboard/invite" class="dash-action-btn">+ Invite</a>
         </div>
 
@@ -144,7 +147,7 @@
             <tbody>
               {% for emp in employees %}
               <tr>
-                <td style="font-weight:700">{{ emp.name or '—' }}</td>
+                <td style="font-weight:700">{{ emp.name or ', ' }}</td>
                 <td style="color:var(--text-muted)">{{ emp.email }}</td>
                 <td>
                   {% for rec in emp.vaccination_records[:4] %}
@@ -160,7 +163,7 @@
                   <span style="font-size:13px;font-weight:700;color:var(--accent)">{{ 100 - la.risk_score | int }}</span>
                   <span style="font-size:11px;color:var(--text-muted)"> risk</span>
                   {% else %}
-                  <span style="font-size:12px;color:var(--text-muted)">—</span>
+                  <span style="font-size:12px;color:var(--text-muted)"></span>
                   {% endif %}
                 </td>
                 <td>
@@ -168,7 +171,7 @@
                   {% if pr %}
                   <span style="font-size:13px;font-weight:700;color:#d97706">{{ pr|length }}</span>
                   {% else %}
-                  <span style="font-size:12px;color:var(--text-muted)">—</span>
+                  <span style="font-size:12px;color:var(--text-muted)"></span>
                   {% endif %}
                 </td>
               </tr>
@@ -178,7 +181,7 @@
         </div>
         {% else %}
         <div class="dash-empty">
-          <div style="font-size:36px;margin-bottom:8px">👥</div>
+          <div style="font-size:36px;margin-bottom:8px"><i class="ti ti-users" style="color:var(--coral)"></i></div>
           <div>No employees linked yet.</div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Invite employees to link their CareMate accounts to your company.</div>
           <a href="/corporate/dashboard/invite" class="dash-action-btn" style="margin-top:16px;display:inline-block">+ Invite Employees</a>
@@ -193,17 +196,17 @@
       <!-- Quick actions -->
       <div class="dash-card">
         <div class="dash-card-header">
-          <div class="dash-card-title">⚡ Quick Actions</div>
+          <div class="dash-card-title"><i class="ti ti-bolt" style="color:var(--coral)"></i> Quick Actions</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <a href="/corporate/dashboard/reminders/send-all" class="dash-action-btn" style="justify-content:center;padding:12px">
-            🔔 Send Reminder to All Employees
+            <i class="ti ti-bell" style="color:var(--coral)"></i> Send Reminder to All Employees
           </a>
           <a href="/clinics" class="dash-action-btn" style="justify-content:center;padding:12px;background:rgba(5,150,105,0.1);color:var(--accent)">
-            📍 Book Corporate Clinic Session
+            <i class="ti ti-map-pin" style="color:var(--coral)"></i> Book Corporate Clinic Session
           </a>
           <a href="/corporate/dashboard/export" class="dash-action-btn" style="justify-content:center;padding:12px;background:rgba(2,132,199,0.1);color:#0284c7">
-            📊 Export Compliance Report
+            <i class="ti ti-chart-bar" style="color:var(--coral)"></i> Export Compliance Report
           </a>
         </div>
       </div>
@@ -211,7 +214,7 @@
       <!-- Unvaccinated alerts -->
       <div class="dash-card" style="margin-top:16px">
         <div class="dash-card-header">
-          <div class="dash-card-title">⚠️ Priority Gaps</div>
+          <div class="dash-card-title"><i class="ti ti-alert-triangle" style="color:var(--coral)"></i> Priority Gaps</div>
           <span style="font-size:12px;color:var(--text-muted)">Employees needing key vaccines</span>
         </div>
         {% set priority_vax = ['influenza', 'pneumococcal', 'covid19'] %}
@@ -238,7 +241,7 @@
         {% endfor %}
         {% if not has_gaps %}
         <div class="dash-empty" style="padding:16px 0">
-          <div style="font-size:24px;margin-bottom:6px">🎉</div>
+          <div style="font-size:24px;margin-bottom:6px"><i class="ti ti-confetti" style="color:var(--coral)"></i></div>
           <div style="font-size:13px">All employees are up to date on priority vaccines!</div>
         </div>
         {% endif %}
@@ -247,13 +250,13 @@
       <!-- Company info -->
       <div class="dash-card" style="margin-top:16px">
         <div class="dash-card-header">
-          <div class="dash-card-title">🏢 Company Info</div>
+          <div class="dash-card-title"><i class="ti ti-building" style="color:var(--coral)"></i> Company Info</div>
         </div>
         <div style="font-size:13px;color:var(--text-secondary);display:flex;flex-direction:column;gap:8px">
-          <div><strong style="color:var(--text-primary)">Industry:</strong> {{ company.industry or '—' }}</div>
-          <div><strong style="color:var(--text-primary)">Size:</strong> {{ company.employee_size or '—' }} employees</div>
+          <div><strong style="color:var(--text-primary)">Industry:</strong> {{ company.industry or ', ' }}</div>
+          <div><strong style="color:var(--text-primary)">Size:</strong> {{ company.employee_size or ', ' }} employees</div>
           <div><strong style="color:var(--text-primary)">Plan:</strong> {{ company.plan | capitalize }}</div>
-          <div><strong style="color:var(--text-primary)">Contact:</strong> {{ company.contact_name or '—' }}</div>
+          <div><strong style="color:var(--text-primary)">Contact:</strong> {{ company.contact_name or ', ' }}</div>
           <div><strong style="color:var(--text-primary)">Member since:</strong> {{ company.created_at.strftime('%B %Y') }}</div>
         </div>
         <a href="/corporate/dashboard/settings" style="font-size:12px;color:var(--accent);font-weight:700;text-decoration:none;display:block;margin-top:12px">Edit company profile →</a>

@@ -1,0 +1,28 @@
+<svg class="mate-svg" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <radialGradient id="mateBody" cx="40%" cy="36%" r="72%">
+      <stop offset="0" stop-color="#FFC4A8"/><stop offset="60%" stop-color="#FF6B6B"/><stop offset="100%" stop-color="#E55555"/>
+    </radialGradient>
+    <linearGradient id="mateLeaf" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#2ED573"/><stop offset="1" stop-color="#63E6BE"/>
+    </linearGradient>
+  </defs>
+  <!-- sprout leaf (grows with streak, wilts when low) -->
+  <g class="mate-leaf">
+    <path d="M65 56 L65 40" stroke="#2ED573" stroke-width="3" stroke-linecap="round"/>
+    <path d="M65 48 C56 46 52 39 53 34 C61 35 66 42 65 48Z" fill="url(#mateLeaf)"/>
+    <path d="M65 45 C74 43 78 37 77 32 C69 33 64 40 65 45Z" fill="url(#mateLeaf)" opacity=".92"/>
+  </g>
+  <!-- body + face -->
+  <g class="mate-body" style="transform-origin:65px 78px">
+    <circle class="mate-orb" cx="65" cy="78" r="28" fill="url(#mateBody)"/>
+    <ellipse cx="56" cy="70" rx="8" ry="5" fill="#fff" opacity=".4"/>
+    <circle class="mate-cheek" cx="52" cy="80" r="4.5" fill="#fff" opacity="0"/>
+    <circle class="mate-cheek" cx="78" cy="80" r="4.5" fill="#fff" opacity="0"/>
+    <g class="mate-eyes" style="transform-origin:65px 76px">
+      <circle class="mate-pupil" cx="58" cy="76" r="3.6" fill="#1A0A00"/>
+      <circle class="mate-pupil" cx="72" cy="76" r="3.6" fill="#1A0A00"/>
+    </g>
+    <path class="mate-mouth" d="M58 85 Q65 91 72 85" fill="none" stroke="#1A0A00" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

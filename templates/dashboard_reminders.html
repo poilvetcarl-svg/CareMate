@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reminders — CareMate</title>
+  <title>Reminders, CareMate</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
 </head>
 <body class="dash-body">
 
+<button class="dash-burger" aria-label="Open menu" onclick="document.body.classList.add(&apos;nav-open&apos;)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="dash-backdrop" onclick="document.body.classList.remove(&apos;nav-open&apos;)"></div>
 <aside class="dash-sidebar">
-  <div class="dash-logo"><a href="/" class="nav-logo">Care<span>Mate</span></a></div>
+  <div class="dash-logo"><a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span>Mate</span></a></div>
   <nav class="dash-nav">
     <a href="/dashboard" class="dash-nav-item">Overview</a>
     <a href="/dashboard/history" class="dash-nav-item">Vaccination History</a>
@@ -33,11 +35,11 @@
 <main class="dash-main">
   <div class="dash-header">
     <div>
-      <h1 class="dash-title">🔔 Reminders</h1>
+      <h1 class="dash-title"><i class="ti ti-bell" style="color:var(--coral)"></i> Reminders</h1>
       <p class="dash-sub">Your upcoming and past vaccination reminders.</p>
     </div>
     {% if not current_user.phone or not current_user.whatsapp_opt_in %}
-    <a href="/dashboard/settings" class="btn-outline" style="padding:10px 20px;font-size:13px">📱 Enable WhatsApp</a>
+    <a href="/dashboard/settings" class="btn-outline" style="padding:10px 20px;font-size:13px"><i class="ti ti-device-mobile" style="color:var(--coral)"></i> Enable WhatsApp</a>
     {% endif %}
   </div>
 
@@ -48,7 +50,7 @@
   <!-- Upcoming -->
   <div class="dash-card" style="margin-bottom:20px">
     <div class="dash-card-header">
-      <div class="dash-card-title">📅 Upcoming Reminders</div>
+      <div class="dash-card-title"><i class="ti ti-calendar" style="color:var(--coral)"></i> Upcoming Reminders</div>
       <span style="font-size:12px;color:var(--text-muted)">{{ pending|length }} pending</span>
     </div>
     {% if pending %}
@@ -60,7 +62,7 @@
           <div class="vt-name">{{ r.vaccine_name }}</div>
           <div class="vt-meta">
             {% set diff = (r.reminder_date - today).days %}
-            {% if diff == 0 %}Today{% elif diff == 1 %}Tomorrow{% else %}{{ r.reminder_date.strftime('%d %b %Y') }} — {{ diff }} days{% endif %}
+            {% if diff == 0 %}Today{% elif diff == 1 %}Tomorrow{% else %}{{ r.reminder_date.strftime('%d %b %Y') }}, {{ diff }} days{% endif %}
             · via {{ r.channel | capitalize }}
           </div>
         </div>
@@ -72,7 +74,7 @@
     </div>
     {% else %}
     <div class="dash-empty">
-      <div style="font-size:36px;margin-bottom:8px">🔔</div>
+      <div style="font-size:36px;margin-bottom:8px"><i class="ti ti-bell" style="color:var(--coral)"></i></div>
       <div>No upcoming reminders.</div>
       <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Book a vaccine or log a next-dose date to set reminders automatically.</div>
     </div>
@@ -83,7 +85,7 @@
   {% if past %}
   <div class="dash-card">
     <div class="dash-card-header">
-      <div class="dash-card-title">📜 Past Reminders</div>
+      <div class="dash-card-title"><i class="ti ti-file-certificate" style="color:var(--coral)"></i> Past Reminders</div>
     </div>
     <div class="vaccine-timeline">
       {% for r in past %}
@@ -91,7 +93,7 @@
         <div class="vt-dot" style="background:var(--text-muted);box-shadow:none"></div>
         <div class="vt-content">
           <div class="vt-name" style="color:var(--text-secondary)">{{ r.vaccine_name }}</div>
-          <div class="vt-meta">{{ r.reminder_date.strftime('%d %b %Y') }}{% if r.sent %} · ✅ Sent{% endif %}</div>
+          <div class="vt-meta">{{ r.reminder_date.strftime('%d %b %Y') }}{% if r.sent %} · <i class="ti ti-circle-check" style="color:var(--coral)"></i> Sent{% endif %}</div>
         </div>
       </div>
       {% endfor %}

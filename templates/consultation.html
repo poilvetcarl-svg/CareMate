@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
   <link rel="apple-touch-icon" href="/static/img/favicon-192.png" />
-  <title>Consultation with {{ doctor.name }} — CareMate</title>
+  <title>Consultation with {{ doctor.name }}, CareMate</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
@@ -405,6 +405,7 @@
       .consult-layout { grid-template-columns: 1fr; grid-template-rows: 55vh 45vh; }
     }
   </style>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
 </head>
 <body>
 
@@ -418,13 +419,13 @@
   <div class="consult-bar-right">
     <!-- Language toggle -->
     <div class="lang-toggle" title="Switch consultation language">
-      <button class="lang-btn" id="btnLangID" data-lang="indonesian" onclick="switchLanguage('indonesian')">🇮🇩 Indo</button>
+      <button class="lang-btn" id="btnLangID" data-lang="indonesian" onclick="switchLanguage('indonesian')">ID</button>
       <div class="lang-btn-sep"></div>
-      <button class="lang-btn active" id="btnLangEN" data-lang="english" onclick="switchLanguage('english')">🇬🇧 ENG</button>
+      <button class="lang-btn active" id="btnLangEN" data-lang="english" onclick="switchLanguage('english')">ENG</button>
     </div>
     <div class="call-live-dot"></div>
     <span class="call-timer" id="callTimer">00:00</span>
-    <button class="btn-end-call" onclick="endCall()">📞 End Call</button>
+    <button class="btn-end-call" onclick="endCall()"><i class="ti ti-phone-off"></i> End Call</button>
   </div>
 </div>
 
@@ -437,14 +438,14 @@
     <!-- Blurred pre-load background -->
     <div class="tavus-bg" id="tavusBg" style="background-image: url('{{ doctor.did_photo or doctor.photo }}');"></div>
 
-    <!-- Tavus CVI iframe — filled once conversation URL is ready -->
+    <!-- Tavus CVI iframe, filled once conversation URL is ready -->
     <iframe
       id="tavusFrame"
       allow="camera; microphone; autoplay; display-capture; fullscreen"
       allowfullscreen
     ></iframe>
 
-    <!-- D-ID streaming avatar — used when Tavus is unavailable -->
+    <!-- D-ID streaming avatar, used when Tavus is unavailable -->
     <video id="didVideo" autoplay playsinline
            style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;background:#060610;"></video>
 
@@ -475,12 +476,12 @@
         <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">{{ doctor.hospital }}, {{ doctor.city }}</p>
         <div style="margin-top:16px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:10px 16px;">
           <p style="color:rgba(255,255,255,0.8);font-size:12px;line-height:1.6;">
-            💬 Video stream unavailable — use the <strong>Text Chat</strong> on the right.<br>
+            <i class="ti ti-message-circle"></i> Video stream unavailable, use the <strong>Text Chat</strong> on the right.<br>
             The AI doctor will still respond and speak to you.
           </p>
         </div>
         <button onclick="initTavus()" style="margin-top:12px;background:rgba(124,58,237,0.3);border:1px solid rgba(124,58,237,0.5);color:white;padding:8px 20px;border-radius:20px;font-size:13px;cursor:pointer;">
-          🔄 Retry Video
+          <i class="ti ti-refresh"></i> Retry Video
         </button>
       </div>
     </div>
@@ -498,9 +499,8 @@
     <!-- Floating risk score (populated from localStorage if available) -->
     <div class="risk-float hud-badge" id="riskFloat">
       <div class="risk-float-label">Your Prevention Score</div>
-      <div class="risk-float-score" id="rfScore">—</div>
+      <div class="risk-float-score" id="rfScore"></div>
       <div class="risk-float-level" id="rfLevel"></div>
-      <div class="risk-float-vaccines" id="rfVaccines"></div>
     </div>
 
   </div>
@@ -510,79 +510,17 @@
 
     <!-- Tabs -->
     <div class="sidebar-tabs">
-      <div class="sidebar-tab active" onclick="switchTab('chat')">💬 Text Chat</div>
-      <div class="sidebar-tab" onclick="switchTab('notes')">📋 Notes</div>
+      <div class="sidebar-tab active" onclick="switchTab('chat')"><i class="ti ti-message-circle"></i> Text Chat</div>
+      <div class="sidebar-tab" onclick="switchTab('notes')"><i class="ti ti-clipboard"></i> Notes</div>
     </div>
 
-    <!-- Setup panel hidden — auto-started from localStorage name -->
+    <!-- Setup panel hidden, auto-started from localStorage name -->
 
     <!-- TRANSCRIPT -->
     <div class="transcript-panel hidden" id="transcriptPanel"></div>
 
     <!-- NOTES PANEL -->
     <div class="notes-panel" id="notesPanel">
-
-      <!-- Generate Prescription button -->
-      <button class="btn-rx" id="btnGenRx" onclick="generatePrescription()">
-        <span>📄</span> Generate Prescription
-      </button>
-
-      <!-- Prescription card (hidden until generated) -->
-      <div class="rx-card" id="rxCard">
-
-        <div class="rx-header">
-          <div class="rx-logo">CareMate · Vaccination Prescription</div>
-          <div class="rx-title">Resep / Prescription</div>
-          <div class="rx-meta">
-            Dokter: <span id="rxDoctor">—</span><br>
-            Pasien: <span id="rxPatient">—</span><br>
-            Tanggal: <span id="rxDate">—</span><br>
-            <span id="rxIcdCodes" style="font-size:10px;color:#a78bfa;font-weight:600"></span>
-          </div>
-        </div>
-
-        <!-- Clinical notes -->
-        <div class="rx-clinical-block" id="rxClinicalBlock" style="display:none">
-          <div class="rx-clinical-label">📋 Clinical Notes</div>
-          <div class="rx-clinical-text" id="rxClinicalNotes"></div>
-        </div>
-
-        <div>
-          <div class="rx-section-label">R/ Vaksinasi yang Diresepkan</div>
-          <div class="rx-vaccine-list" id="rxVaccineList"></div>
-        </div>
-
-        <div id="rxInstructionsBlock">
-          <div class="rx-section-label">📋 Instruksi Pasca-Vaksinasi</div>
-          <div class="rx-text-block" id="rxInstructions"></div>
-        </div>
-
-        <div id="rxFollowUpBlock">
-          <div class="rx-section-label">🗓 Kontrol Ulang</div>
-          <div class="rx-text-block" id="rxFollowUp"></div>
-        </div>
-
-        <div class="rx-warning" id="rxWarnings" style="display:none"></div>
-
-        <!-- Prescriber note -->
-        <div class="rx-prescriber-block" id="rxPrescriberBlock" style="display:none">
-          <div class="rx-prescriber-label">Note for Vaccinating Clinician</div>
-          <div class="rx-prescriber-text" id="rxPrescriberNote"></div>
-        </div>
-
-        <div class="rx-footer">
-          <div class="rx-signature">
-            <strong id="rxSignDoctor">—</strong><br>
-            <span id="rxSignSpec">—</span><br>
-            <span id="rxSignHosp">—</span>
-          </div>
-        </div>
-
-        <div class="rx-actions">
-          <button class="btn-rx-print" onclick="printPrescription()">🖨 Print</button>
-          <button class="btn-rx-regen" onclick="generatePrescription()">↻ Regenerate</button>
-        </div>
-      </div>
 
       <!-- Doctor info -->
       <div class="note-card">
@@ -592,7 +530,7 @@
           <li>{{ doctor.specialty }}</li>
           <li>{{ doctor.hospital }}, {{ doctor.city }}</li>
           <li>{{ doctor.experience }} experience</li>
-          <li>⭐ {{ doctor.rating }} ({{ doctor.reviews }} reviews)</li>
+          <li><i class="ti ti-star"></i> {{ doctor.rating }} ({{ doctor.reviews }} reviews)</li>
         </ul>
       </div>
 
@@ -601,16 +539,24 @@
         <div id="summaryContent" style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6">
           Summary will appear after the consultation.
         </div>
+        <button id="btnSaveSummary" onclick="saveSummary()"
+          style="margin-top:14px;width:100%;background:linear-gradient(135deg,#FF6B6B,#FF8E53);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;display:none">
+          Save summary to my dashboard
+        </button>
+        <div id="saveSummaryMsg" style="margin-top:8px;font-size:11.5px;color:#63E6BE;font-weight:700;display:none"><i class="ti ti-check"></i> Saved to your dashboard</div>
+        <p style="margin-top:10px;font-size:10.5px;color:rgba(255,255,255,0.35);line-height:1.5">
+          This AI consultation is for educational guidance only and does not provide prescriptions or a diagnosis.
+        </p>
       </div>
     </div>
 
     <!-- TEXT CHAT INPUT AREA -->
     <div class="sidebar-input-area hidden" id="inputArea">
       <div class="input-row">
-        <button class="btn-mic-speak" id="sttBtn" onclick="toggleSpeech()" title="Click to speak">🎙️</button>
-        <textarea class="consult-input" id="consultInput" placeholder="Type a question or click 🎙️ to speak…" rows="1"
+        <button class="btn-mic-speak" id="sttBtn" onclick="toggleSpeech()" title="Click to speak" aria-label="Speak to the doctor"><i class="ti ti-microphone"></i></button>
+        <textarea class="consult-input" id="consultInput" placeholder="Type a question or click the mic to speak…" rows="1"
                   onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendConsultMessage()}"></textarea>
-        <button class="btn-send-consult" onclick="sendConsultMessage()">➤</button>
+        <button class="btn-send-consult" onclick="sendConsultMessage()" aria-label="Send message"><i class="ti ti-send"></i></button>
       </div>
       <div class="input-hint">This text chat is separate from the voice conversation in the video →</div>
     </div>
@@ -620,7 +566,7 @@
 <!-- END CALL MODAL -->
 <div class="end-modal-overlay hidden" id="endModal">
   <div class="end-modal">
-    <div class="end-modal-icon">📋</div>
+    <div class="end-modal-icon"><i class="ti ti-clipboard"></i></div>
     <h3>Consultation Complete</h3>
     <p>Your session with {{ doctor.name }} has ended. What would you like to do next?</p>
     <div class="end-modal-btns">
@@ -645,7 +591,7 @@
   let recognition     = null;
   let tavusConvId     = null;   // active Tavus conversation ID
   let lastReplyText   = null;   // last doctor reply, voiced by D-ID once it connects
-  let currentLang     = 'english';  // default — English first
+  let currentLang     = 'english';  // default, English first
 
   // ── INIT ──
   window.addEventListener('load', () => {
@@ -670,13 +616,16 @@
   });
 
   // ── FLOATING RISK SCORE ──
+  const IS_AUTHED = {{ 'true' if current_user.is_authenticated else 'false' }};
+  const HAS_ASSESSMENT = {{ 'true' if has_assessment else 'false' }};
   function initRiskFloat() {
     try {
+      // Logged-in users only see a score once they've actually taken an assessment
+      if (IS_AUTHED && !HAS_ASSESSMENT) return;
       const saved = localStorage.getItem('lastAssessment');
       if (!saved) return;
       const data = JSON.parse(saved);
       const risk = data.risk;
-      const vaccines = data.vaccines || [];
       if (!risk || !risk.percentage) return;
 
       const pScore = risk.prevention_score ?? (100 - risk.percentage);
@@ -688,17 +637,13 @@
       document.getElementById('rfLevel').textContent  = level;
       document.getElementById('rfLevel').style.color  = color;
 
-      if (vaccines.length) {
-        document.getElementById('rfVaccines').textContent =
-          '💉 ' + vaccines.slice(0, 3).join(' · ') + (vaccines.length > 3 ? ` +${vaccines.length - 3} more` : '');
-      }
-
       document.getElementById('riskFloat').classList.add('visible');
     } catch(e) {}
   }
 
   // End Tavus / D-ID sessions when leaving the page
   window.addEventListener('beforeunload', () => {
+    autoSaveConsultationBeacon();
     if (tavusConvId) {
       navigator.sendBeacon(`/api/tavus/conversation/${tavusConvId}`,
         new Blob([JSON.stringify({})], { type: 'application/json' }));
@@ -720,7 +665,7 @@
   }
 
   // ── VIDEO FAILOVER: Tavus → static (looping real replica video + chat) ──
-  // D-ID's animated-photo avatar was removed — it looked fake. If Tavus is
+  // D-ID's animated-photo avatar was removed, it looked fake. If Tavus is
   // unavailable we fall straight back to the real looping replica footage,
   // which reads as a genuine person far better than a talking still image.
   function failoverVideo(reason) {
@@ -769,13 +714,13 @@
         document.getElementById('tavusLoading').classList.add('hidden');
         document.getElementById('tavusBg').style.display = 'none';
         didActive = true;
-        console.log('D-ID avatar stream connected ✓');
-        // Unmuted autoplay is often blocked — retry on the first user gesture
+        console.log('D-ID avatar stream connected');
+        // Unmuted autoplay is often blocked, retry on the first user gesture
         video.play().catch(() => {
           const resume = () => { video.play().catch(() => {}); document.removeEventListener('click', resume); };
           document.addEventListener('click', resume);
         });
-        // The avatar only renders video while speaking — greet on connect so
+        // The avatar only renders video while speaking, greet on connect so
         // the doctor appears and talks instead of sitting blank.
         if (lastReplyText) { didTalk(lastReplyText); lastReplyText = null; }
         else if (!didGreeted) {
@@ -866,7 +811,7 @@
           if (labContext) {
             const banner = document.createElement('div');
             banner.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(16,185,129,.92);color:#fff;font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px;pointer-events:none';
-            banner.textContent = '🧪 Lab results shared with your doctor';
+            banner.textContent = 'Lab results shared with your doctor';
             document.body.appendChild(banner);
             setTimeout(() => banner.remove(), 4000);
           }
@@ -881,6 +826,7 @@
         language_override: langOverride || 'english'
       };
       if (labContext) tavusBody.lab_context = labContext;
+      if (patientName) tavusBody.patient_name = patientName;
 
       const r = await fetch('/api/tavus/conversation', {
         method: 'POST',
@@ -904,10 +850,10 @@
         document.getElementById('tavusLoading').classList.add('hidden');
         document.getElementById('langSwitchBanner').classList.remove('visible');
         document.getElementById('tavusBg').style.display = 'none';
-        console.log('Tavus CVI iframe loaded ✓');
+        console.log('Tavus CVI iframe loaded');
       };
 
-      // Hard timeout — if loading spinner still showing after 20s, fall back gracefully
+      // Hard timeout, if loading spinner still showing after 20s, fall back gracefully
       setTimeout(() => {
         if (!document.getElementById('tavusLoading').classList.contains('hidden')) {
           failoverVideo('Tavus load timeout');
@@ -929,7 +875,7 @@
     document.getElementById('btnLangID').classList.toggle('active', lang === 'indonesian');
     document.getElementById('btnLangEN').classList.toggle('active', lang === 'english');
 
-    // D-ID avatar mode: voice follows currentLang automatically — no restart needed
+    // D-ID avatar mode: voice follows currentLang automatically, no restart needed
     if (didActive) return;
 
     // Show switch banner
@@ -977,7 +923,7 @@
       const t = Array.from(event.results).map(r => r[0].transcript).join('');
       document.getElementById('consultInput').value = t;
       if (event.results[event.results.length - 1].isFinal) {
-        stopSpeech(); sendConsultMessage();
+        stopSpeech(); sendConsultMessage(null, true);  // voice input → reply spoken aloud
       }
     };
     recognition.onend  = () => stopSpeech();
@@ -992,14 +938,14 @@
   function startSpeech() {
     isListening = true;
     document.getElementById('sttBtn').classList.add('listening');
-    document.getElementById('sttBtn').textContent = '🔴';
+    document.getElementById('sttBtn').innerHTML = '<i class="ti ti-microphone" style="color:#ef4444"></i>';
     recognition.start();
   }
   function stopSpeech() {
     isListening = false;
     const btn = document.getElementById('sttBtn');
     btn.classList.remove('listening');
-    btn.textContent = '🎙️';
+    btn.innerHTML = '<i class="ti ti-microphone"></i>';
     try { recognition.stop(); } catch(e) {}
   }
 
@@ -1019,7 +965,7 @@
   }
 
   // ── SEND TEXT MESSAGE ──
-  async function sendConsultMessage(autoMessage) {
+  async function sendConsultMessage(autoMessage, viaVoice) {
     const input = document.getElementById('consultInput');
     const text  = autoMessage || input.value.trim();
     if (!text) return;
@@ -1058,8 +1004,11 @@
       }
 
       consultHistory.push({ role: 'assistant', content: fullReply });
-      if (didActive) { didTalk(fullReply); }
-      else { lastReplyText = fullReply; speakText(fullReply); }
+      // Only voice the reply when the patient spoke (mic). Typed chat stays text-only.
+      if (viaVoice) {
+        if (didActive) { didTalk(fullReply); }
+        else { lastReplyText = fullReply; speakText(fullReply); }
+      }
       if (consultHistory.length >= 4) updateSummary();
 
     } catch (e) {
@@ -1118,213 +1067,77 @@
     const msgs  = consultHistory.filter(m => m.role === 'assistant').map(m => m.content).join(' ');
     const words = msgs.split(' ').slice(0, 60).join(' ');
     document.getElementById('summaryContent').textContent = words + (msgs.length > 300 ? '…' : '');
+    const btn = document.getElementById('btnSaveSummary');
+    if (btn) btn.style.display = 'block';
   }
 
-  // ── PRESCRIPTION ──
-  async function generatePrescription() {
-    const btn = document.getElementById('btnGenRx');
-    btn.disabled = true;
-    btn.innerHTML = '<span style="animation:dotFade 1s infinite">⏳</span> Generating…';
-
-    // Gather everything we need
-    let assessment = null;
-    try { assessment = JSON.parse(localStorage.getItem('lastAssessment') || 'null'); } catch(e) {}
-
+  // ── SAVE CONSULTATION SUMMARY TO DASHBOARD ──
+  async function saveSummary() {
+    const btn = document.getElementById('btnSaveSummary');
+    const summary = document.getElementById('summaryContent').textContent.trim();
+    if (!summary || summary.startsWith('Summary will appear')) return;
+    btn.disabled = true; btn.textContent = 'Saving…';
     try {
-      const res = await fetch('/api/prescription', {
+      const r = await fetch('/api/consultation/save-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          doctor_id:    DOCTOR_ID,
-          patient_name: patientName || 'Pasien',
-          history:      consultHistory,
-          assessment:   assessment || {},
-          language:     currentLang
+          doctor_name: DOCTOR_NAME,
+          doctor_specialty: {{ doctor.specialty | tojson }},
+          summary: summary,
+          transcript: consultHistory.slice(-40)
         })
       });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      renderPrescription(data);
-
-      // Switch to Notes tab so the user sees it
-      switchTab('notes');
-
-    } catch(err) {
-      console.error('Prescription error:', err);
-      alert('Gagal membuat resep. Coba lagi setelah percakapan lebih panjang.');
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<span>📄</span> Generate Prescription';
+      if (r.ok) {
+        btn.style.display = 'none';
+        document.getElementById('saveSummaryMsg').style.display = 'block';
+      } else {
+        btn.disabled = false; btn.textContent = 'Save summary to my dashboard';
+      }
+    } catch(e) {
+      btn.disabled = false; btn.textContent = 'Save summary to my dashboard';
     }
   }
 
-  function renderPrescription(data) {
-    const rx   = data.prescription || {};
-    const doc  = data.doctor || {};
-    const lang = data.language || 'indonesian';
-    const isID = lang === 'indonesian';
 
-    // Header
-    document.getElementById('rxDoctor').textContent  = doc.name || DOCTOR_NAME;
-    document.getElementById('rxPatient').textContent = data.patient || patientName || '—';
-    document.getElementById('rxDate').textContent    = data.date || new Date().toLocaleDateString('id-ID', {day:'2-digit',month:'long',year:'numeric'});
-
-    // Labels
-    document.querySelector('#rxCard .rx-section-label:nth-of-type(1)').textContent = isID ? '💉 Vaksin yang Diresepkan' : '💉 Prescribed Vaccines';
-    document.getElementById('rxInstructionsBlock').querySelector('.rx-section-label').textContent = isID ? '📋 Instruksi' : '📋 Instructions';
-    document.getElementById('rxFollowUpBlock').querySelector('.rx-section-label').textContent = isID ? '🗓 Kontrol Ulang' : '🗓 Follow-up';
-    document.getElementById('btnGenRx').innerHTML = '<span>📄</span> ' + (isID ? 'Generate Ulang Resep' : 'Regenerate Prescription');
-
-    // Clinical notes + ICD codes
-    const clinNotes = rx.clinical_notes || '';
-    const icdCodes  = (rx.diagnosis_codes || []).join(' · ');
-    const prescNote = rx.prescriber_note || '';
-    document.getElementById('rxClinicalNotes').textContent = clinNotes;
-    document.getElementById('rxClinicalBlock').style.display = clinNotes ? 'block' : 'none';
-    document.getElementById('rxIcdCodes').textContent = icdCodes ? `ICD-10: ${icdCodes}` : '';
-    document.getElementById('rxPrescriberNote').textContent = prescNote;
-    document.getElementById('rxPrescriberBlock').style.display = prescNote ? 'block' : 'none';
-
-    // Vaccine list
-    const list = document.getElementById('rxVaccineList');
-    list.innerHTML = '';
-    const vaccines = rx.vaccines || [];
-    if (vaccines.length === 0) {
-      list.innerHTML = `<div style="font-size:12px;color:rgba(255,255,255,0.35);text-align:center;padding:8px">${isID ? 'Tidak ada vaksin dalam resep' : 'No vaccines in prescription'}</div>`;
-    } else {
-      vaccines.forEach((v, i) => {
-        const isPriority = (v.priority || '').toLowerCase() === 'urgent';
-        list.insertAdjacentHTML('beforeend', `
-          <div class="rx-vaccine-item">
-            <div class="rx-vaccine-name">
-              <div class="rx-priority-dot ${isPriority ? 'urgent' : 'routine'}"></div>
-              <span>${i + 1}. ${v.name || '—'}</span>
-            </div>
-            ${v.generic_name ? `<div class="rx-vaccine-generic">${v.generic_name}${v.icd10 ? ' &nbsp;·&nbsp; <span class="rx-icd">'+v.icd10+'</span>' : ''}</div>` : ''}
-            <div class="rx-vaccine-detail">
-              <span>💊 ${v.dose || '—'}</span>
-              <span>📍 ${v.route || '—'}</span>
-              <span>📅 ${v.schedule || '—'}</span>
-            </div>
-            ${v.brand_options ? `<div class="rx-vaccine-brand">Brand: ${v.brand_options}</div>` : ''}
-            ${v.indication ? `<div class="rx-vaccine-reason">↳ ${v.indication}</div>` : ''}
-            ${v.contraindications && v.contraindications !== 'Tidak ada' && v.contraindications !== 'None'
-              ? `<div class="rx-vaccine-contra">⚠ ${v.contraindications}</div>` : ''}
-          </div>
-        `);
+  // ── AUTO-SAVE CONSULTATION TO DASHBOARD ──
+  let consultSaved = false;
+  function buildConsultPayload() {
+    return {
+      doctor_name: DOCTOR_NAME,
+      doctor_specialty: {{ doctor.specialty | tojson }},
+      transcript: consultHistory.slice(-40),
+      conversation_id: tavusConvId || null,
+      autosummarize: true
+    };
+  }
+  function hasRealConversation() {
+    const userMsgs   = consultHistory.filter(m => m.role === 'user' && (m.content || '').trim());
+    const doctorMsgs = consultHistory.filter(m => m.role === 'assistant' && (m.content || '').trim());
+    return userMsgs.length >= 1 && doctorMsgs.length >= 1;
+  }
+  async function autoSaveConsultation() {
+    if (consultSaved || !hasRealConversation()) return;
+    consultSaved = true;
+    try {
+      await fetch('/api/consultation/save-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildConsultPayload())
       });
-    }
-
-    // Instructions & Follow-up
-    document.getElementById('rxInstructions').textContent = rx.instructions || '—';
-    document.getElementById('rxFollowUp').textContent     = rx.follow_up    || '—';
-
-    // Warnings
-    const warnEl = document.getElementById('rxWarnings');
-    if (rx.warnings && rx.warnings.trim()) {
-      warnEl.textContent = '⚠️ ' + rx.warnings;
-      warnEl.style.display = 'block';
-    } else {
-      warnEl.style.display = 'none';
-    }
-
-    // Signature
-    document.getElementById('rxSignDoctor').textContent = doc.name || DOCTOR_NAME;
-    document.getElementById('rxSignSpec').textContent   = doc.specialty || '';
-    document.getElementById('rxSignHosp').textContent   = doc.hospital ? `${doc.hospital}, ${doc.city || ''}` : '';
-
-    // Show the card
-    document.getElementById('rxCard').classList.add('visible');
+    } catch(e) { consultSaved = false; }
   }
-
-  function printPrescription() {
-    const rx = document.getElementById('rxCard');
-    if (!rx || !rx.classList.contains('visible')) return;
-
-    const doctor  = document.getElementById('rxDoctor').textContent;
-    const patient = document.getElementById('rxPatient').textContent;
-    const date    = document.getElementById('rxDate').textContent;
-    const vaccines = [...document.querySelectorAll('.rx-vaccine-item')].map(el => el.innerText).join('\n\n');
-    const instructions = document.getElementById('rxInstructions').textContent;
-    const followup     = document.getElementById('rxFollowUp').textContent;
-    const warnings     = document.getElementById('rxWarnings').style.display !== 'none'
-                         ? document.getElementById('rxWarnings').textContent : '';
-    const signDoctor = document.getElementById('rxSignDoctor').textContent;
-    const signSpec   = document.getElementById('rxSignSpec').textContent;
-    const signHosp   = document.getElementById('rxSignHosp').textContent;
-
-    const win = window.open('', '_blank');
-    win.document.write(`<!DOCTYPE html><html><head>
-      <meta charset="UTF-8">
-      <title>Resep — ${patient}</title>
-      <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 24px; color: #1e293b; }
-        .header { text-align: center; border-bottom: 2px solid #7c3aed; padding-bottom: 16px; margin-bottom: 20px; }
-        .logo { color: #7c3aed; font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
-        h1 { font-size: 20px; margin: 6px 0 12px; }
-        .meta { font-size: 13px; line-height: 1.8; color: #475569; }
-        .meta strong { color: #1e293b; }
-        .section { margin-top: 20px; }
-        .section-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #7c3aed; margin-bottom: 8px; }
-        .vaccine { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
-        .vaccine-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
-        .vaccine-detail { font-size: 12px; color: #64748b; }
-        .vaccine-reason { font-size: 12px; color: #7c3aed; font-style: italic; margin-top: 3px; }
-        .text-block { font-size: 13px; color: #334155; line-height: 1.7; }
-        .warning { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 10px 12px; font-size: 12px; color: #92400e; margin-top: 12px; }
-        .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: right; }
-        .signature { font-size: 13px; color: #475569; line-height: 1.8; }
-        .signature strong { color: #1e293b; }
-        @media print { body { margin: 20px; } }
-      </style>
-    </head><body>
-      <div class="header">
-        <div class="logo">CareMate · Vaccination Prescription</div>
-        <h1>Resep Vaksinasi</h1>
-        <div class="meta">
-          Dokter: <strong>${doctor}</strong><br>
-          Pasien: <strong>${patient}</strong><br>
-          Tanggal: <strong>${date}</strong>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-label">💉 Vaksin yang Diresepkan</div>
-        ${[...document.querySelectorAll('.rx-vaccine-item')].map((el, i) => {
-          const name   = el.querySelector('.rx-vaccine-name')?.textContent?.trim() || '';
-          const detail = el.querySelector('.rx-vaccine-detail')?.textContent?.trim() || '';
-          const reason = el.querySelector('.rx-vaccine-reason')?.textContent?.trim() || '';
-          return `<div class="vaccine">
-            <div class="vaccine-name">${name}</div>
-            <div class="vaccine-detail">${detail}</div>
-            ${reason ? `<div class="vaccine-reason">${reason}</div>` : ''}
-          </div>`;
-        }).join('')}
-      </div>
-      <div class="section">
-        <div class="section-label">📋 Instruksi</div>
-        <div class="text-block">${instructions}</div>
-      </div>
-      <div class="section">
-        <div class="section-label">🗓 Kontrol Ulang</div>
-        <div class="text-block">${followup}</div>
-      </div>
-      ${warnings ? `<div class="warning">${warnings}</div>` : ''}
-      <div class="footer">
-        <div class="signature">
-          <strong>${signDoctor}</strong><br>
-          ${signSpec}<br>
-          ${signHosp}
-        </div>
-      </div>
-    </body></html>`);
-    win.document.close();
-    setTimeout(() => win.print(), 400);
+  function autoSaveConsultationBeacon() {
+    if (consultSaved || !hasRealConversation() || !navigator.sendBeacon) return;
+    consultSaved = true;
+    navigator.sendBeacon('/api/consultation/save-summary',
+      new Blob([JSON.stringify(buildConsultPayload())], { type: 'application/json' }));
   }
 
   // ── END CALL ──
   async function endCall() {
     clearInterval(callInterval);
+    autoSaveConsultation();
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     if (window.speechSynthesis) window.speechSynthesis.cancel();
 

@@ -3,15 +3,18 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>{{ 'Admin Referrals' if is_admin else 'My Bookings & Revenue' }} — CareMate</title>
+  <title>{{ 'Admin Referrals' if is_admin else 'My Bookings & Revenue' }}, CareMate</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
 </head>
 <body class="dash-body">
 
 {% if not is_admin %}
+<button class="dash-burger" aria-label="Open menu" onclick="document.body.classList.add(&apos;nav-open&apos;)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<div class="dash-backdrop" onclick="document.body.classList.remove(&apos;nav-open&apos;)"></div>
 <aside class="dash-sidebar">
-  <div class="dash-logo"><a href="/" class="nav-logo">Care<span>Mate</span></a></div>
+  <div class="dash-logo"><a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span>Mate</span></a></div>
   <nav class="dash-nav">
     <a href="/dashboard" class="dash-nav-item">Overview</a>
     <a href="/dashboard/history" class="dash-nav-item">History</a>
@@ -34,7 +37,7 @@
 <main class="dash-main">
   <div class="dash-header">
     <div>
-      <h1 class="dash-title">{{ '🔑 Admin — All Referrals' if is_admin else '💰 Booking Revenue' }}</h1>
+      <h1 class="dash-title">{{ '<i class="ti ti-key" style="color:var(--coral)"></i> Admin, All Referrals' if is_admin else '<i class="ti ti-coin" style="color:var(--coral)"></i> Booking Revenue' }}</h1>
       <p class="dash-sub">{{ 'Platform-wide booking and referral fee overview.' if is_admin else 'Your clinic bookings and referral fees generated.' }}</p>
     </div>
   </div>
@@ -42,21 +45,21 @@
   <!-- Summary cards -->
   <div class="dash-stats" style="grid-template-columns:repeat(3,1fr)">
     <div class="dash-stat-card">
-      <div class="dash-stat-icon" style="background:rgba(5,150,105,0.1);color:var(--accent)">📍</div>
+      <div class="dash-stat-icon" style="background:rgba(5,150,105,0.1);color:var(--accent)"><i class="ti ti-map-pin" style="color:var(--coral)"></i></div>
       <div>
         <div class="dash-stat-value">{{ bookings|length }}</div>
         <div class="dash-stat-label">Total Bookings</div>
       </div>
     </div>
     <div class="dash-stat-card">
-      <div class="dash-stat-icon" style="background:rgba(124,58,237,0.1);color:#7c3aed">💵</div>
+      <div class="dash-stat-icon" style="background:rgba(124,58,237,0.1);color:#7c3aed"><i class="ti ti-coin" style="color:var(--coral)"></i></div>
       <div>
         <div class="dash-stat-value">Rp {{ '{:,.0f}'.format(total_referral) }}</div>
         <div class="dash-stat-label">Referral Revenue</div>
       </div>
     </div>
     <div class="dash-stat-card">
-      <div class="dash-stat-icon" style="background:rgba(2,132,199,0.1);color:#0284c7">🏥</div>
+      <div class="dash-stat-icon" style="background:rgba(2,132,199,0.1);color:#0284c7"><i class="ti ti-building-hospital" style="color:var(--coral)"></i></div>
       <div>
         <div class="dash-stat-value">{{ clinic_stats|length }}</div>
         <div class="dash-stat-label">Clinics Used</div>
@@ -69,7 +72,7 @@
     <div class="dash-col-main">
       <div class="dash-card">
         <div class="dash-card-header">
-          <div class="dash-card-title">🏥 Per-Clinic Breakdown</div>
+          <div class="dash-card-title"><i class="ti ti-building-hospital" style="color:var(--coral)"></i> Per-Clinic Breakdown</div>
         </div>
         {% if clinic_stats %}
         {% for cname, stats in clinic_stats.items() | sort(attribute='1.revenue', reverse=True) %}
@@ -94,7 +97,7 @@
       <!-- Booking list -->
       <div class="dash-card" style="margin-top:20px">
         <div class="dash-card-header">
-          <div class="dash-card-title">📋 All Bookings</div>
+          <div class="dash-card-title"><i class="ti ti-clipboard-heart" style="color:var(--coral)"></i> All Bookings</div>
         </div>
         {% if bookings %}
         <div style="overflow-x:auto">
@@ -136,10 +139,10 @@
     <!-- Right: info -->
     <div class="dash-col-side">
       <div class="dash-card">
-        <div class="dash-card-title" style="margin-bottom:14px">💡 How referrals work</div>
+        <div class="dash-card-title" style="margin-bottom:14px"><i class="ti ti-bulb" style="color:var(--coral)"></i> How referrals work</div>
         <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
           <p style="margin:0 0 10px">Every booking made through CareMate earns a <strong style="color:var(--accent)">Rp 25,000</strong> referral fee from the partner clinic.</p>
-          <p style="margin:0 0 10px">Clinics pay for premium placement and confirmed bookings — you get revenue for every patient you send their way.</p>
+          <p style="margin:0 0 10px">Clinics pay for premium placement and confirmed bookings, you get revenue for every patient you send their way.</p>
           <p style="margin:0">Fees are tracked automatically and available for monthly payout.</p>
         </div>
         <div style="margin-top:16px;padding:12px;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.15);border-radius:10px;font-size:13px;color:var(--accent);font-weight:700">
@@ -148,9 +151,9 @@
       </div>
 
       <div class="dash-card" style="margin-top:16px">
-        <div class="dash-card-title" style="margin-bottom:14px">🏥 Add more clinics</div>
+        <div class="dash-card-title" style="margin-bottom:14px"><i class="ti ti-building-hospital" style="color:var(--coral)"></i> Add more clinics</div>
         <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">More clinic bookings = more referral revenue.</div>
-        <a href="/clinics" class="dash-action-btn" style="display:block;text-align:center">📍 Browse Clinics</a>
+        <a href="/clinics" class="dash-action-btn" style="display:block;text-align:center"><i class="ti ti-map-pin" style="color:var(--coral)"></i> Browse Clinics</a>
       </div>
     </div>
   </div>
