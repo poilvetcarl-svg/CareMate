@@ -1,0 +1,27 @@
+{
+  "packageId": "me.mycaremate.app",
+  "host": "mycaremate.me",
+  "name": "CareMate",
+  "launcherName": "CareMate",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#FF6B6B",
+  "themeColorDark": "#1A0A00",
+  "navigationColor": "#FF6B6B",
+  "navigationColorDark": "#1A0A00",
+  "backgroundColor": "#FFF6F2",
+  "enableNotifications": false,
+  "startUrl": "/?source=twa",
+  "iconUrl": "https://mycaremate.me/static/img/icon-512.png",
+  "maskableIconUrl": "https://mycaremate.me/static/img/icon-maskable-512.png",
+  "webManifestUrl": "https://mycaremate.me/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "minSdkVersion": 21,
+  "shortcuts": [],
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "caremate"
+  }
+}

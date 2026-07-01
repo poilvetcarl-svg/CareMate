@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traction metrics, CareMate</title>
+  <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
+  <style>
+    :root{--coral:#FF6B6B;--orange:#FF8E53;--ink:#1A0A00;--muted:#8a7a6e;--border:#F0E4DD;--green:#2ED573}
+    *{margin:0;box-sizing:border-box;font-family:'DM Sans','Helvetica Neue',Arial,sans-serif}
+    body{background:#FFF8F4;color:var(--ink);padding:40px 20px}
+    .wrap{max-width:900px;margin:0 auto}
+    h1{font-size:24px;font-weight:900}
+    .sub{font-size:14px;color:var(--muted);margin:6px 0 26px}
+    h2{font-size:15px;font-weight:800;margin:30px 0 14px}
+    .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+    .kpi{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+    .kpi b{display:block;font-size:26px;font-weight:900;color:var(--coral);line-height:1.1}
+    .kpi span{font-size:11.5px;color:var(--muted);font-weight:700}
+    .kpi .wow{font-size:11px;font-weight:800;margin-top:3px}
+    .up{color:#1b9e54}.down{color:#E5484D}
+    .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 22px}
+    .bars{display:flex;align-items:flex-end;gap:12px;height:150px;padding-top:10px}
+    .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%}
+    .bar{width:100%;max-width:46px;background:linear-gradient(180deg,var(--coral),var(--orange));border-radius:7px 7px 0 0;min-height:3px}
+    .bar-n{font-size:13px;font-weight:800}
+    .bar-l{font-size:10.5px;color:var(--muted);font-weight:600}
+    .funnel-row{display:flex;align-items:center;gap:14px;margin-bottom:11px}
+    .funnel-label{width:210px;font-size:13px;font-weight:600;flex-shrink:0}
+    .funnel-track{flex:1;background:#FBEDE6;border-radius:8px;height:30px;position:relative;overflow:hidden}
+    .funnel-fill{height:100%;background:linear-gradient(90deg,var(--coral),var(--orange));border-radius:8px;min-width:2px}
+    .funnel-val{position:absolute;right:10px;top:0;line-height:30px;font-size:12.5px;font-weight:800;color:var(--ink)}
+    table{width:100%;border-collapse:collapse}
+    th,td{text-align:left;padding:11px 14px;font-size:13.5px;border-bottom:1px solid var(--border)}
+    th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800}
+    td.num{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+    tr:last-child td{border-bottom:none}
+    .note{font-size:12px;color:var(--muted);margin-top:10px}
+    @media(max-width:680px){.kpis{grid-template-columns:repeat(2,1fr)}.funnel-label{width:130px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Traction metrics</h1>
+    <div class="sub">The numbers investors look at: acquisition, activation, engagement and retention.</div>
+
+    <div class="kpis">
+      <div class="kpi"><b>{{ total_users }}</b><span>Total users</span></div>
+      <div class="kpi"><b>{{ dau }}</b><span>Active today</span></div>
+      <div class="kpi"><b>{{ wau }}</b><span>Weekly active</span></div>
+      <div class="kpi"><b>{{ mau }}</b><span>Monthly active</span></div>
+      <div class="kpi"><b>{{ signups_7 }}</b><span>Signups (7d)</span>
+        {% if wow is not none %}<div class="wow {{ 'up' if wow >= 0 else 'down' }}">{{ '+' if wow >= 0 else '' }}{{ wow }}% WoW</div>{% endif %}
+      </div>
+    </div>
+
+    <h2>Weekly signups</h2>
+    <div class="card">
+      <div class="bars">
+        {% for w in weekly %}
+        <div class="bar-col">
+          <div class="bar-n">{{ w.count }}</div>
+          <div class="bar" style="height:{{ (w.count / max_week * 100)|int }}%"></div>
+          <div class="bar-l">{{ w.label }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <h2>Activation funnel</h2>
+    <div class="card">
+      {% for f in funnel %}
+      <div class="funnel-row">
+        <div class="funnel-label">{{ f.label }}</div>
+        <div class="funnel-track">
+          <div class="funnel-fill" style="width:{{ f.pct }}%"></div>
+          <div class="funnel-val">{{ f.count }} ({{ f.pct }}%)</div>
+        </div>
+      </div>
+      {% endfor %}
+      <div class="note">Percentages are of all signed-up users. The drop between steps is where to focus.</div>
+    </div>
+
+    <h2>Engagement &amp; retention</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th>Signup week</th><th style="text-align:right">New users</th><th style="text-align:right">Came back</th><th style="text-align:right">Retention</th></tr></thead>
+        <tbody>
+          {% for c in cohorts %}
+          <tr><td>Week of {{ c.label }}</td><td class="num">{{ c.size }}</td><td class="num">{{ c.returned }}</td><td class="num">{{ c.pct }}%</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="note">Retention = share of that week's new users who returned at least a day after signing up. Also: {{ checkins_total }} wellbeing check-ins logged, {{ checkin_users_7 }} users checked in this week.</div>
+    </div>
+  </div>
+</body>
+</html>

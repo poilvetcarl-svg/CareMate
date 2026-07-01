@@ -137,6 +137,15 @@ class TavusSession(db.Model):
     created_at       = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+# ── EVENT (product analytics: signup, activation, engagement, for traction) ───
+class Event(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    name       = db.Column(db.String(60), index=True)   # signup | login | assessment_completed | consultation_started | checkin
+    user_id    = db.Column(db.Integer, index=True)       # nullable (anonymous ok)
+    meta       = db.Column(db.String(300))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+
 # ── OUTBOUND LINK CLICK (partner referral tracking, for proving click-through) ─
 class LinkClick(db.Model):
     id         = db.Column(db.Integer, primary_key=True)

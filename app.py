@@ -90,7 +90,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Recycle pooled connections so serverless cold starts don't reuse dead sockets.
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 280}
 
-from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, seed_clinics
+from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, Event, seed_clinics
 db.init_app(app)
 
 from flask_mail import Mail, Message as MailMessage
@@ -932,6 +932,26 @@ def pwa_offline():
     return render_template("offline.html")
 
 
+@app.route("/.well-known/assetlinks.json")
+def assetlinks():
+    """Digital Asset Links, verifies the Play Store (TWA) app owns this domain so it
+    opens without a browser URL bar. Set ANDROID_CERT_SHA256 (and optionally
+    ANDROID_PACKAGE) in the environment after you build the Android app."""
+    fp = os.environ.get("ANDROID_CERT_SHA256", "").strip()
+    pkg = os.environ.get("ANDROID_PACKAGE", "me.mycaremate.app")
+    data = []
+    if fp:
+        data = [{
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+                "namespace": "android_app",
+                "package_name": pkg,
+                "sha256_cert_fingerprints": [f.strip() for f in fp.split(",") if f.strip()],
+            },
+        }]
+    return jsonify(data)
+
+
 @app.route("/health")
 def health():
     """Liveness/readiness probe for load balancers and uptime monitors."""
@@ -965,6 +985,7 @@ def login():
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
             login_user(user)
+            log_event("login", user.id)
             next_page = request.args.get("next")
             return redirect(next_page or url_for("dashboard"))
         flash("Invalid email or password.", "error")
@@ -1157,7 +1178,8 @@ def register():
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        flash("Welcome to CareMate! 🎉", "success")
+        log_event("signup", user.id)
+        flash("Welcome to CareMate!", "success")
         return redirect(url_for("onboarding"))
 
     return render_template("auth.html", mode="register", page_title="Create Account")
@@ -1787,6 +1809,17 @@ def _checkin_streak(user_id):
     return streak
 
 
+def log_event(name, user_id=None, meta=None):
+    """Record a product-analytics event. Best-effort, never breaks the request."""
+    try:
+        db.session.add(Event(name=str(name)[:60], user_id=user_id,
+                             meta=(str(meta)[:300] if meta else None)))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"[log_event] {e}")
+
+
 @app.route("/api/checkin", methods=["POST"])
 @login_required
 def daily_checkin():
@@ -1805,6 +1838,7 @@ def daily_checkin():
     row.mind = mind
     row.note = (data.get("note") or "")[:280]
     db.session.commit()
+    log_event("checkin", current_user.id)
     return jsonify({"ok": True, "streak": _checkin_streak(current_user.id)})
 
 
@@ -1954,6 +1988,78 @@ def admin_clicks():
     return render_template("admin_clicks.html", rows=rows,
                            total_all=sum(totals.values()),
                            total_last30=sum(last30.values()))
+
+
+@app.route("/admin/metrics")
+def admin_metrics():
+    """Investor-grade traction dashboard: acquisition, activation, engagement, retention."""
+    if request.args.get("key") != os.environ.get("ADMIN_KEY", "caremate-admin"):
+        return "Forbidden", 403
+    now = datetime.utcnow()
+    today = date.today()
+
+    def active_users(since_dt):
+        ids = set()
+        for model, col in [(Event, Event.created_at), (Assessment, Assessment.created_at),
+                           (TavusSession, TavusSession.created_at), (LinkClick, LinkClick.created_at)]:
+            ids |= {r[0] for r in db.session.query(model.user_id)
+                    .filter(col >= since_dt, model.user_id.isnot(None)).distinct()}
+        ids |= {r[0] for r in db.session.query(DailyCheckin.user_id)
+                .filter(DailyCheckin.day >= since_dt.date()).distinct()}
+        ids.discard(None)
+        return ids
+
+    total_users = User.query.count()
+    wau = len(active_users(now - timedelta(days=7)))
+    mau = len(active_users(now - timedelta(days=30)))
+    dau = len(active_users(datetime.combine(today, datetime.min.time())))
+
+    week_ago, two_weeks = now - timedelta(days=7), now - timedelta(days=14)
+    signups_7 = User.query.filter(User.created_at >= week_ago).count()
+    signups_prev7 = User.query.filter(User.created_at >= two_weeks, User.created_at < week_ago).count()
+    wow = round((signups_7 - signups_prev7) / signups_prev7 * 100) if signups_prev7 else None
+
+    weekly = []
+    for i in range(7, -1, -1):
+        start, end = now - timedelta(days=(i + 1) * 7), now - timedelta(days=i * 7)
+        weekly.append({"label": end.strftime("%d %b"),
+                       "count": User.query.filter(User.created_at >= start, User.created_at < end).count()})
+    max_week = max([w["count"] for w in weekly] + [1])
+
+    def pct(n):
+        return round(n / total_users * 100) if total_users else 0
+    ua = db.session.query(Assessment.user_id).distinct().count()
+    uc = db.session.query(TavusSession.user_id).distinct().count()
+    ucl = db.session.query(LinkClick.user_id).filter(LinkClick.user_id.isnot(None)).distinct().count()
+    funnel = [
+        {"label": "Signed up", "count": total_users, "pct": 100},
+        {"label": "Completed an assessment", "count": ua, "pct": pct(ua)},
+        {"label": "Started a consultation", "count": uc, "pct": pct(uc)},
+        {"label": "Clicked through to a clinic", "count": ucl, "pct": pct(ucl)},
+    ]
+
+    checkins_total = DailyCheckin.query.count()
+    checkin_users_7 = db.session.query(DailyCheckin.user_id).filter(
+        DailyCheckin.day >= (today - timedelta(days=7))).distinct().count()
+
+    cohorts = []
+    for i in range(5, -1, -1):
+        start, end = now - timedelta(days=(i + 1) * 7), now - timedelta(days=i * 7)
+        cohort = User.query.filter(User.created_at >= start, User.created_at < end).all()
+        returned = 0
+        for u in cohort:
+            after = u.created_at + timedelta(days=1)
+            if (Event.query.filter(Event.user_id == u.id, Event.created_at >= after).first()
+                    or Assessment.query.filter(Assessment.user_id == u.id, Assessment.created_at >= after).first()
+                    or DailyCheckin.query.filter(DailyCheckin.user_id == u.id,
+                                                 DailyCheckin.day >= (u.created_at.date() + timedelta(days=1))).first()):
+                returned += 1
+        cohorts.append({"label": end.strftime("%d %b"), "size": len(cohort), "returned": returned,
+                        "pct": round(returned / len(cohort) * 100) if cohort else 0})
+
+    return render_template("admin_metrics.html", total_users=total_users, wau=wau, mau=mau, dau=dau,
+                           signups_7=signups_7, wow=wow, weekly=weekly, max_week=max_week, funnel=funnel,
+                           checkins_total=checkins_total, checkin_users_7=checkin_users_7, cohorts=cohorts)
 
 
 @app.route("/clinics/book", methods=["POST"])
@@ -2210,6 +2316,7 @@ Write a personal, warm 3-4 sentence message directly to this patient, like a doc
             )
             db.session.add(asmt)
             db.session.commit()
+            log_event("assessment_completed", current_user.id, meta=risk.get("level"))
         except Exception as e:
             print(f"[Assessment save] {e}")
 
@@ -2660,6 +2767,7 @@ def tavus_create_conversation():
                         doctor_specialty=doctor.get("specialty", "")[:160],
                     ))
                     db.session.commit()
+                    log_event("consultation_started", current_user.id, meta=doctor.get("name"))
             except Exception as e:
                 db.session.rollback()
                 print(f"[Tavus] Could not store session mapping: {e}")
