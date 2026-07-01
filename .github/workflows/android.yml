@@ -45,7 +45,7 @@ jobs:
       - name: Build .aab
         working-directory: android
         run: |
-          bubblewrap build --skipPwaValidation \
+          yes | bubblewrap build --skipPwaValidation \
             --keystorePassword="$KS_PASSWORD" \
             --signingKeyPassword="$KEY_PASSWORD"
       - name: Print signing SHA-256
