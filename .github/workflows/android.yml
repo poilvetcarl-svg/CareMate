@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,6 +26,8 @@ jobs:
           cat > "$HOME/.bubblewrap/config.json" <<JSON
           { "jdkPath": "${JAVA_HOME}", "androidSdkPath": "${ANDROID_SDK_ROOT}" }
           JSON
+      - name: Accept Android SDK licenses up front
+        run: yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null 2>&1 || true
       - name: Prepare signing keystore
         working-directory: android
         env:
