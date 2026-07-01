@@ -116,8 +116,8 @@
       {% endfor %}
     </div>
     <div class="clinic-actions">
-      <a class="btn-book" href="{{ clinic.website }}" target="_blank" rel="noopener">Book on {{ clinic.network }} →</a>
-      <a class="btn-directions" href="https://wa.me/{{ clinic.phone | replace('+','') }}" target="_blank" rel="noopener">WhatsApp</a>
+      <a class="btn-book" href="/go/clinic/{{ clinic.id }}/book" target="_blank" rel="noopener">Book on {{ clinic.network }} →</a>
+      <a class="btn-directions" href="/go/clinic/{{ clinic.id }}/whatsapp" target="_blank" rel="noopener">WhatsApp</a>
     </div>
 
     {% else %}
@@ -144,7 +144,7 @@
       <a href="/login" class="btn-book">Sign in to Book</a>
       {% endif %}
       {% if clinic.website %}
-      <a class="btn-directions" href="{{ clinic.website }}" target="_blank" rel="noopener">Website</a>
+      <a class="btn-directions" href="/go/clinic/{{ clinic.id }}/book" target="_blank" rel="noopener">Website</a>
       {% endif %}
       <a class="btn-directions" href="https://www.google.com/maps/search/?api=1&query={{ clinic.latitude }},{{ clinic.longitude }}" target="_blank" rel="noopener">Map</a>
     </div>
@@ -317,5 +317,6 @@ function requestLocation() {
   }, { timeout: 10000 });
 }
 </script>
+{% include "_footer.html" %}
 </body>
 </html>

@@ -137,6 +137,18 @@ class TavusSession(db.Model):
     created_at       = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+# ── OUTBOUND LINK CLICK (partner referral tracking, for proving click-through) ─
+class LinkClick(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    partner    = db.Column(db.String(80), index=True)    # network / partner name
+    clinic_id  = db.Column(db.Integer)                    # nullable
+    kind       = db.Column(db.String(20))                 # book | whatsapp | partner
+    dest       = db.Column(db.String(300))
+    user_id    = db.Column(db.Integer)                    # nullable (anonymous ok)
+    referrer   = db.Column(db.String(300))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+
 # ── WEARABLE / SMARTWATCH CONNECTION (demo: simulated metrics) ────────────────
 class WearableDevice(db.Model):
     id           = db.Column(db.Integer, primary_key=True)

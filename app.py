@@ -90,7 +90,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Recycle pooled connections so serverless cold starts don't reuse dead sockets.
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 280}
 
-from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, seed_clinics
+from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, seed_clinics
 db.init_app(app)
 
 from flask_mail import Mail, Message as MailMessage
@@ -1849,6 +1849,53 @@ def clinics():
         vaccines=VACCINE_DATA["vaccines"],
         booking_confirmed=booking_confirmed
     )
+
+
+@app.route("/go/clinic/<int:clinic_id>/<kind>")
+def go_clinic(clinic_id, kind):
+    """Log an outbound click to a partner clinic, then redirect. Lets us prove
+    click-through volume to partners without any third-party tracker."""
+    clinic = Clinic.query.get(clinic_id)
+    if not clinic:
+        return redirect("/clinics")
+    if kind == "whatsapp":
+        phone = (clinic.phone or "").replace("+", "").replace(" ", "")
+        dest = ("https://wa.me/" + phone) if phone else "/clinics"
+    else:
+        kind = "book"
+        dest = clinic.website or "/clinics"
+    try:
+        db.session.add(LinkClick(
+            partner=(clinic.network or clinic.name or "Unknown")[:80],
+            clinic_id=clinic.id, kind=kind, dest=str(dest)[:300],
+            user_id=current_user.id if current_user.is_authenticated else None,
+            referrer=(request.referrer or "")[:300],
+        ))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"[go_clinic] log failed: {e}")
+    if not str(dest).startswith("http"):
+        return redirect("/clinics")
+    return redirect(dest, code=302)
+
+
+@app.route("/admin/clicks")
+def admin_clicks():
+    """Per-partner click-through report (proof of referral volume for partners)."""
+    if request.args.get("key") != os.environ.get("ADMIN_KEY", "caremate-admin"):
+        return "Forbidden", 403
+    from sqlalchemy import func
+    since = datetime.utcnow() - timedelta(days=30)
+    totals = dict(db.session.query(LinkClick.partner, func.count(LinkClick.id))
+                  .group_by(LinkClick.partner).all())
+    last30 = dict(db.session.query(LinkClick.partner, func.count(LinkClick.id))
+                  .filter(LinkClick.created_at >= since).group_by(LinkClick.partner).all())
+    partners = sorted(totals.keys(), key=lambda p: totals[p], reverse=True)
+    rows = [{"partner": p, "total": totals[p], "last30": last30.get(p, 0)} for p in partners]
+    return render_template("admin_clicks.html", rows=rows,
+                           total_all=sum(totals.values()),
+                           total_last30=sum(last30.values()))
 
 
 @app.route("/clinics/book", methods=["POST"])

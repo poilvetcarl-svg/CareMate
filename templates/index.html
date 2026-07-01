@@ -58,14 +58,18 @@
 
   <!-- LEFT: Text -->
   <div class="hero-text">
+    <div class="hero-badge" style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,107,107,0.1);color:var(--coral);font-weight:700;font-size:13px;padding:7px 15px;border-radius:20px;margin-bottom:18px">
+      <i class="ti ti-map-pin"></i> Preventive care, made for Indonesia
+    </div>
     <h1 class="hero-title">
       Your Family's<br/>
       <span class="gradient-text">Prevention Plan</span><br/>
       in 60 Seconds
     </h1>
     <p class="hero-subtitle">
-      Get a personalized prevention plan for vaccines, screenings, and health checks
-      based on your age, health profile, lifestyle, and family risks.
+      Get a personalized prevention plan for vaccines, screenings, and health checks,
+      built on Indonesian guidelines from Kemenkes, PAPDI and IDAI, tailored to your
+      age, health profile, lifestyle and family risks.
     </p>
     <div class="hero-actions">
       <button class="btn-primary" onclick="scrollToAssessment()">
@@ -528,7 +532,7 @@
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="Europe" />
-              <div class="region-content"><span>Europe</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>Europe</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="North America" />
@@ -627,41 +631,7 @@
 </main>
 
 <!-- ===== FOOTER ===== -->
-<footer class="footer">
-  <div class="footer-content">
-    <div class="footer-brand">
-      <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span class="logo-accent">Mate</span></a>
-      <p>AI-powered preventive health for everyone.</p>
-    </div>
-    <div class="footer-links">
-      <div class="footer-col">
-        <h5>Platform</h5>
-        <a href="#assessment">Free Assessment</a>
-        <a href="/clinics"><i class="ti ti-map-pin" style="color:var(--coral)"></i> Find a Clinic</a>
-        <a href="/teleconsultation">Teleconsultation</a>
-        <a href="#how-it-works">How It Works</a>
-      </div>
-      <div class="footer-col">
-        <h5>My Account</h5>
-        <a href="/register">Create Account</a>
-        <a href="/login">Sign In</a>
-        <a href="/dashboard">My Dashboard</a>
-        <a href="/dashboard/history">Vaccination History</a>
-      </div>
-      <div class="footer-col">
-        <h5>For Business</h5>
-        <a href="/corporate/register"><i class="ti ti-building" style="color:var(--coral)"></i> Corporate Portal</a>
-        <a href="/corporate/login">HR Dashboard</a>
-        <a href="/references">PAPDI 2025 Sources</a>
-        <a href="/references">CDC / WHO Guidelines</a>
-      </div>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>CareMate is for informational purposes only and does not replace professional medical advice.</p>
-    <p>© 2025 CareMate. All rights reserved.</p>
-  </div>
-</footer>
+{% include "_footer.html" %}
 
 <!-- ===== CHATBOT ===== -->
 <div class="chatbot-widget" id="chatbotWidget">
