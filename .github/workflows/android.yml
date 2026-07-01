@@ -45,7 +45,6 @@ jobs:
       - name: Build .aab
         working-directory: android
         run: |
-          bubblewrap init --manifest ./twa-manifest.json --skipPwaValidation
           bubblewrap build --skipPwaValidation \
             --keystorePassword="$KS_PASSWORD" \
             --signingKeyPassword="$KEY_PASSWORD"
