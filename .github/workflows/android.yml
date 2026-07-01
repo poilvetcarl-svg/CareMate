@@ -8,28 +8,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
-      - name: Restore signing keystore (if provided)
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        if: env.ANDROID_KEYSTORE_BASE64 != ''
-        run: echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/android.keystore
-      - name: Build .aab
+      - name: Point Bubblewrap at the JDK and Android SDK
+        run: |
+          mkdir -p "$HOME/.bubblewrap"
+          cat > "$HOME/.bubblewrap/config.json" <<JSON
+          { "jdkPath": "${JAVA_HOME}", "androidSdkPath": "${ANDROID_SDK_ROOT}" }
+          JSON
+      - name: Prepare signing keystore
         working-directory: android
         env:
-          KS_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          bubblewrap init --manifest ./twa-manifest.json --skipPwaValidation || true
-          bubblewrap build --skipPwaValidation ${KS_PASSWORD:+--keystorePassword="$KS_PASSWORD"} ${KEY_PASSWORD:+--signingKeyPassword="$KEY_PASSWORD"}
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > android.keystore
+            echo "KS_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+          else
+            keytool -genkeypair -v -keystore android.keystore -alias caremate \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass caremate -keypass caremate \
+              -dname "CN=CareMate, OU=Mobile, O=CareMate, L=Jakarta, C=ID"
+            echo "KS_PASSWORD=caremate" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=caremate" >> "$GITHUB_ENV"
+          fi
+      - name: Build .aab
+        working-directory: android
+        run: |
+          bubblewrap init --manifest ./twa-manifest.json --skipPwaValidation
+          bubblewrap build --skipPwaValidation \
+            --keystorePassword="$KS_PASSWORD" \
+            --signingKeyPassword="$KEY_PASSWORD"
+      - name: Print signing SHA-256
+        working-directory: android
+        continue-on-error: true
+        run: keytool -list -v -keystore android.keystore -alias caremate -storepass "$KS_PASSWORD" | grep -A1 "SHA256:" || true
       - uses: actions/upload-artifact@v4
         with:
           name: caremate-aab
