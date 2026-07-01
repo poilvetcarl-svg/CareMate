@@ -20,7 +20,7 @@ From this `android/` folder:
 bubblewrap init --manifest https://mycaremate.me/manifest.webmanifest
 ```
 When prompted:
-- **Package name / Application ID**: `me.mycaremate.app`
+- **Package name / Application ID**: `com.mycaremate.app`
 - **Launcher name**: `CareMate`
 - Accept the colors/icons it pulls from the web manifest (coral `#FF6B6B`)
 - Let it create a **signing key** (or point it at `android.keystore`, alias `caremate`)
@@ -42,7 +42,7 @@ Copy the `SHA256:` value (format `AB:CD:...`).
 The site already serves `/.well-known/assetlinks.json` and reads the fingerprint from
 an env var. In **Vercel → CareMate project → Settings → Environment Variables**, add:
 - `ANDROID_CERT_SHA256` = the SHA-256 fingerprint from step 3
-- `ANDROID_PACKAGE` = `me.mycaremate.app`  (only if you changed the default)
+- `ANDROID_PACKAGE` = `com.mycaremate.app`  (only if you changed the default)
 
 Redeploy (or it applies on next deploy). Confirm it works:
 ```bash

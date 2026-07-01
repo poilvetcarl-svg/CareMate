@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CareMate — Showcase Reel</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
+<style>
+  :root{
+    --coral:#FF6B6B; --coral-dark:#E55555; --orange:#FF8E53; --yellow:#FFD93D;
+    --mint:#63E6BE; --sky:#74C0FC;
+    --bg:#FFF8F5; --bg2:#FFF0EB; --card:#FFFFFF;
+    --ink:#1A0A00; --ink2:#6B4423; --muted:#A07850; --border:rgba(255,107,107,0.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
+  html,body{height:100%;background:#1A0A00;overflow:hidden}
+  /* 16:9 stage, centered, scales to viewport */
+  .stage{
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 30% 20%, #fff2ec, #ffe6db 60%, #ffd9cb);
+  }
+  .frame{
+    position:relative; width:100vw; height:56.25vw; max-height:100vh; max-width:177.78vh;
+    background:radial-gradient(circle at 70% 0%, #FFFFFF 0%, #FFF8F5 45%, #FFF0EB 100%);
+    overflow:hidden;
+  }
+  /* floating blobs */
+  .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;animation:float 9s ease-in-out infinite}
+  .blob.b1{width:38%;height:60%;left:-10%;top:-15%;background:rgba(255,142,83,.45)}
+  .blob.b2{width:34%;height:55%;right:-8%;bottom:-15%;background:rgba(255,107,107,.4);animation-delay:-3s}
+  .blob.b3{width:24%;height:40%;left:40%;top:55%;background:rgba(255,217,61,.35);animation-delay:-6s}
+  @keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(3%,4%)}}
+
+  .scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:5% 8%;opacity:0;transform:translateY(20px);pointer-events:none;text-align:center}
+  .scene.active{opacity:1;transform:translateY(0);pointer-events:auto;transition:opacity .7s ease,transform .7s ease}
+
+  .eyebrow{font-size:1.15vw;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--coral);margin-bottom:1.4vw}
+  h1{font-size:5.2vw;font-weight:900;line-height:1.02;color:var(--ink);letter-spacing:-.02em}
+  h2{font-size:3.6vw;font-weight:800;line-height:1.08;color:var(--ink);letter-spacing:-.02em}
+  .grad{background:linear-gradient(100deg,var(--coral),var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:1.7vw;font-weight:500;color:var(--ink2);margin-top:1.8vw;max-width:62ch;line-height:1.5}
+  .big-stat{font-size:9vw;font-weight:900;line-height:1;letter-spacing:-.03em}
+  .footnote{position:absolute;bottom:.7vw;left:0;right:0;text-align:center;font-size:.68vw;color:var(--muted);font-weight:500;padding:0 10vw;line-height:1.3;opacity:.75}
+
+  .logo{display:flex;align-items:center;gap:1.2vw;font-size:4.4vw;font-weight:900;color:var(--ink)}
+  .logo .mark{height:5vw;width:auto;display:block}
+  .tagline{font-size:1.9vw;color:var(--ink2);font-weight:600;margin-top:1.6vw}
+
+  /* device mock */
+  .device{width:28vw;background:var(--card);border:1px solid var(--border);border-radius:1.4vw;
+    box-shadow:0 3vw 6vw rgba(255,107,107,.18);overflow:hidden;text-align:left}
+  .device-bar{height:2.8vw;background:var(--bg2);display:flex;align-items:center;gap:.5vw;padding:0 1.2vw}
+  .device-bar i{width:.85vw;height:.85vw;border-radius:50%}
+  .db-r{background:#ff5f57}.db-y{background:#febc2e}.db-g{background:#28c840}
+  .device-body{padding:1.6vw 1.8vw}
+
+  .row{display:flex;align-items:center;gap:1.6vw}
+  .col2{display:grid;grid-template-columns:repeat(2,1fr);gap:1.6vw;width:100%}
+  .col3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4vw;width:88%}
+  .feat6{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1vw;width:78vw}
+  .feat6 .card{padding:1.4vw 1.3vw;text-align:center}
+  .feat6 .card .ic{display:block;font-size:2.4vw;color:var(--coral);margin:0 auto .7vw;line-height:1}
+  .feat6 .card h3{font-size:1.2vw;margin-bottom:.35vw}
+  .feat6 .card p{font-size:.92vw;line-height:1.4}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:1.2vw;padding:1.8vw;text-align:left;
+    box-shadow:0 1vw 2.4vw rgba(255,107,107,.1)}
+  .card .ic{font-size:2.6vw;margin-bottom:.8vw;display:block}
+  .card h3{font-size:1.5vw;font-weight:800;color:var(--ink);margin-bottom:.5vw}
+  .card p{font-size:1.15vw;color:var(--muted);line-height:1.45;font-weight:500}
+
+  .ring{position:relative;width:14vw;height:14vw;flex:0 0 auto}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .score{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .ring .score .num{display:flex;align-items:baseline;line-height:1}
+  .ring .score .num b{font-size:3.4vw;font-weight:900;color:var(--ink)}
+  .ring .score .num em{font-size:1.4vw;font-weight:800;color:var(--muted);font-style:normal}
+  .score-label{font-size:1.05vw;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.12em;margin-top:1.2vw}
+  .risk-badge{display:inline-flex;align-items:center;gap:.5vw;font-size:.95vw;font-weight:800;
+    padding:.55vw 1.1vw;border-radius:2vw;background:rgba(255,142,83,.16);color:#c2410c;margin-top:.9vw}
+  .risk-badge::before{content:"";width:.7vw;height:.7vw;border-radius:50%;background:#f59e0b}
+
+  .pill{display:inline-flex;align-items:center;gap:.5vw;font-size:1.05vw;font-weight:700;padding:.5vw 1.1vw;border-radius:2vw;margin:.4vw}
+  .pill.high{background:rgba(239,68,68,.12);color:#dc2626}
+  .pill.ok{background:rgba(99,230,190,.18);color:#0f9b73}
+  .pill.vac{background:rgba(255,142,83,.16);color:#c2410c}
+
+  .labrow{display:flex;align-items:center;justify-content:space-between;padding:.85vw 0;border-bottom:1px solid var(--border)}
+  .labrow .nm{font-size:1.2vw;font-weight:700;color:var(--ink)}
+  .labrow .vl{font-size:1.1vw;color:var(--muted);font-weight:600}
+
+  /* recommendations panel mock */
+  .reco{width:58vw;background:var(--card);border:1px solid var(--border);border-radius:1.4vw;
+    box-shadow:0 3vw 6vw rgba(255,107,107,.16);overflow:hidden;text-align:left}
+  .reco-head{display:flex;align-items:center;gap:.9vw;padding:1.2vw 1.6vw;background:rgba(255,142,83,.1);border-bottom:1px solid var(--border)}
+  .reco-head .flag{font-size:1.35vw;font-weight:800;color:var(--ink)}
+  .reco-head .msg{font-size:1.05vw;color:var(--ink2);font-weight:600}
+  .reco-cols{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .reco-col{padding:1.4vw 1.6vw}
+  .reco-col + .reco-col{border-left:1px solid var(--border)}
+  .reco-col .sec{font-size:.95vw;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:1vw}
+  .reco-item{margin-bottom:1vw}
+  .reco-item .t{font-size:1.15vw;font-weight:700;color:var(--ink)}
+  .reco-item .r{font-size:.95vw;color:var(--muted);font-weight:500;line-height:1.35}
+  .reco-item:last-child{margin-bottom:0}
+
+  .doc{width:30vw;height:30vw;border-radius:1.6vw;overflow:hidden;position:relative;box-shadow:0 3vw 6vw rgba(255,107,107,.22);background:#111}
+  .doc video,.doc img{width:100%;height:100%;object-fit:cover}
+  .doc .live{position:absolute;top:1.2vw;left:1.2vw;background:#ef4444;color:#fff;font-size:1vw;font-weight:800;padding:.4vw 1vw;border-radius:1.4vw;display:flex;align-items:center;gap:.5vw}
+  .doc .live::before{content:"";width:.8vw;height:.8vw;border-radius:50%;background:#fff;animation:pulse 1.2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .doc .cap{position:absolute;bottom:0;left:0;right:0;padding:2.2vw 1.4vw 1.2vw;background:linear-gradient(transparent,rgba(0,0,0,.75));color:#fff}
+  .doc .cap b{font-size:1.5vw;font-weight:800;display:block}
+  .doc .cap span{font-size:1.1vw;opacity:.8}
+
+  .chat{width:26vw;text-align:left}
+  .bubble{background:var(--card);border:1px solid var(--border);border-radius:1.2vw;padding:1.2vw 1.5vw;font-size:1.25vw;
+    color:var(--ink);font-weight:500;margin-bottom:1vw;box-shadow:0 .8vw 2vw rgba(255,107,107,.1);line-height:1.4}
+  .bubble.me{background:linear-gradient(135deg,var(--coral),var(--orange));color:#fff;border:none;margin-left:6vw}
+
+  .cta-url{display:inline-flex;align-items:center;gap:.8vw;font-size:2.4vw;font-weight:900;color:#fff;
+    background:linear-gradient(135deg,var(--coral),var(--orange));padding:1.2vw 2.6vw;border-radius:1.4vw;margin-top:2.4vw;
+    box-shadow:0 1.6vw 3vw rgba(255,107,107,.35)}
+
+  /* progress dots */
+  .progress{position:absolute;bottom:2.4vw;left:50%;transform:translateX(-50%);display:flex;gap:.8vw;z-index:20}
+  .progress .d{width:.9vw;height:.9vw;border-radius:50%;background:rgba(255,107,107,.25);transition:all .4s}
+  .progress .d.on{background:var(--coral);transform:scale(1.35)}
+
+  .brandmark{position:absolute;top:2.4vw;left:3vw;display:flex;align-items:center;gap:.7vw;font-size:1.8vw;font-weight:900;color:var(--ink);z-index:20}
+  .brandmark .mark{height:2.4vw;width:auto;display:block}
+  .brandmark .ac{color:var(--coral)}
+
+  .fade-up{opacity:0;transform:translateY(18px)}
+  .scene.active .s1{animation:up .6s .15s forwards}
+  .scene.active .s2{animation:up .6s .35s forwards}
+  .scene.active .s3{animation:up .6s .55s forwards}
+  .scene.active .s4{animation:up .6s .75s forwards}
+  @keyframes up{to{opacity:1;transform:translateY(0)}}
+
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="frame" id="frame">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+    <div class="brandmark"><img class="mark" src="static/img/logo-icon.png" alt="" /><span>Care<span class="ac">Mate</span></span></div>
+
+    <!-- 1 — PROBLEM / HOOK -->
+    <section class="scene" data-dur="6000">
+      <div class="eyebrow fade-up s1">The problem</div>
+      <div class="big-stat grad fade-up s2">92%</div>
+      <h2 class="fade-up s3" style="margin-top:1vw">of adults are missing <br> recommended prevention care*</h2>
+      <p class="sub fade-up s4">Prevention isn’t broken. The way people navigate it is.</p>
+      <div class="footnote fade-up s4">*Source: Healthy People 2030 (AHS-08), ODPHP — MEPS, AHRQ (2015).</div>
+    </section>
+
+    <!-- 2 — INTRO -->
+    <section class="scene" data-dur="5500">
+      <div class="logo fade-up s1"><img class="mark" src="static/img/logo-icon.png" alt="" /><span>Care<span style="color:var(--coral)">Mate</span></span></div>
+      <h2 class="fade-up s2" style="margin-top:2vw">Your personal <span class="grad">prevention companion</span></h2>
+      <p class="tagline fade-up s3">Know what to prevent, when to act, and where to start.</p>
+    </section>
+
+    <!-- 3 — ASSESSMENT / PREVENTION SCORE -->
+    <section class="scene" data-dur="7000">
+      <div class="eyebrow fade-up s1">Feature 01 · AI Health Assessment</div>
+      <div class="row fade-up s2" style="margin-top:1.5vw">
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <div class="ring">
+            <svg width="100%" height="100%" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,107,107,.15)" stroke-width="12"/>
+              <circle id="scoreArc" cx="60" cy="60" r="52" fill="none" stroke="url(#g)" stroke-width="12" stroke-linecap="round" stroke-dasharray="327" stroke-dashoffset="327"/>
+              <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6B6B"/><stop offset="1" stop-color="#FF8E53"/></linearGradient></defs>
+            </svg>
+            <div class="score"><div class="num"><b id="scoreNum">0</b><em>/100</em></div></div>
+          </div>
+          <div class="score-label">Prevention Score</div>
+          <div class="risk-badge">Moderate risk · action recommended</div>
+        </div>
+        <div style="text-align:left;max-width:34vw">
+          <h2 style="font-size:2.6vw">Build your prevention profile in 60 seconds.</h2>
+          <p class="sub" style="margin-top:1vw;font-size:1.5vw">Answer a few questions about your age, lifestyle, health history, and family risks. CareMate gives you a prevention score and explains what to focus on first..</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 — LAB RESULTS -->
+    <section class="scene" data-dur="7500">
+      <div class="eyebrow fade-up s1">Feature 02 · Smart Lab Analysis</div>
+      <h2 class="fade-up s2" style="margin-top:1vw">Snap your lab report.<br> <span class="grad">Understand it instantly.</span></h2>
+      <div class="device fade-up s3" style="margin-top:1.8vw">
+        <div class="device-bar"><i class="db-r"></i><i class="db-y"></i><i class="db-g"></i></div>
+        <div class="device-body">
+          <div class="labrow"><span class="nm">HbA1c <span style="color:var(--muted)">9.0 %</span></span><span class="pill high">HIGH</span></div>
+          <div class="labrow"><span class="nm">LDL Cholesterol <span style="color:var(--muted)">165</span></span><span class="pill high">HIGH</span></div>
+          <div class="labrow" style="border:none"><span class="nm">Hemoglobin <span style="color:var(--muted)">14.2</span></span><span class="pill ok">IN RANGE</span></div>
+        </div>
+      </div>
+      <p class="sub fade-up s4" style="font-size:1.4vw">CareMate flags abnormal values, explains what they may mean, and shows what to do next.</p>
+    </section>
+
+    <!-- 5 — NEXT STEPS: TESTS + VACCINES -->
+    <section class="scene" data-dur="8500">
+      <div class="eyebrow fade-up s1">Feature 03 · Personalized Action Plan</div>
+      <h2 class="fade-up s2" style="margin-top:1vw">Turn health results into <span class="grad">clear next steps.</span></h2>
+      <div class="reco fade-up s3" style="margin-top:1.6vw">
+        <div class="reco-head">
+          <span class="pill high" style="margin:0">HbA1c · 9.0% · HIGH</span>
+          <span class="msg">Your HbA1c suggests your blood sugar has been running high. <br> here's what to discuss next.</span>
+        </div>
+        <div class="reco-cols">
+          <div class="reco-col">
+            <div class="sec">🧪 Follow-up tests to discuss</div>
+            <div class="reco-item"><div class="t">Oral Glucose Tolerance Test</div><div class="r">Helps assess glucose control and diabetes status.</div></div>
+            <div class="reco-item"><div class="t">Fasting Insulin</div><div class="r">Checks for insulin resistance.</div></div>
+            <div class="reco-item"><div class="t">Kidney screen: eGFR / UACR</div><div class="r">Screens for early kidney impact from high sugar.</div></div>
+          </div>
+          <div class="reco-col">
+            <div class="sec">💉 Vaccines you may need</div>
+            <div class="reco-item"><div class="t">Influenza</div><div class="r">Higher complication risk with diabetes.</div></div>
+            <div class="reco-item"><div class="t">Pneumococcal</div><div class="r">Helps protect against pneumonia risk.</div></div>
+            <div class="reco-item"><div class="t">Hepatitis B</div><div class="r">Recommended for some adults with diabetes.</div></div>
+          </div>
+        </div>
+      </div>
+      <p class="sub fade-up s4" style="font-size:1.35vw;margin-top:1.6vw;max-width:56ch">
+        <b style="color:var(--ink);font-weight:800">No more guessing.</b> CareMate turns scattered health data into a clear prevention plan.
+      </p>
+    </section>
+
+    <!-- 6 — TELECONSULT -->
+    <section class="scene" data-dur="8500">
+      <div class="eyebrow fade-up s1">Feature 04 · Live AI Doctor</div>
+      <h2 class="fade-up s2" style="margin-top:1vw">Talk through your results, <span class="grad">face to face.</span></h2>
+      <div class="row fade-up s3" style="margin-top:2vw;align-items:stretch">
+        <div class="doc">
+          <span class="live">LIVE</span>
+          <video autoplay muted loop playsinline>
+            <source src="https://cdn.replica.tavus.io/39476/8558b349.mp4" type="video/mp4"/>
+          </video>
+          <div class="cap"><b>Dr. Hugo Santoso</b><span>Internal Medicine &amp; Infectious Disease</span></div>
+        </div>
+        <div class="chat" style="display:flex;flex-direction:column;justify-content:center">
+          <div class="bubble">I've reviewed your results and highlighted what needs attention.</div>
+          <div style="align-self:flex-end;background:linear-gradient(135deg,var(--coral),var(--orange));color:#fff;font-weight:800;font-size:1.2vw;padding:1vw 1.6vw;border-radius:1.2vw;margin-bottom:1vw;box-shadow:0 .8vw 2vw rgba(255,107,107,.25)">What's my next step?</div>
+          <div class="bubble">CareMate recommends follow-up tests, prevention actions, and questions to ask your doctor.</div>
+        </div>
+      </div>
+      <p class="sub fade-up s4" style="font-size:1.35vw">From lab results to personalized next steps, in one conversation.</p>
+    </section>
+
+    <!-- 7 — PREVENTION OS -->
+    <section class="scene" data-dur="9000">
+      <h2 class="fade-up s1" style="font-size:3vw">Everything prevention needs, <span class="grad">in one place.</span></h2>
+      <p class="sub fade-up s1" style="font-size:1.35vw;margin-top:.9vw;max-width:70ch">From vaccines and screenings to reminders, bookings, certificates, and family health records.</p>
+      <div class="feat6 fade-up s2" style="margin-top:1.6vw">
+        <div class="card"><i class="ic ti ti-calendar-stats"></i><h3>Family prevention timeline</h3><p>Vaccines, screenings, and health checks organized by age, risk, and due date.</p></div>
+        <div class="card"><i class="ic ti ti-bell"></i><h3>Smart reminders</h3><p>WhatsApp nudges before doses, boosters, lab checks, and follow-up appointments.</p></div>
+        <div class="card"><i class="ic ti ti-map-pin"></i><h3>Clinic booking</h3><p>Find trusted clinics nearby, check availability, and book directly from your plan.</p></div>
+        <div class="card"><i class="ic ti ti-clipboard-heart"></i><h3>Digital health record</h3><p>Store vaccination history, lab results, certificates, and prevention progress in one dashboard.</p></div>
+        <div class="card"><i class="ic ti ti-plane-tilt"></i><h3>Travel &amp; lifestyle alerts</h3><p>Recommendations based on travel plans, health conditions, smoking, obesity, and family risks.</p></div>
+        <div class="card"><i class="ic ti ti-users"></i><h3>Family coverage</h3><p>Manage prevention for children, adults, parents, and grandparents from one account.</p></div>
+      </div>
+      <p class="sub fade-up s4" style="font-size:1.3vw;margin-top:1.4vw;max-width:62ch">
+        CareMate turns prevention from a one-time check into <b style="color:var(--ink);font-weight:800">an everyday health habit.</b>
+      </p>
+    </section>
+
+    <!-- 8 — CLOSE / CTA -->
+    <section class="scene" data-dur="8000">
+      <img class="fade-up s1" src="static/img/logo-full.png" alt="CareMate" style="height:14vw;width:auto" />
+      <h1 class="fade-up s2" style="margin-top:1.6vw;font-size:4.6vw">Prevention <span class="grad">for everyone.</span></h1>
+      <p class="sub fade-up s3">Helping families know what to prevent, when to act, and where to start.</p>
+      <div class="cta-url fade-up s4">Try CareMate now →</div>
+    </section>
+
+    <div class="progress" id="progress"></div>
+  </div>
+</div>
+
+<script>
+  const scenes=[...document.querySelectorAll('.scene')];
+  const prog=document.getElementById('progress');
+  scenes.forEach(()=>{const d=document.createElement('div');d.className='d';prog.appendChild(d);});
+  const dots=[...prog.children];
+  let timer=null;
+
+  function animateScore(){
+    const arc=document.getElementById('scoreArc');
+    const num=document.getElementById('scoreNum');
+    if(!arc)return;
+    const target=62, circ=327, off=circ-(circ*target/100);
+    arc.style.transition='stroke-dashoffset 1.6s cubic-bezier(.2,.8,.2,1)';
+    requestAnimationFrame(()=>{arc.style.strokeDashoffset=off;});
+    let n=0;const step=Math.max(1,Math.round(target/40));
+    const t=setInterval(()=>{n+=step;if(n>=target){n=target;clearInterval(t);}num.textContent=n;},38);
+  }
+
+  function play(i){
+    clearTimeout(timer);
+    scenes.forEach((s,k)=>s.classList.toggle('active',k===i));
+    dots.forEach((d,k)=>d.classList.toggle('on',k===i));
+    if(scenes[i].querySelector('#scoreArc')){
+      document.getElementById('scoreArc').style.strokeDashoffset=327;
+      document.getElementById('scoreNum').textContent='0';
+      setTimeout(animateScore,300);
+    }
+    const dur=parseInt(scenes[i].dataset.dur||'5000',10);
+    timer=setTimeout(()=>play((i+1)%scenes.length),dur);
+  }
+  play(0);
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'){const cur=scenes.findIndex(s=>s.classList.contains('active'));play(Math.min(cur+1,scenes.length-1));}
+    if(e.key==='ArrowLeft'){const cur=scenes.findIndex(s=>s.classList.contains('active'));play(Math.max(cur-1,0));}
+    if(e.key==='r'||e.key==='R')play(0);
+  });
+</script>
+</body>
+</html>

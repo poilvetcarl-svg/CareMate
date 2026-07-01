@@ -938,7 +938,7 @@ def assetlinks():
     opens without a browser URL bar. Set ANDROID_CERT_SHA256 (and optionally
     ANDROID_PACKAGE) in the environment after you build the Android app."""
     fp = os.environ.get("ANDROID_CERT_SHA256", "").strip()
-    pkg = os.environ.get("ANDROID_PACKAGE", "me.mycaremate.app")
+    pkg = os.environ.get("ANDROID_PACKAGE", "com.mycaremate.app")
     data = []
     if fp:
         data = [{
@@ -1579,7 +1579,7 @@ def compute_child_schedule(child):
             day=min(child.date_of_birth.day, 28))
         if (d["key"], d["dose"]) in given:
             status = "done"
-        elif due < today - timedelta(days=30):
+        elif due < today - timedelta(days=14):
             status = "overdue"
         elif due <= today + timedelta(days=30):
             status = "due"

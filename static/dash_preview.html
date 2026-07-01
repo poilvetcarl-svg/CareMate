@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  :root{--coral:#FF6B6B;--orange:#FF8E53;--ink:#1A0A00;--muted:#9a7a5e;--green:#2ED573}
+  *{margin:0;box-sizing:border-box;font-family:'DM Sans',sans-serif}
+  body{background:linear-gradient(135deg,#fff6f2,#ffe9e1);min-height:100vh}
+  /* top bar with logo */
+  .topbar{display:flex;align-items:center;padding:18px 30px;background:#fff;border-bottom:1px solid rgba(255,107,107,.12)}
+  .logo{font-size:21px;font-weight:900;color:var(--ink);letter-spacing:-.5px}
+  .logo span{color:var(--coral)}
+  .wrap{padding:40px 24px 60px;text-align:center}
+  h2{font-size:24px;font-weight:900;color:var(--ink)}
+  .sub{font-size:14px;color:var(--muted);margin:6px 0 0;max-width:520px;margin-left:auto;margin-right:auto}
+  .hero{background:#fff;border:1px solid rgba(255,107,107,.14);border-radius:26px;padding:30px;max-width:340px;margin:30px auto 14px;box-shadow:0 18px 40px -18px rgba(255,107,107,.36)}
+  .hero .nm{font-size:18px;font-weight:900;margin-top:8px}
+  .hero .ds{font-size:12.5px;color:var(--muted);margin-top:4px}
+  .streak{display:inline-flex;align-items:center;gap:6px;background:rgba(46,213,115,.12);color:#1b9e54;font-size:12px;font-weight:800;padding:6px 12px;border-radius:20px;margin-top:12px}
+  .sect{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--coral);margin:46px 0 18px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:840px;margin:0 auto}
+  .card{background:#fff;border:1px solid rgba(255,107,107,.14);border-radius:18px;padding:22px 18px;text-align:left;box-shadow:0 12px 30px -18px rgba(255,107,107,.3)}
+  .card .ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:12px}
+  .card h3{font-size:14.5px;font-weight:850;color:var(--ink);margin-bottom:5px}
+  .card p{font-size:12.5px;color:var(--muted);line-height:1.55}
+  .card .pill{display:inline-block;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:20px;margin-bottom:10px}
+  .cta-btn{display:inline-block;margin-top:12px;font-size:12.5px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--coral),var(--orange));padding:9px 16px;border-radius:10px;text-decoration:none}
+  .cta-ghost{display:inline-block;margin-top:12px;font-size:12.5px;font-weight:800;color:var(--coral);background:rgba(255,107,107,.09);padding:9px 16px;border-radius:10px;text-decoration:none}
+  .row5{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;max-width:920px;margin:0 auto}
+  .opt{background:#fff;border:1px solid rgba(255,107,107,.14);border-radius:18px;padding:16px 8px 12px;box-shadow:0 12px 30px -16px rgba(255,107,107,.3)}
+  .opt .nm{font-size:12.5px;font-weight:800;color:var(--ink);margin-top:2px}
+  svg{overflow:visible}
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  @keyframes sway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+</style></head>
+<body>
+  <!-- TOP BAR: CareMate logo top-left -->
+  <div class="topbar"><div class="logo">Care<span>Mate</span></div></div>
+
+  <div class="wrap">
+    <h2>Meet Tomo, your prevention mate</h2>
+    <div class="sub">Check in each day to keep Tomo fed and glowing; take care of your health each week to make him thrive.</div>
+
+    <!-- HERO -->
+    <div class="hero">
+      <svg width="190" height="190" viewBox="0 0 130 130">
+        <defs>
+          <radialGradient id="b" cx="40%" cy="36%" r="72%"><stop offset="0" stop-color="#FFC4A8"/><stop offset="60%" stop-color="#FF6B6B"/><stop offset="100%" stop-color="#E55555"/></radialGradient>
+          <linearGradient id="r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6B6B"/><stop offset="1" stop-color="#FF8E53"/></linearGradient>
+          <linearGradient id="lf" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#2ED573"/><stop offset="1" stop-color="#63E6BE"/></linearGradient>
+        </defs>
+        <g style="transform-origin:65px 56px;animation:sway 4s ease-in-out infinite">
+          <path d="M65 56 L65 40" stroke="#2ED573" stroke-width="3" stroke-linecap="round"/>
+          <path d="M65 48 C56 46 52 39 53 34 C61 35 66 42 65 48Z" fill="url(#lf)"/>
+          <path d="M65 45 C74 43 78 37 77 32 C69 33 64 40 65 45Z" fill="url(#lf)" opacity=".92"/>
+        </g>
+        <g style="transform-origin:65px 78px;animation:breathe 3.4s ease-in-out infinite">
+          <circle cx="65" cy="78" r="28" fill="url(#b)"/>
+          <ellipse cx="56" cy="70" rx="8" ry="5" fill="#fff" opacity=".4"/>
+          <circle cx="52" cy="80" r="4.5" fill="#fff" opacity=".45"/><circle cx="78" cy="80" r="4.5" fill="#fff" opacity=".45"/>
+          <circle cx="58" cy="76" r="3.6" fill="#1A0A00"/><circle cx="72" cy="76" r="3.6" fill="#1A0A00"/>
+          <path d="M58 85 Q65 91 72 85" fill="none" stroke="#1A0A00" stroke-width="3" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <div class="nm">Tomo</div>
+      <div class="ds">Leaf grows with your streak · glows when you stay well</div>
+      <div class="streak">🔥 4-day streak · Tomo is Thriving</div>
+    </div>
+
+    <!-- KEEP ALIVE -->
+    <div class="sect">How you keep Tomo alive</div>
+    <div class="cards">
+      <div class="card">
+        <div class="ic" style="background:rgba(255,107,107,.1);color:var(--coral)">☀️</div>
+        <div class="pill" style="background:rgba(255,107,107,.1);color:var(--coral)">Every day · 10 sec</div>
+        <h3>Daily check-in</h3>
+        <p>Tell Tomo how your body & mind feel. This feeds him, keeping him glowing and your streak alive.</p>
+      </div>
+      <div class="card">
+        <div class="ic" style="background:rgba(46,213,115,.12);color:#1b9e54">🌱</div>
+        <div class="pill" style="background:rgba(46,213,115,.12);color:#1b9e54">Every week · 2 actions</div>
+        <h3>Weekly prevention</h3>
+        <p>Run an assessment, add a lab result, log a vaccine or book a clinic. These grow the leaf and let Tomo thrive.</p>
+      </div>
+      <div class="card">
+        <div class="ic" style="background:rgba(154,122,94,.12);color:var(--muted)">💤</div>
+        <div class="pill" style="background:rgba(154,122,94,.12);color:var(--muted)">If you forget</div>
+        <h3>He waits for you</h3>
+        <p>Miss a day and his colour fades, the leaf droops. Tomo never dies for good. He perks right back up when you return.</p>
+      </div>
+    </div>
+
+    <!-- POST CHECK-IN CTA -->
+    <div class="sect">After your check-in, one gentle next step</div>
+    <div class="cards">
+      <div class="card">
+        <div class="ic" style="background:rgba(116,192,252,.16);color:#3b82c4">🫧</div>
+        <div class="pill" style="background:rgba(116,192,252,.16);color:#3b82c4">Feeling low</div>
+        <h3>Be gentle today</h3>
+        <p>“Let's slow down together.” A 60-second breathing minute and one small self-care tip.</p>
+        <a class="cta-ghost" href="#">Take a mindful minute</a>
+      </div>
+      <div class="card">
+        <div class="ic" style="background:rgba(255,142,83,.14);color:var(--orange)">✨</div>
+        <div class="pill" style="background:rgba(255,142,83,.14);color:var(--orange)">Feeling okay</div>
+        <h3>Add a quick win</h3>
+        <p>“Small steps count.” Log water, sleep or a walk, or see what lifts your prevention score.</p>
+        <a class="cta-ghost" href="#">Add a quick win</a>
+      </div>
+      <div class="card">
+        <div class="ic" style="background:rgba(46,213,115,.14);color:#1b9e54">🏆</div>
+        <div class="pill" style="background:rgba(46,213,115,.14);color:#1b9e54">Feeling good</div>
+        <h3>Keep the streak</h3>
+        <p>“You're glowing!” Come back tomorrow to keep Tomo growing, and take your next prevention step.</p>
+        <a class="cta-btn" href="#">See my next step</a>
+      </div>
+    </div>
+
+    <!-- HEALTH STATES -->
+    <div class="sect">His health states</div>
+    <div class="row5">
+      <div class="opt"><svg width="92" height="92" viewBox="0 0 130 130">
+        <path d="M65 56 L65 44" stroke="#b9b07a" stroke-width="3" stroke-linecap="round"/>
+        <path d="M65 50 C58 52 54 49 54 45 C60 44 65 46 65 50Z" fill="#cdbf86"/>
+        <circle cx="65" cy="78" r="28" fill="#d9b8a4"/>
+        <path d="M53 74 Q58 78 63 74" fill="none" stroke="#5b4636" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M67 74 Q72 78 77 74" fill="none" stroke="#5b4636" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M58 90 Q65 84 72 90" fill="none" stroke="#5b4636" stroke-width="2.8" stroke-linecap="round"/>
+        <path d="M84 66 q4 6 0 10 q-4-4 0-10Z" fill="#74C0FC"/>
+        </svg><div class="nm">Poorly</div></div>
+      <div class="opt"><svg width="92" height="92" viewBox="0 0 130 130">
+        <defs><linearGradient id="rl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF8E53"/><stop offset="1" stop-color="#FF6B6B"/></linearGradient></defs>
+        <path d="M65 56 L65 44" stroke="#5bbf86" stroke-width="3" stroke-linecap="round"/>
+        <path d="M65 49 C57 47 54 41 55 37 C62 38 66 44 65 49Z" fill="#7cd6a3"/>
+        <circle cx="65" cy="78" r="28" fill="#FF8E76" opacity=".9"/>
+        <circle cx="58" cy="76" r="3.4" fill="#1A0A00"/><circle cx="72" cy="76" r="3.4" fill="#1A0A00"/>
+        <path d="M58 88 Q65 84 72 88" fill="none" stroke="#1A0A00" stroke-width="2.6" stroke-linecap="round"/>
+        </svg><div class="nm">Low</div></div>
+      <div class="opt"><svg width="92" height="92" viewBox="0 0 130 130">
+        <defs><linearGradient id="ro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF8E53"/><stop offset="1" stop-color="#FF6B6B"/></linearGradient></defs>
+        <path d="M65 54 L65 42" stroke="#2ED573" stroke-width="3" stroke-linecap="round"/>
+        <path d="M65 47 C57 45 53 39 54 34 C62 35 66 42 65 47Z" fill="#3fd17e"/>
+        <circle cx="65" cy="78" r="28" fill="#FF6B6B"/>
+        <circle cx="58" cy="76" r="3.6" fill="#1A0A00"/><circle cx="72" cy="76" r="3.6" fill="#1A0A00"/>
+        <path d="M58 87 H72" fill="none" stroke="#1A0A00" stroke-width="2.6" stroke-linecap="round"/>
+        </svg><div class="nm">Okay</div></div>
+      <div class="opt"><svg width="92" height="92" viewBox="0 0 130 130">
+        <defs><radialGradient id="bg" cx="40%" cy="36%" r="72%"><stop offset="0" stop-color="#FFC4A8"/><stop offset="60%" stop-color="#FF6B6B"/><stop offset="100%" stop-color="#E55555"/></radialGradient><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6B6B"/><stop offset="1" stop-color="#FF8E53"/></linearGradient></defs>
+        <path d="M65 54 L65 40" stroke="#2ED573" stroke-width="3" stroke-linecap="round"/>
+        <path d="M65 47 C56 45 52 38 53 33 C61 34 66 41 65 47Z" fill="#3fd17e"/><path d="M65 44 C74 42 78 36 77 31 C69 32 64 39 65 44Z" fill="#63E6BE"/>
+        <circle cx="65" cy="78" r="28" fill="url(#bg)"/>
+        <ellipse cx="56" cy="70" rx="7" ry="4" fill="#fff" opacity=".4"/>
+        <circle cx="58" cy="76" r="3.6" fill="#1A0A00"/><circle cx="72" cy="76" r="3.6" fill="#1A0A00"/>
+        <path d="M58 85 Q65 91 72 85" fill="none" stroke="#1A0A00" stroke-width="3" stroke-linecap="round"/>
+        </svg><div class="nm">Good</div></div>
+      <div class="opt"><svg width="92" height="92" viewBox="0 0 130 130">
+        <defs><radialGradient id="bt" cx="40%" cy="36%" r="72%"><stop offset="0" stop-color="#FFC9AD"/><stop offset="60%" stop-color="#FF6B6B"/><stop offset="100%" stop-color="#E55555"/></radialGradient><linearGradient id="rt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6B6B"/><stop offset="1" stop-color="#FF8E53"/></linearGradient></defs>
+        <path d="M30 36 l2.4 4.8 4.8 2.4 -4.8 2.4 -2.4 4.8 -2.4 -4.8 -4.8 -2.4 4.8 -2.4Z" fill="#FFD93D"/>
+        <path d="M64 54 L64 38" stroke="#2ED573" stroke-width="3" stroke-linecap="round"/>
+        <path d="M64 46 C54 44 49 36 50 30 C60 31 65 39 64 46Z" fill="#3fd17e"/><path d="M64 43 C75 41 80 34 79 28 C69 29 63 37 64 43Z" fill="#63E6BE"/>
+        <circle cx="65" cy="78" r="28" fill="url(#bt)"/>
+        <circle cx="50" cy="82" r="5" fill="#fff" opacity=".5"/><circle cx="80" cy="82" r="5" fill="#fff" opacity=".5"/>
+        <ellipse cx="56" cy="70" rx="7" ry="4" fill="#fff" opacity=".45"/>
+        <circle cx="58" cy="74" r="3.8" fill="#1A0A00"/><circle cx="72" cy="74" r="3.8" fill="#1A0A00"/>
+        <path d="M56 84 Q65 94 74 84" fill="none" stroke="#1A0A00" stroke-width="3" stroke-linecap="round"/>
+        </svg><div class="nm">Thriving</div></div>
+    </div>
+  </div>
+</body></html>

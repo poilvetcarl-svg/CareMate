@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet"/>
+<style>
+  :root{--coral:#FF6B6B;--orange:#FF8E53;--ink:#1A0A00;--muted:#8a6a4e}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'DM Sans',sans-serif}
+  body{background:#fff8f5;padding:48px}
+  .lbl{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:var(--coral);margin:36px 0 18px}
+  .wrap{max-width:880px}
+  h2{font-size:30px;font-weight:900;color:var(--ink);letter-spacing:-.02em;margin-bottom:6px}
+  .sub{font-size:15px;color:var(--muted);font-weight:500;margin-bottom:24px}
+  .CLINIC{background-image:url('https://images.pexels.com/photos/3993211/pexels-photo-3993211.jpeg?auto=compress&w=800');background-size:cover;background-position:center}
+  .HOME{background-image:url('https://images.pexels.com/photos/8313446/pexels-photo-8313446.jpeg?auto=compress&w=800');background-size:cover;background-position:center 25%}
+
+  /* ===== OPTION 1 - Find care (search + service chips) ===== */
+  .panel{background:#fff;border-radius:26px;padding:30px;box-shadow:0 20px 50px -22px rgba(193,58,29,.3)}
+  .searchbar{display:flex;gap:10px;margin-bottom:18px}
+  .loc{flex:1;display:flex;align-items:center;gap:10px;border:1.5px solid rgba(255,107,107,.22);border-radius:14px;padding:14px 16px;color:var(--ink);font-size:15px;font-weight:600}
+  .loc i{color:var(--coral);font-size:20px}
+  .loc .ph{color:#b89b82;font-weight:500}
+  .sbtn{background:linear-gradient(135deg,var(--coral),var(--orange));color:#fff;border:none;border-radius:14px;padding:0 24px;font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;box-shadow:0 10px 24px rgba(255,107,107,.4)}
+  .chiprow{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{display:flex;align-items:center;gap:8px;border:1.5px solid rgba(255,107,107,.18);border-radius:30px;padding:9px 16px;font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer}
+  .chip i{color:var(--coral);font-size:17px}
+  .chip.on{background:var(--coral);color:#fff;border-color:var(--coral)} .chip.on i{color:#fff}
+  .home-note{margin-top:18px;font-size:13.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:7px}
+  .home-note b{color:var(--coral)}
+
+  /* ===== OPTION 2 - Two channels w/ service lists ===== */
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .ch{border-radius:22px;overflow:hidden;background:#fff;border:1px solid rgba(255,107,107,.14);box-shadow:0 12px 30px rgba(255,107,107,.1);cursor:pointer;transition:.25s}
+  .ch:hover{transform:translateY(-4px);box-shadow:0 22px 46px rgba(255,107,107,.2)}
+  .ch .im{position:relative;height:150px}
+  .ch .im::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(15,6,0,.6),rgba(255,107,107,.25))}
+  .ch .im h3{position:absolute;left:18px;bottom:14px;color:#fff;font-size:19px;font-weight:800;z-index:2}
+  .ch .im .pin{position:absolute;top:14px;left:14px;z-index:2;background:rgba(255,255,255,.9);color:var(--coral);width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px}
+  .ch .bd{padding:18px 22px 22px}
+  .srv{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13.5px;font-weight:600;color:var(--ink)}
+  .srv i{color:var(--coral);font-size:17px;width:20px}
+  .ch .cta{margin-top:12px;font-size:14px;font-weight:800;color:var(--coral);display:inline-flex;align-items:center;gap:7px}
+
+  /* ===== OPTION 3 - Service tiles grid ===== */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+  .tile{background:#fff;border:1px solid rgba(255,107,107,.14);border-radius:18px;padding:20px;transition:.2s;cursor:pointer}
+  .tile:hover{border-color:var(--coral);transform:translateY(-3px);box-shadow:0 14px 30px rgba(255,107,107,.14)}
+  .tile .ti2{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,rgba(255,107,107,.13),rgba(255,142,83,.13));color:var(--coral);display:flex;align-items:center;justify-content:center;font-size:23px;margin-bottom:12px}
+  .tile b{font-size:15px;font-weight:800;color:var(--ink);display:block;margin-bottom:3px}
+  .tile span{font-size:12px;color:var(--muted)}
+  .modebar{display:flex;gap:14px}
+  .mode{flex:1;display:flex;align-items:center;gap:12px;border-radius:16px;padding:16px 18px;cursor:pointer}
+  .mode.a{background:linear-gradient(135deg,var(--coral),var(--orange));color:#fff;box-shadow:0 12px 28px rgba(255,107,107,.4)}
+  .mode.b{background:#fff;border:1.5px solid rgba(255,107,107,.22);color:var(--ink)}
+  .mode i{font-size:22px} .mode.a i{color:#fff} .mode.b i{color:var(--coral)}
+  .mode b{font-size:15px;font-weight:800;display:block} .mode span{font-size:11.5px;opacity:.85}
+</style></head><body>
+
+<!-- 1 -->
+<div class="lbl">Option 1 · Find care (search + services)</div>
+<div class="wrap">
+  <h2>What do you need today?</h2>
+  <p class="sub">Vaccinations, screenings, lab tests and consultations, at a clinic near you or at home.</p>
+  <div class="panel">
+    <div class="searchbar">
+      <div class="loc"><i class="ti ti-map-pin"></i><span class="ph">Your location, e.g. Jakarta Selatan</span></div>
+      <button class="sbtn"><i class="ti ti-search"></i>Find care</button>
+    </div>
+    <div class="chiprow">
+      <span class="chip on"><i class="ti ti-vaccine"></i>Vaccination</span>
+      <span class="chip"><i class="ti ti-stethoscope"></i>Health screening</span>
+      <span class="chip"><i class="ti ti-flask"></i>Lab test</span>
+      <span class="chip"><i class="ti ti-user-heart"></i>Consultation</span>
+      <span class="chip"><i class="ti ti-dental"></i>Dental</span>
+    </div>
+    <div class="home-note"><i class="ti ti-home"></i>Prefer to stay in? <b>Get care at home →</b></div>
+  </div>
+</div>
+
+<!-- 2 -->
+<div class="lbl">Option 2 · Two channels with full service list</div>
+<div class="wrap"><div class="pair">
+  <div class="ch"><div class="im CLINIC"><span class="pin"><i class="ti ti-building-hospital"></i></span><h3>Visit a Clinic</h3></div><div class="bd">
+    <div class="srv"><i class="ti ti-vaccine"></i>Vaccinations</div>
+    <div class="srv"><i class="ti ti-stethoscope"></i>Health screenings &amp; check-ups</div>
+    <div class="srv"><i class="ti ti-flask"></i>Lab tests</div>
+    <div class="srv"><i class="ti ti-user-heart"></i>Doctor consultations</div>
+    <span class="cta">Find clinics near me <i class="ti ti-arrow-right"></i></span>
+  </div></div>
+  <div class="ch"><div class="im HOME"><span class="pin"><i class="ti ti-ambulance"></i></span><h3>Care at Home</h3></div><div class="bd">
+    <div class="srv"><i class="ti ti-vaccine"></i>Home vaccination</div>
+    <div class="srv"><i class="ti ti-test-pipe"></i>Sample collection for labs</div>
+    <div class="srv"><i class="ti ti-heart-handshake"></i>Elderly &amp; family care</div>
+    <div class="srv"><i class="ti ti-nurse"></i>Nurse &amp; doctor visits</div>
+    <span class="cta">See home services <i class="ti ti-arrow-right"></i></span>
+  </div></div>
+</div></div>
+
+<!-- 3 -->
+<div class="lbl">Option 3 · Service tiles + where</div>
+<div class="wrap">
+  <h2>Everything a clinic offers</h2>
+  <p class="sub">One place to find and book the care you need.</p>
+  <div class="grid">
+    <div class="tile"><div class="ti2"><i class="ti ti-vaccine"></i></div><b>Vaccinations</b><span>Adults &amp; children</span></div>
+    <div class="tile"><div class="ti2"><i class="ti ti-stethoscope"></i></div><b>Health screenings</b><span>Check-ups by age</span></div>
+    <div class="tile"><div class="ti2"><i class="ti ti-flask"></i></div><b>Lab tests</b><span>Blood, urine &amp; more</span></div>
+    <div class="tile"><div class="ti2"><i class="ti ti-user-heart"></i></div><b>Consultations</b><span>GPs &amp; specialists</span></div>
+    <div class="tile"><div class="ti2"><i class="ti ti-dental"></i></div><b>Dental</b><span>Cleaning &amp; care</span></div>
+    <div class="tile"><div class="ti2"><i class="ti ti-mood-kid"></i></div><b>Maternal &amp; child</b><span>Pre &amp; postnatal</span></div>
+  </div>
+  <div class="modebar">
+    <div class="mode a"><i class="ti ti-building-hospital"></i><div><b>Visit a clinic near you</b><span>Sorted by distance</span></div></div>
+    <div class="mode b"><i class="ti ti-home"></i><div><b>Get care at home</b><span>Nurse or doctor visits</span></div></div>
+  </div>
+</div>
+
+</body></html>
