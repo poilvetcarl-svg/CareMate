@@ -874,6 +874,64 @@ def index():
     return render_template("index.html", current_user=current_user)
 
 
+# ── PWA (installable Android/mobile app) ──────────────────────────────────────
+@app.route("/manifest.webmanifest")
+def pwa_manifest():
+    manifest = {
+        "name": "CareMate, Preventive Health for Indonesia",
+        "short_name": "CareMate",
+        "description": "Personalised prevention: vaccines, screenings, labs and an AI doctor, made for Indonesia.",
+        "start_url": "/?source=pwa",
+        "scope": "/",
+        "display": "standalone",
+        "orientation": "portrait",
+        "background_color": "#FFF6F2",
+        "theme_color": "#FF6B6B",
+        "lang": "en",
+        "categories": ["health", "medical", "lifestyle"],
+        "icons": [
+            {"src": "/static/img/favicon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+            {"src": "/static/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+            {"src": "/static/img/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+        ],
+    }
+    return jsonify(manifest), 200, {"Content-Type": "application/manifest+json"}
+
+
+@app.route("/sw.js")
+def pwa_service_worker():
+    """Served from root so its scope covers the whole app."""
+    sw = """
+const CACHE = 'caremate-v1';
+const CORE = ['/', '/offline', '/static/css/style.css', '/static/img/logo-icon.png', '/static/img/favicon-192.png'];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE).catch(() => {})).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', e => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  if (req.mode === 'navigate') {
+    e.respondWith(fetch(req).catch(() => caches.match('/offline').then(r => r || caches.match('/'))));
+    return;
+  }
+  e.respondWith(caches.match(req).then(cached => cached || fetch(req).then(res => {
+    if (res.ok && req.url.includes('/static/')) { const cp = res.clone(); caches.open(CACHE).then(c => c.put(req, cp)); }
+    return res;
+  }).catch(() => cached)));
+});
+""".strip()
+    return app.response_class(sw, mimetype="application/javascript",
+                              headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache"})
+
+
+@app.route("/offline")
+def pwa_offline():
+    return render_template("offline.html")
+
+
 @app.route("/health")
 def health():
     """Liveness/readiness probe for load balancers and uptime monitors."""
