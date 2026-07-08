@@ -113,16 +113,36 @@
            data-name="{{ (current_user.name.split()[0] if current_user.name else 'friend') }}"
            data-wear="{{ wearable.wellness if wearable else '' }}"
            data-wear-sleep="{{ wearable.sleep_label if wearable else '' }}"
-           data-wear-steps="{{ wearable.steps_label if wearable else '' }}">
+           data-wear-steps="{{ wearable.steps_label if wearable else '' }}"
+           data-stage="{{ pet.stage }}">
         <div class="mate-row">
           <div class="mate-pet" id="matePet">{% include "_mate_pet.svg" %}</div>
           <div class="mate-info">
             <div class="mate-headline">
               <span class="mate-title">I'm Tomo, your prevention mate</span>
+              <span class="mate-stage" id="mateStage">Stage {{ pet.stage }} · {{ pet.stage_name }}</span>
               <span class="mate-streak" id="mateStreak"><i class="ti ti-flame"></i> <b id="mateStreakNum">0</b>-day bond</span>
             </div>
             <div class="mate-state" id="mateState">Tap to check in. I grow happier each day you do.</div>
-            <button class="mate-btn" id="mateBtn" onclick="openMate()">Check in</button>
+
+            <div class="mate-xp">
+              <div class="mate-xp-top">
+                <span><b id="mateXpNum">{{ pet.xp }}</b> XP</span>
+                <span id="mateXpNext">{% if pet.next_name %}{{ pet.to_next }} XP to {{ pet.next_name }}{% else %}Fully evolved{% endif %}</span>
+              </div>
+              <div class="mate-xp-track"><i id="mateXpFill" style="width:{{ pet.pct }}%"></i></div>
+            </div>
+
+            <div class="mate-actions-row">
+              <button class="mate-btn" id="mateBtn" onclick="openMate()">Check in</button>
+              <div class="mate-quests">
+                {% if pet.counts.assessment == 0 %}
+                <a class="mate-quest" href="/#assessment"><i class="ti ti-clipboard-heart"></i> Assessment <b>+{{ pet.xp_values.assessment }}</b></a>
+                {% endif %}
+                <a class="mate-quest" href="/clinics"><i class="ti ti-map-pin"></i> Book a clinic <b>+{{ pet.xp_values.booking }}</b></a>
+                <a class="mate-quest" href="#" onclick="document.getElementById('logModal').classList.remove('hidden');return false"><i class="ti ti-vaccine"></i> Log a vaccine <b>+{{ pet.xp_values.vaccine }}</b></a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -877,6 +897,16 @@ async function disconnectWatch(){
   const wear = parseInt(card.dataset.wear) || null;   // smartwatch recovery 1..5
   const petWear = document.querySelector('#wearTomo');
   if (petWear && wear) setFace(petWear, wear);         // mini Tomo on the device card
+
+  // evolution stage: reveal the SVG layers for the current stage (1..4)
+  let stage = parseInt(card.dataset.stage) || 1;
+  function setStage(root, st){
+    if (!root) return;
+    root.querySelectorAll('.mate-s2').forEach(el => el.style.display = st >= 2 ? '' : 'none');
+    root.querySelectorAll('.mate-s3').forEach(el => el.style.display = st >= 3 ? '' : 'none');
+    root.querySelectorAll('.mate-s4').forEach(el => el.style.display = st >= 4 ? '' : 'none');
+  }
+  function applyStageAll(st){ [petSmall, petBig, petWear].forEach(p => setStage(p, st)); }
   function refreshCard(){
     if (streak>0){ streakNum.textContent = streak; streakEl.style.display='inline-flex'; }
     else streakEl.style.display='none';
@@ -928,10 +958,12 @@ async function disconnectWatch(){
   window.saveMate = async function(){
     const b=+bodyS.value, m=+mindS.value, avg=(b+m)/2;
     const btn=document.getElementById('mateSave'); btn.disabled=true; btn.textContent='Saving…';
+    let evolved=false, petData=null;
     try {
       const r = await fetch('/api/checkin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({body:b,mind:m}) });
-      if (r.ok){ const d=await r.json(); streak=d.streak||streak; saved={body:b,mind:m}; }
+      if (r.ok){ const d=await r.json(); streak=d.streak||streak; saved={body:b,mind:m}; evolved=!!d.evolved; petData=d.pet||null; }
     } catch(e){}
+    if (petData) updatePetProgress(petData, evolved);
     celebrate(petBig);
     const act=document.getElementById('mateAction');
     let html;
@@ -953,6 +985,25 @@ async function disconnectWatch(){
     refreshCard();
   };
 
+  // live XP + evolution updates after a check-in
+  function updatePetProgress(p, didEvolve){
+    const xpNum=document.getElementById('mateXpNum'), xpNext=document.getElementById('mateXpNext'),
+          xpFill=document.getElementById('mateXpFill'), stEl=document.getElementById('mateStage');
+    if (xpNum)  xpNum.textContent = p.xp;
+    if (xpNext) xpNext.textContent = p.next_name ? (p.to_next + ' XP to ' + p.next_name) : 'Fully evolved';
+    if (xpFill) xpFill.style.width = p.pct + '%';
+    if (stEl)   stEl.textContent = 'Stage ' + p.stage + ' · ' + p.stage_name;
+    if (p.stage !== stage || didEvolve){
+      stage = p.stage;
+      applyStageAll(stage);
+      if (didEvolve){
+        speech.textContent = "I evolved! I'm a " + p.stage_name + " now, thank you for taking care of us both.";
+        const svg = petBig && petBig.querySelector('.mate-svg');
+        if (svg){ svg.classList.add('evolve'); setTimeout(()=>svg.classList.remove('evolve'), 1600); }
+      }
+    }
+  }
+
   // mindful minute (the low-mood CTA, not a doctor)
   let breatheTimer=null;
   window.openBreathe = function(){
@@ -969,6 +1020,7 @@ async function disconnectWatch(){
   };
 
   refreshCard();
+  applyStageAll(stage);
 })();
 </script>
 </body>

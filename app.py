@@ -1221,6 +1221,7 @@ def dashboard():
     checkin_streak = _checkin_streak(current_user.id)
     wearable_device = WearableDevice.query.filter_by(user_id=current_user.id).first()
     wearable = _simulated_wearable(current_user.id, today) if wearable_device else None
+    pet = _pet_progress(current_user.id)
     # Heal rows saved before a test existed in the reference table: re-match + re-flag
     _healed = False
     for lab in lab_results:
@@ -1249,7 +1250,8 @@ def dashboard():
         checkin_streak=checkin_streak,
         lab_reference=LAB_REFERENCE,
         wearable_device=wearable_device,
-        wearable=wearable
+        wearable=wearable,
+        pet=pet
     )
 
 
@@ -1381,6 +1383,7 @@ def add_lab_result():
         value=value, unit=request.form.get("unit") or (ref["unit"] if ref else ""),
         flag=flag_lab_value(key, value), date_taken=taken, source="manual"))
     db.session.commit()
+    log_event("lab_added", current_user.id, meta=test_name)
     flash("Lab result saved.", "success")
     return redirect(url_for("dashboard"))
 
@@ -1716,6 +1719,7 @@ def log_vaccine():
     )
     db.session.add(rec)
     db.session.commit()
+    log_event("vaccine_logged", current_user.id, meta=vaccine_name)
 
     if set_reminder and next_dose_date:
         from reminders import schedule_vaccine_reminders
@@ -1809,6 +1813,66 @@ def _checkin_streak(user_id):
     return streak
 
 
+# ── TOMO GROWTH ENGINE ────────────────────────────────────────────────────────
+# XP per prevention action. Verified real-world actions (booking a clinic,
+# logging a vaccine) are worth the most, daily habits keep him alive.
+PET_XP = {
+    "checkin": 10,       # daily body & mind check-in
+    "assessment": 40,    # completed health assessment
+    "lab": 30,           # lab result added
+    "vaccine": 50,       # vaccine logged
+    "consultation": 40,  # AI doctor consultation
+    "booking": 100,      # clinic booking (verified real-world action)
+    "streak_day": 5,     # bonus per day of current check-in streak
+}
+
+PET_STAGES = [
+    {"stage": 1, "name": "Sprout", "at": 0},
+    {"stage": 2, "name": "Bud", "at": 50},
+    {"stage": 3, "name": "Bloom", "at": 180},
+    {"stage": 4, "name": "Mythic", "at": 400},
+]
+
+
+def _pet_progress(user_id):
+    """Compute Tomo's XP and evolution stage from the user's real prevention
+    actions. Derived from live table counts, so it is cheat-resistant, needs no
+    migration, and retroactively rewards everything a user has already done."""
+    counts = {
+        "checkin": DailyCheckin.query.filter_by(user_id=user_id).count(),
+        "assessment": Assessment.query.filter_by(user_id=user_id).count(),
+        "lab": LabResult.query.filter_by(user_id=user_id).count(),
+        "vaccine": VaccinationRecord.query.filter_by(user_id=user_id).count(),
+        "consultation": ConsultationSummary.query.filter_by(user_id=user_id).count(),
+        "booking": Booking.query.filter_by(user_id=user_id).count(),
+    }
+    streak = _checkin_streak(user_id)
+    xp = sum(counts[k] * PET_XP[k] for k in counts) + streak * PET_XP["streak_day"]
+
+    current = PET_STAGES[0]
+    for s in PET_STAGES:
+        if xp >= s["at"]:
+            current = s
+    nxt = next((s for s in PET_STAGES if s["at"] > xp), None)
+    if nxt:
+        span = nxt["at"] - current["at"]
+        pct = int((xp - current["at"]) / span * 100) if span else 100
+    else:
+        pct = 100
+    return {
+        "xp": xp,
+        "stage": current["stage"],
+        "stage_name": current["name"],
+        "next_name": nxt["name"] if nxt else None,
+        "next_at": nxt["at"] if nxt else None,
+        "to_next": (nxt["at"] - xp) if nxt else 0,
+        "pct": max(2, min(100, pct)),
+        "counts": counts,
+        "streak": streak,
+        "xp_values": PET_XP,
+    }
+
+
 def log_event(name, user_id=None, meta=None):
     """Record a product-analytics event. Best-effort, never breaks the request."""
     try:
@@ -1830,6 +1894,7 @@ def daily_checkin():
     except (TypeError, ValueError):
         return jsonify({"error": "invalid"}), 400
     today = date.today()
+    stage_before = _pet_progress(current_user.id)["stage"]
     row = DailyCheckin.query.filter_by(user_id=current_user.id, day=today).first()
     if not row:
         row = DailyCheckin(user_id=current_user.id, day=today)
@@ -1839,7 +1904,9 @@ def daily_checkin():
     row.note = (data.get("note") or "")[:280]
     db.session.commit()
     log_event("checkin", current_user.id)
-    return jsonify({"ok": True, "streak": _checkin_streak(current_user.id)})
+    pet = _pet_progress(current_user.id)
+    return jsonify({"ok": True, "streak": pet["streak"], "pet": pet,
+                    "evolved": pet["stage"] > stage_before})
 
 
 def _summarize_consultation(transcript, doctor_name=""):
@@ -2093,6 +2160,7 @@ def book_clinic():
     )
     db.session.add(booking)
     db.session.commit()
+    log_event("booking", current_user.id, meta=vaccine_name or clinic.name)
 
     # Schedule reminders for the booking date
     from reminders import schedule_vaccine_reminders

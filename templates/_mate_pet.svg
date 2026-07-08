@@ -6,12 +6,43 @@
     <linearGradient id="mateLeaf" x1="0" y1="1" x2="0" y2="0">
       <stop offset="0" stop-color="#2ED573"/><stop offset="1" stop-color="#63E6BE"/>
     </linearGradient>
+    <radialGradient id="mateAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#FFD93D" stop-opacity="0.45"/><stop offset="1" stop-color="#FFD93D" stop-opacity="0"/>
+    </radialGradient>
   </defs>
+  <!-- stage 4: mythic golden aura behind everything -->
+  <circle class="mate-s4" cx="65" cy="72" r="52" fill="url(#mateAura)" style="display:none"/>
   <!-- sprout leaf (grows with streak, wilts when low) -->
   <g class="mate-leaf">
     <path d="M65 56 L65 40" stroke="#2ED573" stroke-width="3" stroke-linecap="round"/>
     <path d="M65 48 C56 46 52 39 53 34 C61 35 66 42 65 48Z" fill="url(#mateLeaf)"/>
     <path d="M65 45 C74 43 78 37 77 32 C69 33 64 40 65 45Z" fill="url(#mateLeaf)" opacity=".92"/>
+    <!-- stage 2: second leaf pair + closed bud at the stem tip -->
+    <g class="mate-s2" style="display:none">
+      <path d="M65 52 C59 51 56 47 56.5 44 C61.5 45 65 48 65 52Z" fill="url(#mateLeaf)" opacity=".85"/>
+      <path d="M65 50 C71 49 74 45 73.5 42 C68.5 43 65 46 65 50Z" fill="url(#mateLeaf)" opacity=".8"/>
+      <ellipse cx="65" cy="38" rx="4.5" ry="6" fill="#FF8E9E"/>
+      <path d="M65 32.5 C63 34.5 63 38 65 40 C67 38 67 34.5 65 32.5Z" fill="#FF6B8A"/>
+    </g>
+    <!-- stage 3: open flower bloom at the stem tip -->
+    <g class="mate-s3" style="display:none">
+      <g fill="#FF8E9E">
+        <ellipse cx="65" cy="29" rx="4.2" ry="6.4"/>
+        <ellipse cx="72.5" cy="34" rx="4.2" ry="6.4" transform="rotate(72 72.5 34)"/>
+        <ellipse cx="69.8" cy="42.6" rx="4.2" ry="6.4" transform="rotate(144 69.8 42.6)"/>
+        <ellipse cx="60.2" cy="42.6" rx="4.2" ry="6.4" transform="rotate(216 60.2 42.6)"/>
+        <ellipse cx="57.5" cy="34" rx="4.2" ry="6.4" transform="rotate(288 57.5 34)"/>
+      </g>
+      <circle cx="65" cy="36.5" r="4.6" fill="#FFD93D"/>
+    </g>
+  </g>
+  <!-- stage 4: sparkles + tiny crown -->
+  <g class="mate-s4" style="display:none">
+    <path d="M28 52 l2.6 5.2 5.2 2.6 -5.2 2.6 -2.6 5.2 -2.6 -5.2 -5.2 -2.6 5.2 -2.6Z" fill="#FFD93D"/>
+    <path d="M100 40 l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2Z" fill="#FFD93D" opacity=".9"/>
+    <path d="M103 92 l1.6 3.2 3.2 1.6 -3.2 1.6 -1.6 3.2 -1.6 -3.2 -3.2 -1.6 3.2 -1.6Z" fill="#FFD93D" opacity=".75"/>
+    <path d="M80 55 L82 61 L88 59 L85.5 64 L91 66.5 L84.5 67.5 L85 73 L80.5 69 L76 73 L76.5 67.5 L70 66.5 L75.5 64 L73 59 L79 61 Z"
+          fill="#FFD93D" stroke="#F5B700" stroke-width="0.8" transform="rotate(14 80 63)"/>
   </g>
   <!-- body + face -->
   <g class="mate-body" style="transform-origin:65px 78px">

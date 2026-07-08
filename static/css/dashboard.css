@@ -973,6 +973,30 @@
 .mate-headline { display: flex; align-items: center; gap: 10px; }
 .mate-title { font-size: 18px; font-weight: 900; color: var(--text-primary); }
 .mate-tagline { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+.mate-stage { font-size: 11px; font-weight: 800; color: #1b9e54; background: rgba(46,213,115,0.12); padding: 3px 10px; border-radius: 20px; }
+
+/* XP + growth */
+.mate-xp { margin: 2px 0 12px; max-width: 420px; }
+.mate-xp-top { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; }
+.mate-xp-top b { color: var(--coral); font-weight: 900; }
+.mate-xp-track { height: 7px; border-radius: 8px; background: rgba(160,120,90,0.13); overflow: hidden; }
+.mate-xp-track i { display: block; height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--coral), #FF8E53); transition: width .8s cubic-bezier(.2,.8,.2,1); }
+.mate-actions-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mate-quests { display: flex; gap: 8px; flex-wrap: wrap; }
+.mate-quest { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: var(--text-secondary); background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 6px 12px; text-decoration: none; transition: border-color .15s, transform .15s; }
+.mate-quest b { color: #1b9e54; font-weight: 900; }
+.mate-quest i { color: var(--coral); font-size: 14px; }
+.mate-quest:hover { border-color: var(--coral); transform: translateY(-1px); }
+
+/* evolution burst */
+.mate-svg.evolve { animation: mateEvolve 1.5s ease; }
+@keyframes mateEvolve {
+  0% { transform: scale(1); filter: none; }
+  25% { transform: scale(1.18) rotate(-4deg); filter: drop-shadow(0 0 14px rgba(255,217,61,0.9)); }
+  50% { transform: scale(0.96) rotate(3deg); filter: drop-shadow(0 0 20px rgba(255,217,61,0.7)); }
+  75% { transform: scale(1.1); filter: drop-shadow(0 0 12px rgba(255,217,61,0.5)); }
+  100% { transform: scale(1); filter: none; }
+}
 .mate-streak { position: absolute; top: 16px; right: 18px; font-size: 11px; font-weight: 800; color: var(--coral); background: rgba(255,107,107,0.1); padding: 4px 11px; border-radius: 20px; }
 .mate-state { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 6px 0 14px; }
 .mate-btn { background: linear-gradient(135deg,var(--coral),#FF8E53); color:#fff; border:none; border-radius:11px; padding:10px 22px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 10px 22px rgba(255,107,107,0.35); transition: transform .15s; }
