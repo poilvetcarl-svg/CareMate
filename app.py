@@ -8,6 +8,7 @@ import json
 import math
 import base64
 import requests as http_req
+import hmac
 import string
 import random
 from datetime import date, datetime, timedelta
@@ -90,7 +91,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Recycle pooled connections so serverless cold starts don't reuse dead sockets.
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 280}
 
-from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, Event, seed_clinics
+from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, Event, TerraUser, WearableMetric, seed_clinics
 db.init_app(app)
 
 from flask_mail import Mail, Message as MailMessage
@@ -165,6 +166,13 @@ TAVUS_BASE = "https://tavusapi.com/v2"
 
 # Shared secret so only Tavus (using our callback URL) can post to the webhook
 import hashlib
+# -- Terra (real wearable data: Garmin, Fitbit, Oura, ...) --
+TERRA_DEV_ID         = os.environ.get("TERRA_DEV_ID", "")
+TERRA_API_KEY        = os.environ.get("TERRA_API_KEY", "")
+TERRA_SIGNING_SECRET = os.environ.get("TERRA_SIGNING_SECRET", "")
+TERRA_ENABLED        = bool(TERRA_DEV_ID and TERRA_API_KEY)
+TERRA_BASE           = "https://api.tryterra.co/v2"
+
 TAVUS_WEBHOOK_SECRET = os.environ.get("TAVUS_WEBHOOK_SECRET") or \
     hashlib.sha256((app.secret_key + "tavus-webhook").encode()).hexdigest()[:24]
 
@@ -1220,7 +1228,10 @@ def dashboard():
     today_checkin = DailyCheckin.query.filter_by(user_id=current_user.id, day=today).first()
     checkin_streak = _checkin_streak(current_user.id)
     wearable_device = WearableDevice.query.filter_by(user_id=current_user.id).first()
-    wearable = _simulated_wearable(current_user.id, today) if wearable_device else None
+    wearable = None
+    if wearable_device:
+        # Real synced data (Terra) wins; the deterministic demo is the fallback
+        wearable = _real_wearable(current_user.id, today) or _simulated_wearable(current_user.id, today)
     pet = _pet_progress(current_user.id)
     # Heal rows saved before a test existed in the reference table: re-match + re-flag
     _healed = False
@@ -1255,25 +1266,22 @@ def dashboard():
     )
 
 
-def _simulated_wearable(user_id, day):
-    """Demo-only: deterministic, plausible smartwatch metrics for a given day.
-    Stable across reloads (seeded by user + date) so it feels like real synced data."""
-    rnd = random.Random(user_id * 100000 + day.toordinal())
-    resting_hr = rnd.randint(54, 73)
-    sleep_min  = rnd.randint(330, 510)      # 5h30m to 8h30m
-    steps      = rnd.randint(3200, 12600)
-    hrv        = rnd.randint(34, 78)         # ms
-    spo2       = rnd.randint(96, 99)
-    active_min = rnd.randint(16, 78)
-
-    # Per-metric "health" fraction 0..1 (for the mini bars)
-    f_hr    = max(0.0, min((80 - resting_hr) / 30, 1.0))
-    f_sleep = min(sleep_min / 510, 1.0)
-    f_steps = min(steps / 12000, 1.0)
-    f_hrv   = min(hrv / 80, 1.0)
-
-    # Composite recovery score 0..100 (weighted toward sleep + HRV)
-    recovery = int(round(f_sleep * 40 + f_hrv * 25 + f_hr * 20 + f_steps * 15))
+def _score_wearable(resting_hr, sleep_min, steps, hrv, spo2=None, active_min=None, real=False):
+    """Turn raw daily metrics into the recovery dict the dashboard renders.
+    Missing metrics are excluded and the weights renormalised, so a partial
+    Garmin sync still produces a fair score."""
+    parts = []   # (weight, fraction)
+    f_hr = f_sleep = f_steps = f_hrv = 0.0
+    if resting_hr is not None:
+        f_hr = max(0.0, min((80 - resting_hr) / 30, 1.0)); parts.append((20, f_hr))
+    if sleep_min is not None:
+        f_sleep = min(sleep_min / 510, 1.0); parts.append((40, f_sleep))
+    if steps is not None:
+        f_steps = min(steps / 12000, 1.0); parts.append((15, f_steps))
+    if hrv is not None:
+        f_hrv = min(hrv / 80, 1.0); parts.append((25, f_hrv))
+    total_w = sum(w for w, _ in parts) or 1
+    recovery = int(round(sum(w * f for w, f in parts) / total_w * 100))
     recovery = max(8, min(99, recovery))
 
     if   recovery >= 80: label, wellness, color, mood = "Thriving",  5, "#2ED573", "thriving"
@@ -1283,12 +1291,12 @@ def _simulated_wearable(user_id, day):
     else:                label, wellness, color, mood = "Run down",  1, "#E5484D", "run down"
 
     return {
-        "resting_hr": resting_hr,
-        "sleep_min": sleep_min,
-        "sleep_label": f"{sleep_min // 60}h {sleep_min % 60:02d}m",
-        "steps": steps,
-        "steps_label": f"{steps:,}",
-        "hrv": hrv,
+        "resting_hr": resting_hr if resting_hr is not None else "--",
+        "sleep_min": sleep_min or 0,
+        "sleep_label": f"{sleep_min // 60}h {sleep_min % 60:02d}m" if sleep_min else "--",
+        "steps": steps or 0,
+        "steps_label": f"{steps:,}" if steps else "--",
+        "hrv": hrv if hrv is not None else "--",
         "spo2": spo2,
         "active_min": active_min,
         "wellness": wellness,
@@ -1296,10 +1304,38 @@ def _simulated_wearable(user_id, day):
         "label": label,
         "color": color,
         "mood": mood,
+        "real": real,
         "arc": round(recovery / 100 * 327, 1),     # ring fill (circumference ~327)
         "fills": {"hr": round(f_hr, 3), "sleep": round(f_sleep, 3),
                   "steps": round(f_steps, 3), "hrv": round(f_hrv, 3)},
     }
+
+
+def _simulated_wearable(user_id, day):
+    """Demo-only: deterministic, plausible smartwatch metrics for a given day.
+    Stable across reloads (seeded by user + date) so it feels like real synced data."""
+    rnd = random.Random(user_id * 100000 + day.toordinal())
+    return _score_wearable(
+        resting_hr=rnd.randint(54, 73),
+        sleep_min=rnd.randint(330, 510),
+        steps=rnd.randint(3200, 12600),
+        hrv=rnd.randint(34, 78),
+        spo2=rnd.randint(96, 99),
+        active_min=rnd.randint(16, 78),
+        real=False,
+    )
+
+
+def _real_wearable(user_id, today):
+    """Latest real synced metrics (from Terra) within the last 3 days, or None."""
+    m = WearableMetric.query.filter(
+        WearableMetric.user_id == user_id,
+        WearableMetric.day >= today - timedelta(days=3),
+    ).order_by(WearableMetric.day.desc()).first()
+    if not m:
+        return None
+    return _score_wearable(m.resting_hr, m.sleep_min, m.steps, m.hrv,
+                           m.spo2, m.active_min, real=True)
 
 
 @app.route("/api/wearable/connect", methods=["POST"])
@@ -1320,8 +1356,178 @@ def wearable_connect():
 @login_required
 def wearable_disconnect():
     WearableDevice.query.filter_by(user_id=current_user.id).delete()
+    TerraUser.query.filter_by(user_id=current_user.id).delete()
     db.session.commit()
     return jsonify({"ok": True})
+
+
+# ══════════════════════════════════════════════════════════
+#  TERRA, real wearable sync (Garmin / Fitbit / Oura / ...)
+# ══════════════════════════════════════════════════════════
+
+_TERRA_PROVIDERS = {
+    "garmin": "GARMIN", "fitbit": "FITBIT", "oura": "OURA",
+    "apple": "APPLE", "apple watch": "APPLE", "withings": "WITHINGS",
+}
+
+
+@app.route("/api/wearable/terra/connect", methods=["POST"])
+@login_required
+def terra_connect():
+    """Start a real wearable connection: returns Terra's hosted auth URL where the
+    user logs into Garmin/Fitbit/... and grants access. 503 when Terra keys are
+    not configured, so the frontend can fall back to demo mode."""
+    if not TERRA_ENABLED:
+        return jsonify({"error": "terra_not_configured"}), 503
+    provider_raw = ((request.json or {}).get("provider") or "").lower()
+    provider = next((v for k, v in _TERRA_PROVIDERS.items() if k in provider_raw), None)
+    try:
+        resp = http_req.post(
+            f"{TERRA_BASE}/auth/generateWidgetSession",
+            headers={"dev-id": TERRA_DEV_ID, "x-api-key": TERRA_API_KEY,
+                     "Content-Type": "application/json"},
+            json={
+                "reference_id": str(current_user.id),
+                "providers": provider or "GARMIN,FITBIT,OURA,WITHINGS",
+                "language": "en",
+                "auth_success_redirect_url": url_for("dashboard", _external=True) + "?wearable=connected",
+                "auth_failure_redirect_url": url_for("dashboard", _external=True) + "?wearable=failed",
+            },
+            timeout=15,
+        )
+        data = resp.json()
+        if resp.status_code == 200 and data.get("url"):
+            return jsonify({"url": data["url"]})
+        print(f"[Terra] widget session failed: {resp.status_code} {data}")
+        return jsonify({"error": "terra_error"}), 502
+    except Exception as e:
+        print(f"[Terra] connect error: {e}")
+        return jsonify({"error": str(e)}), 502
+
+
+def _terra_verify_signature(req):
+    """Verify Terra's webhook signature: header 'terra-signature: t=<ts>,v1=<hex>',
+    v1 = HMAC-SHA256(secret, '<ts>.<raw body>')."""
+    if not TERRA_SIGNING_SECRET:
+        return False   # no secret configured means no legitimate webhooks exist yet
+    sig = req.headers.get("terra-signature", "")
+    try:
+        parts = dict(p.split("=", 1) for p in sig.split(","))
+        ts, v1 = parts["t"], parts["v1"]
+        expected = hmac.new(TERRA_SIGNING_SECRET.encode(),
+                            f"{ts}.{req.get_data(as_text=True)}".encode(),
+                            hashlib.sha256).hexdigest()
+        return hmac.compare_digest(expected, v1)
+    except Exception:
+        return False
+
+
+def _terra_user_for(payload):
+    """Resolve the CareMate user for a Terra webhook payload."""
+    tu = (payload.get("user") or {})
+    terra_id = tu.get("user_id")
+    if terra_id:
+        link = TerraUser.query.filter_by(terra_user_id=terra_id).first()
+        if link:
+            return link.user_id
+    ref = tu.get("reference_id")
+    if ref and str(ref).isdigit():
+        return int(ref)
+    return None
+
+
+def _terra_upsert(user_id, day, **fields):
+    row = WearableMetric.query.filter_by(user_id=user_id, day=day).first()
+    if not row:
+        row = WearableMetric(user_id=user_id, day=day)
+        db.session.add(row)
+    for k, v in fields.items():
+        if v is not None:
+            setattr(row, k, v)
+    db.session.commit()
+
+
+def _terra_day(item):
+    ts = ((item.get("metadata") or {}).get("start_time") or "")[:10]
+    try:
+        return datetime.strptime(ts, "%Y-%m-%d").date()
+    except ValueError:
+        return date.today()
+
+
+@app.route("/api/terra/webhook", methods=["POST"])
+def terra_webhook():
+    """Receive wearable data pushed by Terra as devices sync. Configure this URL
+    (https://mycaremate.me/api/terra/webhook) in the Terra dashboard."""
+    if not _terra_verify_signature(request):
+        return jsonify({"error": "bad signature"}), 403
+    payload = request.get_json(silent=True) or {}
+    ptype = (payload.get("type") or "").lower()
+
+    if ptype == "auth":
+        user_id = _terra_user_for(payload)
+        tu = payload.get("user") or {}
+        if user_id and tu.get("user_id"):
+            if not TerraUser.query.filter_by(terra_user_id=tu["user_id"]).first():
+                db.session.add(TerraUser(terra_user_id=tu["user_id"], user_id=user_id,
+                                         provider=(tu.get("provider") or "")[:40]))
+            dev = WearableDevice.query.filter_by(user_id=user_id).first()
+            provider_label = (tu.get("provider") or "Wearable").title()
+            if dev:
+                dev.provider = provider_label
+                dev.connected_at = datetime.utcnow()
+            else:
+                db.session.add(WearableDevice(user_id=user_id, provider=provider_label))
+            db.session.commit()
+            log_event("wearable_connected", user_id, meta=tu.get("provider"))
+        return jsonify({"ok": True})
+
+    if ptype == "deauth":
+        tu = payload.get("user") or {}
+        link = TerraUser.query.filter_by(terra_user_id=tu.get("user_id", "")).first()
+        if link:
+            WearableDevice.query.filter_by(user_id=link.user_id).delete()
+            db.session.delete(link)
+            db.session.commit()
+        return jsonify({"ok": True})
+
+    if ptype in ("daily", "activity"):
+        user_id = _terra_user_for(payload)
+        if user_id:
+            for item in payload.get("data") or []:
+                hr = (item.get("heart_rate_data") or {}).get("summary") or {}
+                dist = item.get("distance_data") or {}
+                act = item.get("active_durations_data") or {}
+                oxy = (item.get("oxygen_data") or {})
+                steps = dist.get("steps")
+                rhr = hr.get("resting_hr_bpm")
+                hrv = hr.get("avg_hrv_rmssd")
+                spo2 = oxy.get("avg_saturation_percentage")
+                active_s = act.get("activity_seconds")
+                _terra_upsert(user_id, _terra_day(item),
+                              steps=int(steps) if steps else None,
+                              resting_hr=int(rhr) if rhr else None,
+                              hrv=int(hrv) if hrv else None,
+                              spo2=int(spo2) if spo2 else None,
+                              active_min=int(active_s / 60) if active_s else None)
+        return jsonify({"ok": True})
+
+    if ptype == "sleep":
+        user_id = _terra_user_for(payload)
+        if user_id:
+            for item in payload.get("data") or []:
+                asleep = ((item.get("sleep_durations_data") or {}).get("asleep") or {})
+                secs = asleep.get("duration_asleep_state_seconds")
+                hr = (item.get("heart_rate_data") or {}).get("summary") or {}
+                hrv = hr.get("avg_hrv_rmssd")
+                if secs:
+                    _terra_upsert(user_id, _terra_day(item),
+                                  sleep_min=int(secs / 60),
+                                  hrv=int(hrv) if hrv else None)
+        return jsonify({"ok": True})
+
+    # healthcheck and other event types are acknowledged silently
+    return jsonify({"ok": True, "ignored": ptype})
 
 
 # ══════════════════════════════════════════════════════════
@@ -1824,7 +2030,10 @@ PET_XP = {
     "consultation": 40,  # AI doctor consultation
     "booking": 100,      # clinic booking (verified real-world action)
     "streak_day": 5,     # bonus per day of current check-in streak
+    "active_day": 15,    # day with 8000+ real, watch-verified steps
 }
+
+ACTIVE_DAY_STEPS = 8000
 
 PET_STAGES = [
     {"stage": 1, "name": "Sprout", "at": 0},
@@ -1845,6 +2054,9 @@ def _pet_progress(user_id):
         "vaccine": VaccinationRecord.query.filter_by(user_id=user_id).count(),
         "consultation": ConsultationSummary.query.filter_by(user_id=user_id).count(),
         "booking": Booking.query.filter_by(user_id=user_id).count(),
+        "active_day": WearableMetric.query.filter(
+            WearableMetric.user_id == user_id,
+            WearableMetric.steps >= ACTIVE_DAY_STEPS).count(),
     }
     streak = _checkin_streak(user_id)
     xp = sum(counts[k] * PET_XP[k] for k in counts) + streak * PET_XP["streak_day"]

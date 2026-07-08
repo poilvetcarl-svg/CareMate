@@ -168,6 +168,32 @@ class WearableDevice(db.Model):
     user = db.relationship('User', backref=db.backref('wearable', uselist=False, cascade='all, delete-orphan'))
 
 
+# ── TERRA WEARABLE LINK (maps a Terra user id to our user, real Garmin/Fitbit/…) ─
+class TerraUser(db.Model):
+    id            = db.Column(db.Integer, primary_key=True)
+    terra_user_id = db.Column(db.String(80), unique=True, index=True, nullable=False)
+    user_id       = db.Column(db.Integer, db.ForeignKey('user.id'), index=True, nullable=False)
+    provider      = db.Column(db.String(40))            # GARMIN, FITBIT, OURA, ...
+    created_at    = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# ── WEARABLE METRIC (one row per user per day, real data ingested from Terra) ──
+class WearableMetric(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('user.id'), index=True, nullable=False)
+    day        = db.Column(db.Date, index=True, nullable=False)
+    steps      = db.Column(db.Integer)
+    sleep_min  = db.Column(db.Integer)
+    resting_hr = db.Column(db.Integer)
+    hrv        = db.Column(db.Integer)                  # rmssd ms
+    spo2       = db.Column(db.Integer)
+    active_min = db.Column(db.Integer)
+    source     = db.Column(db.String(40), default='terra')
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'day', name='uq_wearable_user_day'),)
+
+
 # ── DAILY WELLBEING CHECK-IN (the companion "how do you feel today") ──────────
 class DailyCheckin(db.Model):
     id         = db.Column(db.Integer, primary_key=True)

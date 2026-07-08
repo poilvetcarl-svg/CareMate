@@ -184,7 +184,7 @@
         <div class="wear2-head">
           <div class="wear2-device"><i class="ti ti-device-watch"></i> {{ wearable_device.provider }}
             <span class="wear2-live"><span class="wear2-dot"></span>live</span>
-            <span class="wear2-demo" title="Sample data, shown for demonstration">Demo data</span></div>
+            {% if not wearable.real %}<span class="wear2-demo" title="Sample data, shown for demonstration">Demo data</span>{% endif %}</div>
           <button class="wear2-disc" onclick="disconnectWatch()">Disconnect</button>
         </div>
 
@@ -845,6 +845,11 @@ document.getElementById('labTeleconModal')?.addEventListener('click', function(e
 });
 // ── Connected device (smartwatch) ──
 async function connectWatch(provider){
+  try{
+    // Real connection first (Terra: Garmin/Fitbit/Oura login). 503 = not configured yet.
+    const t = await fetch('/api/wearable/terra/connect', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({provider})});
+    if (t.ok){ const d = await t.json(); if (d.url){ window.location.href = d.url; return; } }
+  }catch(e){}
   try{
     const r = await fetch('/api/wearable/connect', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({provider})});
     if (r.ok) location.reload();
