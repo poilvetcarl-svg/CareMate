@@ -168,6 +168,18 @@ class WearableDevice(db.Model):
     user = db.relationship('User', backref=db.backref('wearable', uselist=False, cascade='all, delete-orphan'))
 
 
+# ── PILOT LEAD (companies requesting the free corporate wellness pilot) ────────
+class PilotLead(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    company    = db.Column(db.String(160), nullable=False)
+    contact    = db.Column(db.String(120))
+    email      = db.Column(db.String(160), nullable=False)
+    phone      = db.Column(db.String(40))
+    employees  = db.Column(db.String(40))
+    message    = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 # ── TERRA WEARABLE LINK (maps a Terra user id to our user, real Garmin/Fitbit/…) ─
 class TerraUser(db.Model):
     id            = db.Column(db.Integer, primary_key=True)

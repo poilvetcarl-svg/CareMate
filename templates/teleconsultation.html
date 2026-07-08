@@ -109,13 +109,13 @@
   <div class="blob blob-1"></div>
   <div class="blob blob-2"></div>
   <div class="telecon-hero-content">
-    <div class="doctor-status-chip"><span class="chip-dot"></span>{{ available_count }} Specialists Available Now</div>
-    <h1 class="hero-title">Talk to a <span class="gradient-text">Virtual Doctor</span></h1>
-    <p class="hero-subtitle">An AI prevention doctor you can talk to about vaccines, screenings, lab results, and everyday prevention, from anywhere, anytime.</p>
+    <div class="doctor-status-chip"><span class="chip-dot"></span>{{ available_count }} {{ 'Spesialis Tersedia Sekarang' if LANG == 'id' else 'Specialists Available Now' }}</div>
+    <h1 class="hero-title">{{ t('tc.title.1') }} <span class="gradient-text">{{ t('tc.title.2') }}</span></h1>
+    <p class="hero-subtitle">{{ t('tc.subtitle') }}</p>
     <div class="telecon-stats">
-      <div class="tstat"><span class="tstat-num">24/7</span><span class="tstat-label">Always available</span></div>
+      <div class="tstat"><span class="tstat-num">24/7</span><span class="tstat-label">{{ 'Selalu tersedia' if LANG == 'id' else 'Always available' }}</span></div>
       <div class="tstat-div"></div>
-      <div class="tstat"><span class="tstat-num">Free</span><span class="tstat-label">Consultation</span></div>
+      <div class="tstat"><span class="tstat-num">{{ 'Gratis' if LANG == 'id' else 'Free' }}</span><span class="tstat-label">{{ 'Konsultasi' if LANG == 'id' else 'Consultation' }}</span></div>
     </div>
   </div>
 </section>
@@ -126,18 +126,30 @@
     <a class="consult-card consult-available" href="#" onclick="startVirtualDoctor(event)">
       <div class="consult-ic"><i class="ti ti-video"></i></div>
       <div class="consult-body">
+        {% if LANG == 'id' %}
+        <div class="consult-title">Bicara dengan dokter virtual online</div>
+        <div class="consult-desc">Mulai konsultasi video AI langsung sekarang, bahas vaksinasi, skrining, dan hasil lab Anda.</div>
+        <span class="consult-cta">Mulai konsultasi <i class="ti ti-arrow-right"></i></span>
+        {% else %}
         <div class="consult-title">Talk to a virtual doctor online</div>
         <div class="consult-desc">Start a live AI video consultation right now, discuss your vaccines, screenings and lab results.</div>
         <span class="consult-cta">Start consultation <i class="ti ti-arrow-right"></i></span>
+        {% endif %}
       </div>
     </a>
 
     <div class="consult-card consult-soon" aria-disabled="true">
       <div class="consult-ic"><i class="ti ti-calendar-clock"></i></div>
       <div class="consult-body">
+        {% if LANG == 'id' %}
+        <div class="consult-title">Buat janji dengan dokter online</div>
+        <div class="consult-desc">Jadwalkan janji video dengan dokter sungguhan di waktu yang cocok untuk Anda.</div>
+        <span class="consult-cta muted">Segera hadir</span>
+        {% else %}
         <div class="consult-title">Book an appointment with a doctor online</div>
         <div class="consult-desc">Schedule a video appointment with a human doctor at a time that suits you.</div>
         <span class="consult-cta muted">Coming soon</span>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -145,15 +157,27 @@
   <div style="max-width:920px;margin:26px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
     <div style="display:flex;gap:11px;align-items:flex-start;background:#fff;border:1px solid rgba(255,107,107,0.16);border-radius:14px;padding:15px 16px">
       <i class="ti ti-robot" style="color:var(--coral);font-size:22px;flex-shrink:0"></i>
+      {% if LANG == 'id' %}
+      <div><div style="font-size:13.5px;font-weight:800;color:#1A0A00">Anda berbicara dengan AI</div><div style="font-size:12.5px;color:#8a6a4e;line-height:1.5;margin-top:2px">Panduan pencegahan edukatif, bukan diagnosis atau dokter sungguhan.</div></div>
+      {% else %}
       <div><div style="font-size:13.5px;font-weight:800;color:#1A0A00">You're talking to an AI</div><div style="font-size:12.5px;color:#8a6a4e;line-height:1.5;margin-top:2px">Educational prevention guidance, not a diagnosis or a real doctor.</div></div>
+      {% endif %}
     </div>
     <div style="display:flex;gap:11px;align-items:flex-start;background:#fff;border:1px solid rgba(255,107,107,0.16);border-radius:14px;padding:15px 16px">
       <i class="ti ti-keyboard" style="color:var(--coral);font-size:22px;flex-shrink:0"></i>
+      {% if LANG == 'id' %}
+      <div><div style="font-size:13.5px;font-weight:800;color:#1A0A00">Cukup mengetik, tanpa mikrofon</div><div style="font-size:12.5px;color:#8a6a4e;line-height:1.5;margin-top:2px">Semua pertanyaan bisa diketik. Berbicara dengan suara sepenuhnya opsional.</div></div>
+      {% else %}
       <div><div style="font-size:13.5px;font-weight:800;color:#1A0A00">Type, no mic needed</div><div style="font-size:12.5px;color:#8a6a4e;line-height:1.5;margin-top:2px">You can type every question. Speaking aloud is completely optional.</div></div>
+      {% endif %}
     </div>
     <div style="display:flex;gap:11px;align-items:flex-start;background:#fff;border:1px solid rgba(255,107,107,0.16);border-radius:14px;padding:15px 16px">
       <i class="ti ti-lock" style="color:var(--coral);font-size:22px;flex-shrink:0"></i>
+      {% if LANG == 'id' %}
+      <div><div style="font-size:13.5px;font-weight:800;color:#1A0A00">Privat untuk Anda</div><div style="font-size:12.5px;color:#8a6a4e;line-height:1.5;margin-top:2px">Percakapan dan ringkasannya tersimpan di dasbor Anda sendiri, tidak pernah dijual atau dibagikan.</div></div>
+      {% else %}
       <div><div style="font-size:13.5px;font-weight:800;color:#1A0A00">Private to you</div><div style="font-size:12.5px;color:#8a6a4e;line-height:1.5;margin-top:2px">Your chat and its summary stay in your own dashboard, never sold or shared.</div></div>
+      {% endif %}
     </div>
   </div>
 </section>

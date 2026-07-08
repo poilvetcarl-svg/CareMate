@@ -91,7 +91,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Recycle pooled connections so serverless cold starts don't reuse dead sockets.
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 280}
 
-from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, Event, TerraUser, WearableMetric, seed_clinics
+from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, Event, TerraUser, WearableMetric, PilotLead, seed_clinics
 db.init_app(app)
 
 from flask_mail import Mail, Message as MailMessage
@@ -1004,6 +1004,35 @@ def login():
 GOOGLE_CLIENT_ID     = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+
+
+# ── I18N: Bahasa Indonesia default, English toggle ────────────────────────────
+from i18n import STRINGS, DEFAULT_LANG
+
+
+@app.before_request
+def _set_locale():
+    lang = request.args.get("lang")
+    if lang in ("id", "en"):
+        session["lang"] = lang
+
+
+@app.context_processor
+def _inject_i18n():
+    lang = session.get("lang", DEFAULT_LANG)
+    def t(key):
+        entry = STRINGS.get(key)
+        if not entry:
+            return key
+        return entry.get(lang) or entry.get("en") or key
+    return {"t": t, "LANG": lang}
+
+
+@app.route("/set-lang/<code>")
+def set_lang(code):
+    if code in ("id", "en"):
+        session["lang"] = code
+    return redirect(request.referrer or "/")
 
 
 @app.context_processor
@@ -2006,6 +2035,45 @@ def dashboard_settings():
 @app.route("/references")
 def references():
     return render_template("references.html")
+
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+
+@app.route("/pilot", methods=["POST"])
+def pilot_request():
+    """Corporate pilot request from the homepage B2B section."""
+    company = request.form.get("company", "").strip()
+    email   = request.form.get("email", "").strip()
+    if not company or not email:
+        flash("Mohon isi nama perusahaan dan email." if session.get("lang", DEFAULT_LANG) == "id"
+              else "Please fill in your company name and email.", "error")
+        return redirect(url_for("index") + "#perusahaan")
+    db.session.add(PilotLead(
+        company=company[:160],
+        contact=request.form.get("contact", "").strip()[:120],
+        email=email[:160],
+        phone=request.form.get("phone", "").strip()[:40],
+        employees=request.form.get("employees", "").strip()[:40],
+        message=request.form.get("message", "").strip()[:2000],
+    ))
+    db.session.commit()
+    log_event("pilot_lead", meta=company)
+    flash("Terima kasih! Kami akan menghubungi Anda dalam 1-2 hari kerja."
+          if session.get("lang", DEFAULT_LANG) == "id"
+          else "Thank you! We will get back to you within 1-2 business days.", "success")
+    return redirect(url_for("index") + "#perusahaan")
+
+
+@app.route("/admin/leads")
+def admin_leads():
+    """Corporate pilot leads (key-protected, same key as the other admin pages)."""
+    if request.args.get("key") != os.environ.get("ADMIN_KEY", "caremate-admin"):
+        return "Forbidden", 403
+    leads = PilotLead.query.order_by(PilotLead.created_at.desc()).all()
+    return render_template("admin_leads.html", leads=leads)
 
 
 def _checkin_streak(user_id):

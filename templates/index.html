@@ -5,8 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
   <link rel="apple-touch-icon" href="/static/img/favicon-192.png" />
+  {% if LANG == 'id' %}
+  <title>CareMate, Pendamping Kesehatan Preventif Keluarga Anda</title>
+  <meta name="description" content="Rencana vaksinasi pribadi untuk Anda dan anak-anak Anda, penilaian risiko, jadwal IDAI/CDC/WHO, pemesanan klinik, dan pengingat, dalam satu tempat." />
+  {% else %}
   <title>CareMate, Your Family's Preventive Health Companion</title>
   <meta name="description" content="Personalised vaccination plans for you and your children, risk assessment, IDAI/CDC/WHO schedules, clinic booking and reminders, in one place." />
+  {% endif %}
   <meta property="og:title" content="CareMate, Your Family's Preventive Health Companion" />
   <meta property="og:description" content="Get your personalised vaccine plan in 60 seconds, book a clinic, and talk to certified doctors, all in one place." />
   <meta property="og:type" content="website" />
@@ -32,17 +37,20 @@
   <div class="nav-container">
     <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span class="logo-accent">Mate</span></a>
     <div class="nav-links">
-      <a href="#assessment" class="nav-link">Assessment</a>
-      <a href="#how-it-works" class="nav-link">How It Works</a>
-      <a href="/clinics" class="nav-link">Clinics</a>
-      <a href="/teleconsultation" class="nav-link">Doctors</a>
+      <a href="#assessment" class="nav-link">{{ t('nav.assessment') }}</a>
+      <a href="#how-it-works" class="nav-link">{{ t('nav.how') }}</a>
+      <a href="/clinics" class="nav-link">{{ t('nav.clinics') }}</a>
+      <a href="/teleconsultation" class="nav-link">{{ t('nav.doctors') }}</a>
+      <a href="#perusahaan" class="nav-link">{{ t('nav.business') }}</a>
+      <a href="/about" class="nav-link">{{ t('nav.about') }}</a>
       {% if current_user.is_authenticated %}
-        <a href="/dashboard" class="nav-link" style="font-weight:700;color:var(--coral)">Dashboard</a>
-        <a href="/logout" class="nav-link" style="color:var(--text-muted)">Sign Out</a>
+        <a href="/dashboard" class="nav-link" style="font-weight:700;color:var(--coral)">{{ t('nav.dashboard') }}</a>
+        <a href="/logout" class="nav-link" style="color:var(--text-muted)">{{ t('nav.signout') }}</a>
       {% else %}
-        <a href="/login" class="nav-link">Sign In</a>
-        <a href="/register" class="nav-cta">Sign Up Free</a>
+        <a href="/login" class="nav-link">{{ t('nav.signin') }}</a>
+        <a href="/register" class="nav-cta">{{ t('nav.signup') }}</a>
       {% endif %}
+      <a href="/set-lang/{{ 'en' if LANG == 'id' else 'id' }}" class="nav-link" style="font-weight:800;color:var(--coral)" title="Switch language">{{ t('lang.switch') }}</a>
     </div>
     <button class="menu-toggle" id="menuToggle" aria-label="Open navigation menu"><i class="ti ti-menu-2"></i></button>
   </div>
@@ -60,40 +68,38 @@
   <!-- LEFT: Text -->
   <div class="hero-text">
     <div class="hero-badge" style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,107,107,0.1);color:var(--coral);font-weight:700;font-size:13px;padding:7px 15px;border-radius:20px;margin-bottom:18px">
-      <i class="ti ti-map-pin"></i> Preventive care, made for Indonesia
+      <i class="ti ti-map-pin"></i> {{ t('hero.badge') }}
     </div>
     <h1 class="hero-title">
-      Your Family's<br/>
-      <span class="gradient-text">Prevention Plan</span><br/>
-      in 60 Seconds
+      {{ t('hero.title.1') }}<br/>
+      <span class="gradient-text">{{ t('hero.title.2') }}</span><br/>
+      {{ t('hero.title.3') }}
     </h1>
     <p class="hero-subtitle">
-      Get a personalized prevention plan for vaccines, screenings, and health checks,
-      built on Indonesian guidelines from Kemenkes, PAPDI and IDAI, tailored to your
-      age, health profile, lifestyle and family risks.
+      {{ t('hero.subtitle') }}
     </p>
     <div class="hero-actions">
       <button class="btn-primary" onclick="scrollToAssessment()">
-        Get My Prevention Plan <span class="btn-arrow">→</span>
+        {{ t('hero.cta') }} <span class="btn-arrow">→</span>
       </button>
       <a href="/teleconsultation" class="btn-secondary">
-        Talk to a Doctor
+        {{ t('hero.cta2') }}
       </a>
     </div>
     <div class="hero-stats">
       <div class="stat">
         <div class="stat-value"><span class="stat-num" data-count="100">0</span><span class="stat-suffix">%</span></div>
-        <span class="stat-label">Free, always</span>
+        <span class="stat-label">{{ t('hero.stat.free') }}</span>
       </div>
       <div class="stat-divider"></div>
       <div class="stat">
         <div class="stat-value"><span class="stat-num" data-count="60">0</span><span class="stat-suffix">s</span></div>
-        <span class="stat-label">Average assessment</span>
+        <span class="stat-label">{{ t('hero.stat.time') }}</span>
       </div>
       <div class="stat-divider"></div>
       <div class="stat">
         <div class="stat-value"><span class="stat-num" data-count="24">0</span><span class="stat-suffix">/7</span></div>
-        <span class="stat-label">AI doctor access</span>
+        <span class="stat-label">{{ t('hero.stat.ai') }}</span>
       </div>
     </div>
   </div>
@@ -124,7 +130,7 @@
 
 <!-- ===== TRUST BAR ===== -->
 <section class="trust-section">
-  <p class="trust-label">Following guidelines from</p>
+  <p class="trust-label">{{ t('trust.label') }}</p>
   <div class="trust-logos">
     <a href="https://www.cdc.gov" target="_blank" rel="noopener" class="trust-logo">CDC</a>
     <a href="https://www.who.int" target="_blank" rel="noopener" class="trust-logo">WHO</a>
@@ -137,9 +143,9 @@
 <!-- ===== HOW IT WORKS ===== -->
 <section class="how-it-works-section" id="how-it-works">
   <div class="section-header">
-    <div class="section-badge">How It Works</div>
-    <h2 class="section-title">From Profile to <span class="gradient-text">Protection</span></h2>
-    <p class="section-subtitle">Four simple steps to your personalised prevention plan, powered by CDC &amp; WHO guidelines and AI analysis.</p>
+    <div class="section-badge">{{ t('how.badge') }}</div>
+    <h2 class="section-title">{{ t('how.title.1') }} <span class="gradient-text">{{ t('how.title.2') }}</span></h2>
+    <p class="section-subtitle">{{ t('how.subtitle') }}</p>
   </div>
   <div class="hiw-steps">
 
@@ -147,36 +153,132 @@
       <div class="hiw-step-icon">
         <span class="hiw-step-num">1</span>
       </div>
+      {% if LANG == 'id' %}
+      <h3 class="hiw-step-title">Isi Profil Anda</h3>
+      <p class="hiw-step-desc">Beri tahu usia, jenis kelamin, dan kondisi kesehatan Anda. Kurang dari dua menit dan sepenuhnya privat.</p>
+      {% else %}
       <h3 class="hiw-step-title">Fill Your Profile</h3>
       <p class="hiw-step-desc">Tell us your age, sex, and existing health conditions. It takes under two minutes and is completely private.</p>
+      {% endif %}
     </div>
 
     <div class="hiw-step reveal">
       <div class="hiw-step-icon">
         <span class="hiw-step-num">2</span>
       </div>
+      {% if LANG == 'id' %}
+      <h3 class="hiw-step-title">Analisis AI</h3>
+      <p class="hiw-step-desc">Sistem kami mencocokkan data Anda dengan pedoman PAPDI 2025, CDC ACIP, dan WHO untuk menghitung skor risiko serta memprioritaskan vaksinasi dan skrining kesehatan.</p>
+      {% else %}
       <h3 class="hiw-step-title">AI Analysis</h3>
       <p class="hiw-step-desc">Our engine cross-references your data against PAPDI 2025, CDC ACIP, and WHO guidelines to calculate your risk score and prioritise vaccines and health screenings.</p>
+      {% endif %}
     </div>
 
     <div class="hiw-step reveal">
       <div class="hiw-step-icon">
         <span class="hiw-step-num">3</span>
       </div>
+      {% if LANG == 'id' %}
+      <h3 class="hiw-step-title">Buat Janji di Klinik</h3>
+      <p class="hiw-step-desc">Telusuri klinik di sekitar Anda, cek ketersediaan, dan buat janji, semuanya di satu tempat.</p>
+      {% else %}
       <h3 class="hiw-step-title">Book a Clinic</h3>
       <p class="hiw-step-desc">Browse verified clinics near you, check live availability, and book your appointment, all in one place.</p>
+      {% endif %}
     </div>
 
     <div class="hiw-step reveal">
       <div class="hiw-step-icon">
         <span class="hiw-step-num">4</span>
       </div>
+      {% if LANG == 'id' %}
+      <h3 class="hiw-step-title">Terima Sertifikat Anda</h3>
+      <p class="hiw-step-desc">Dapatkan sertifikat vaksinasi digital setelah setiap dosis. Simpan riwayat lengkap di dasbor dan bagikan kapan pun dibutuhkan.</p>
+      {% else %}
       <h3 class="hiw-step-title">Get Your Certificate</h3>
       <p class="hiw-step-desc">Receive a digital vaccination certificate after each dose. Store your full history in your dashboard and share it instantly when needed.</p>
+      {% endif %}
     </div>
 
   </div>
 </section>
+
+<!-- ===== FOR COMPANIES / UNTUK PERUSAHAAN ===== -->
+<section class="features-section" id="perusahaan" style="background:linear-gradient(135deg,#FFF3EC,#FFE9E1);border-radius:0;padding:70px 24px">
+  <div style="max-width:1080px;margin:0 auto">
+    <div class="section-header" style="margin-bottom:36px">
+      <div class="section-badge">{{ t('b2b.badge') }}</div>
+      <h2 class="section-title">{{ t('b2b.title') }}</h2>
+      {% if LANG == 'id' %}
+      <p class="section-subtitle" style="max-width:660px">Program kesejahteraan karyawan yang benar-benar diikuti. Karyawan mendapat rencana pencegahan pribadi, pengingat vaksinasi, dan pendamping kesehatan interaktif. HR mendapat laporan partisipasi agregat, tanpa data medis individu.</p>
+      {% else %}
+      <p class="section-subtitle" style="max-width:660px">An employee wellness program people actually use. Employees get a personal prevention plan, vaccination reminders, and an interactive health companion. HR gets aggregate participation reporting, never individual medical data.</p>
+      {% endif %}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start" class="b2b-grid">
+      <div>
+        {% set b2b_points = [
+          ('ti-clipboard-heart', 'Penilaian risiko untuk semua karyawan dalam 60 detik', 'A 60-second risk assessment for every employee'),
+          ('ti-vaccine', 'Kampanye vaksinasi flu dan skrining tahunan yang terukur', 'Measurable flu vaccination and annual screening campaigns'),
+          ('ti-chart-bar', 'Dasbor HR: partisipasi dan aksi pencegahan, teragregasi dan anonim', 'HR dashboard: participation and prevention actions, aggregated and anonymous'),
+          ('ti-heart', 'Keterlibatan berkelanjutan lewat pendamping kesehatan, bukan sekadar tantangan langkah yang cepat ditinggalkan', 'Lasting engagement through a health companion, not another step challenge people abandon')
+        ] %}
+        {% for icon, txt_id, txt_en in b2b_points %}
+        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:18px">
+          <div style="width:42px;height:42px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 16px rgba(255,107,107,0.15)"><i class="ti {{ icon }}" style="color:var(--coral);font-size:20px"></i></div>
+          <p style="font-size:15px;color:var(--text-secondary);line-height:1.6;margin:0;padding-top:8px">{{ txt_id if LANG == 'id' else txt_en }}</p>
+        </div>
+        {% endfor %}
+        <div style="background:#fff;border:1.5px solid rgba(255,107,107,0.25);border-radius:14px;padding:16px 18px;margin-top:8px">
+          {% if LANG == 'id' %}
+          <div style="font-size:14px;font-weight:800;color:var(--text-primary)"><i class="ti ti-gift" style="color:var(--coral)"></i> 3 slot pilot gratis 60 hari</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Untuk perusahaan pertama yang bergabung: program penuh tanpa biaya, dengan laporan hasil di akhir pilot.</div>
+          {% else %}
+          <div style="font-size:14px;font-weight:800;color:var(--text-primary)"><i class="ti ti-gift" style="color:var(--coral)"></i> 3 free 60-day pilot slots</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:4px">For the first companies to join: the full program at no cost, with an outcomes report at the end of the pilot.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="background:#fff;border-radius:20px;padding:26px 26px 28px;box-shadow:0 24px 60px -24px rgba(193,58,29,0.3)">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for cat, msg in messages %}
+          <div style="border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:13.5px;font-weight:700;{{ 'background:rgba(46,213,115,0.12);color:#1b9e54' if cat == 'success' else 'background:rgba(229,72,77,0.1);color:#E5484D' }}">{{ msg }}</div>
+          {% endfor %}
+        {% endwith %}
+        <div style="font-size:17px;font-weight:900;color:var(--text-primary);margin-bottom:16px">{{ t('b2b.cta') }}</div>
+        <form method="POST" action="/pilot">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <input name="company" required placeholder="{{ 'Nama perusahaan' if LANG == 'id' else 'Company name' }}" style="border:1.5px solid var(--border);border-radius:11px;padding:12px 14px;font-size:14px;font-family:inherit">
+            <input name="contact" placeholder="{{ 'Nama Anda' if LANG == 'id' else 'Your name' }}" style="border:1.5px solid var(--border);border-radius:11px;padding:12px 14px;font-size:14px;font-family:inherit">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <input name="email" type="email" required placeholder="{{ 'Email kerja' if LANG == 'id' else 'Work email' }}" style="border:1.5px solid var(--border);border-radius:11px;padding:12px 14px;font-size:14px;font-family:inherit">
+            <input name="phone" placeholder="WhatsApp" style="border:1.5px solid var(--border);border-radius:11px;padding:12px 14px;font-size:14px;font-family:inherit">
+          </div>
+          <select name="employees" style="width:100%;border:1.5px solid var(--border);border-radius:11px;padding:12px 14px;font-size:14px;font-family:inherit;margin-bottom:12px;color:var(--text-secondary)">
+            <option value="">{{ 'Jumlah karyawan' if LANG == 'id' else 'Number of employees' }}</option>
+            <option value="<50">&lt; 50</option>
+            <option value="50-200">50 - 200</option>
+            <option value="200-1000">200 - 1000</option>
+            <option value="1000+">1000+</option>
+          </select>
+          <textarea name="message" rows="3" placeholder="{{ 'Ceritakan kebutuhan perusahaan Anda (opsional)' if LANG == 'id' else 'Tell us about your needs (optional)' }}" style="width:100%;border:1.5px solid var(--border);border-radius:11px;padding:12px 14px;font-size:14px;font-family:inherit;resize:vertical;margin-bottom:14px"></textarea>
+          <button type="submit" class="btn-primary" style="width:100%;justify-content:center">{{ t('b2b.cta') }} →</button>
+          {% if LANG == 'id' %}
+          <div style="font-size:11.5px;color:var(--text-muted);margin-top:10px;text-align:center">Kami balas dalam 1-2 hari kerja. Tanpa komitmen.</div>
+          {% else %}
+          <div style="font-size:11.5px;color:var(--text-muted);margin-top:10px;text-align:center">We reply within 1-2 business days. No commitment.</div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+<style>@media (max-width: 820px){ .b2b-grid { grid-template-columns: 1fr !important; } }</style>
 
 <!-- ===== WHY PREVENTION ===== -->
 <section class="features-section" style="text-align:center">

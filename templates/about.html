@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="{{ LANG }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
+  <title>{{ t('about.title') }} · CareMate</title>
+  <meta name="description" content="{{ 'Mengapa kami membangun CareMate: kesehatan preventif yang mudah diakses untuk keluarga Indonesia.' if LANG == 'id' else 'Why we are building CareMate: accessible preventive health for Indonesian families.' }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
+  <style>
+    .about-wrap { max-width: 840px; margin: 0 auto; padding: 120px 24px 60px; }
+    .about-hero h1 { font-size: 38px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1.15; }
+    .about-hero p.lead { font-size: 18px; color: var(--text-secondary); line-height: 1.65; margin-top: 16px; }
+    .about-wrap h2 { font-size: 22px; font-weight: 800; color: var(--text-primary); margin: 42px 0 12px; }
+    .about-wrap p { font-size: 15.5px; color: var(--text-secondary); line-height: 1.75; margin-bottom: 14px; }
+    .founder-card { display: flex; gap: 22px; align-items: center; background: #fff; border: 1px solid rgba(255,107,107,0.18); border-radius: 20px; padding: 26px; margin: 36px 0; box-shadow: 0 18px 44px -20px rgba(255,107,107,0.3); flex-wrap: wrap; }
+    .founder-avatar { width: 96px; height: 96px; border-radius: 50%; background: linear-gradient(135deg, var(--coral), #FF8E53); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 900; flex-shrink: 0; }
+    .founder-name { font-size: 18px; font-weight: 900; color: var(--text-primary); }
+    .founder-role { font-size: 13px; font-weight: 700; color: var(--coral); margin: 3px 0 8px; }
+    .founder-bio { font-size: 14px; color: var(--text-secondary); line-height: 1.6; max-width: 520px; }
+    .value-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+    .value-card { background: #FFF6F0; border: 1px solid rgba(255,107,107,0.14); border-radius: 16px; padding: 20px 18px; }
+    .value-card i { font-size: 24px; color: var(--coral); }
+    .value-card h3 { font-size: 15px; font-weight: 800; color: var(--text-primary); margin: 10px 0 6px; }
+    .value-card p { font-size: 13px; margin: 0; line-height: 1.6; }
+    .about-cta { display: flex; gap: 12px; margin-top: 36px; flex-wrap: wrap; }
+    @media (max-width: 640px) { .value-grid { grid-template-columns: 1fr; } .about-hero h1 { font-size: 30px; } }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span class="logo-accent">Mate</span></a>
+    <div class="nav-links">
+      <a href="/clinics" class="nav-link">{{ t('nav.clinics') }}</a>
+      <a href="/teleconsultation" class="nav-link">{{ t('nav.doctors') }}</a>
+      <a href="/#perusahaan" class="nav-link">{{ t('nav.business') }}</a>
+      <a href="/login" class="nav-cta">{{ t('nav.signin') }}</a>
+    </div>
+  </div>
+</nav>
+
+<div class="about-wrap">
+  <div class="about-hero">
+    {% if LANG == 'id' %}
+    <h1>Kesehatan biasanya dimulai setelah ada masalah.<br/><span class="gradient-text">CareMate dimulai sebelumnya.</span></h1>
+    <p class="lead">CareMate membantu keluarga Indonesia tetap selangkah di depan penyakit, dengan rencana pencegahan pribadi berbasis pedoman Kemenkes, PAPDI, IDAI, CDC, dan WHO.</p>
+    {% else %}
+    <h1>Healthcare usually starts after something goes wrong.<br/><span class="gradient-text">CareMate starts before.</span></h1>
+    <p class="lead">CareMate helps Indonesian families stay ahead of disease, with personal prevention plans built on Kemenkes, PAPDI, IDAI, CDC, and WHO guidelines.</p>
+    {% endif %}
+  </div>
+
+  {% if LANG == 'id' %}
+  <h2>Mengapa kami membangun ini</h2>
+  <p>Penyakit kronis seperti diabetes dan hipertensi semakin banyak menyerang usia muda di Indonesia, padahal sebagian besar bisa dicegah atau dideteksi lebih awal. Informasi pencegahan itu ada, tetapi tersebar di pedoman-pedoman teknis yang sulit dipahami dan jarang sampai ke keluarga yang membutuhkannya.</p>
+  <p>CareMate lahir dari satu keyakinan sederhana: setiap keluarga berhak tahu persis apa yang perlu dilakukan untuk tetap sehat, kapan melakukannya, dan mengapa itu penting, tanpa harus menjadi ahli medis terlebih dahulu.</p>
+  <p>Kami masih di tahap awal dan membangun secara terbuka. Setiap masukan Anda langsung membentuk produk ini.</p>
+  {% else %}
+  <h2>Why we are building this</h2>
+  <p>Chronic conditions like diabetes and hypertension are hitting younger and younger Indonesians, even though most of them can be prevented or caught early. The prevention knowledge exists, but it lives in technical guidelines that rarely reach the families who need it.</p>
+  <p>CareMate was born from a simple belief: every family deserves to know exactly what to do to stay healthy, when to do it, and why it matters, without needing a medical degree first.</p>
+  <p>We are early-stage and building openly. Every piece of feedback directly shapes the product.</p>
+  {% endif %}
+
+  <div class="founder-card">
+    <div class="founder-avatar">CP</div>
+    <div>
+      <div class="founder-name">Carl Poilvet</div>
+      <div class="founder-role">{{ 'Pendiri' if LANG == 'id' else 'Founder' }}</div>
+      <div class="founder-bio">
+        {% if LANG == 'id' %}
+        Berlatar belakang di industri kesehatan, Carl membangun CareMate untuk menjembatani pedoman pencegahan kelas dunia dengan kehidupan sehari-hari keluarga Indonesia.
+        {% else %}
+        With a background in the healthcare industry, Carl is building CareMate to bridge world-class prevention guidelines and the everyday lives of Indonesian families.
+        {% endif %}
+      </div>
+      <div style="margin-top:10px"><a href="mailto:privacy@mycaremate.me" style="font-size:13px;font-weight:700;color:var(--coral);text-decoration:none"><i class="ti ti-mail"></i> privacy@mycaremate.me</a></div>
+    </div>
+  </div>
+
+  <h2>{{ 'Prinsip kami' if LANG == 'id' else 'What we believe' }}</h2>
+  <div class="value-grid">
+    <div class="value-card">
+      <i class="ti ti-shield-check"></i>
+      {% if LANG == 'id' %}
+      <h3>Berbasis pedoman</h3>
+      <p>Setiap rekomendasi mengacu pada Kemenkes, PAPDI 2025, IDAI, CDC, dan WHO, bukan opini.</p>
+      {% else %}
+      <h3>Guideline-based</h3>
+      <p>Every recommendation traces back to Kemenkes, PAPDI 2025, IDAI, CDC, and WHO, not opinion.</p>
+      {% endif %}
+    </div>
+    <div class="value-card">
+      <i class="ti ti-lock-heart"></i>
+      {% if LANG == 'id' %}
+      <h3>Privasi dulu</h3>
+      <p>Data kesehatan Anda milik Anda. Tidak pernah dijual, dan bisa dihapus kapan saja.</p>
+      {% else %}
+      <h3>Privacy first</h3>
+      <p>Your health data is yours. Never sold, and deletable any time.</p>
+      {% endif %}
+    </div>
+    <div class="value-card">
+      <i class="ti ti-message-heart"></i>
+      {% if LANG == 'id' %}
+      <h3>Jujur tentang AI</h3>
+      <p>Kami selalu menyatakan dengan jelas kapan Anda berbicara dengan AI, dan apa batasannya.</p>
+      {% else %}
+      <h3>Honest about AI</h3>
+      <p>We always say clearly when you are talking to an AI, and what its limits are.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="about-cta">
+    <a href="/#assessment" class="btn-primary">{{ t('hero.cta') }} →</a>
+    <a href="/#perusahaan" class="btn-secondary">{{ t('b2b.cta') }}</a>
+  </div>
+</div>
+
+{% include "_footer.html" %}
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pilot leads, CareMate</title>
+  <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
+  <style>
+    :root{--coral:#FF6B6B;--ink:#1A0A00;--muted:#8a7a6e;--border:#F0E4DD}
+    *{margin:0;box-sizing:border-box;font-family:'DM Sans','Helvetica Neue',Arial,sans-serif}
+    body{background:#FFF8F4;color:var(--ink);padding:40px 20px}
+    .wrap{max-width:860px;margin:0 auto}
+    h1{font-size:24px;font-weight:900}
+    .sub{font-size:14px;color:var(--muted);margin:6px 0 26px}
+    table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+    th,td{text-align:left;padding:12px 14px;font-size:13.5px;border-bottom:1px solid var(--border);vertical-align:top}
+    th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800;background:#FFF3EC}
+    tr:last-child td{border-bottom:none}
+    .msg{font-size:12px;color:var(--muted);max-width:280px}
+    .empty{background:#fff;border:1px solid var(--border);border-radius:14px;padding:40px;text-align:center;color:var(--muted);font-size:14px}
+    a{color:var(--coral)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Corporate pilot leads</h1>
+    <div class="sub">{{ leads|length }} request(s). Reply within 1-2 business days, that is the promise on the site.</div>
+    {% if leads %}
+    <table>
+      <thead><tr><th>When</th><th>Company</th><th>Contact</th><th>Size</th><th>Message</th></tr></thead>
+      <tbody>
+        {% for l in leads %}
+        <tr>
+          <td>{{ l.created_at.strftime('%d %b %Y') }}</td>
+          <td><b>{{ l.company }}</b></td>
+          <td>{{ l.contact }}<br/><a href="mailto:{{ l.email }}">{{ l.email }}</a>{% if l.phone %}<br/>{{ l.phone }}{% endif %}</td>
+          <td>{{ l.employees or '?' }}</td>
+          <td class="msg">{{ l.message or '' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No pilot requests yet. Share the homepage "For Companies" section with HR contacts to get the first ones.</div>
+    {% endif %}
+  </div>
+</body>
+</html>

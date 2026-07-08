@@ -36,8 +36,14 @@
 <!-- ── HERO ── -->
 <div class="clinics-hero">
   <div class="clinics-hero-inner">
+    {% if LANG == 'id' %}
+    <h1 class="clinics-title">Temukan layanan kesehatan yang Anda butuhkan</h1>
+    <p class="clinics-subtitle">Vaksinasi, skrining, tes lab, dan konsultasi, di klinik terdekat atau di rumah Anda.</p>
+    {% else %}
     <h1 class="clinics-title">Find the care you need</h1>
     <p class="clinics-subtitle">Vaccinations, screenings, lab tests and consultations, at a clinic near you or at home.</p>
+    {% endif %}
+    <p style="font-size:12px;color:var(--text-muted);max-width:640px;margin:10px auto 0;line-height:1.55">{{ t('clinics.disclaimer') }}</p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in messages %}
@@ -117,7 +123,7 @@
       {% endfor %}
     </div>
     <div class="clinic-actions">
-      <a class="btn-book" href="/go/clinic/{{ clinic.id }}/book" target="_blank" rel="noopener">Book on {{ clinic.network }} →</a>
+      <a class="btn-book" href="/go/clinic/{{ clinic.id }}/book" target="_blank" rel="noopener">{{ t('clinics.visit') }} {{ clinic.network }} →</a>
       <a class="btn-directions" href="/go/clinic/{{ clinic.id }}/whatsapp" target="_blank" rel="noopener">WhatsApp</a>
     </div>
 
@@ -140,14 +146,14 @@
     </div>
     <div class="clinic-actions">
       {% if current_user.is_authenticated %}
-      <button class="btn-book" onclick="openBookingModal({{ clinic.id }}, '{{ clinic.name }} {{ clinic.branch }}')">Book Appointment</button>
+      <button class="btn-book" onclick="openBookingModal({{ clinic.id }}, '{{ clinic.name }} {{ clinic.branch }}')">{{ t('clinics.book') }}</button>
       {% else %}
-      <a href="/login" class="btn-book">Sign in to Book</a>
+      <a href="/login" class="btn-book">{{ t('clinics.signin') }}</a>
       {% endif %}
       {% if clinic.website %}
-      <a class="btn-directions" href="/go/clinic/{{ clinic.id }}/book" target="_blank" rel="noopener">Website</a>
+      <a class="btn-directions" href="/go/clinic/{{ clinic.id }}/book" target="_blank" rel="noopener">{{ t('clinics.website') }}</a>
       {% endif %}
-      <a class="btn-directions" href="https://www.google.com/maps/search/?api=1&query={{ clinic.latitude }},{{ clinic.longitude }}" target="_blank" rel="noopener">Map</a>
+      <a class="btn-directions" href="https://www.google.com/maps/search/?api=1&query={{ clinic.latitude }},{{ clinic.longitude }}" target="_blank" rel="noopener">{{ t('clinics.map') }}</a>
     </div>
     {% endif %}
 
