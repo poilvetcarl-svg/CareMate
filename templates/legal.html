@@ -26,10 +26,11 @@
   <div class="nav-container">
     <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span class="logo-accent">Mate</span></a>
     <div class="nav-links">
-      <a href="/clinics" class="nav-link">Clinics</a>
-      <a href="/teleconsultation" class="nav-link">Doctors</a>
-      <a href="/login" class="nav-cta">Sign In</a>
+      <a href="/clinics" class="nav-link">{{ t('nav.clinics') }}</a>
+      <a href="/teleconsultation" class="nav-link">{{ t('nav.doctors') }}</a>
+      <a href="/login" class="nav-cta">{{ t('nav.signin') }}</a>
     </div>
+    {% include "_langswitch.html" %}
   </div>
 </nav>
 

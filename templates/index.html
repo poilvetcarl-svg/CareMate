@@ -50,8 +50,8 @@
         <a href="/login" class="nav-link">{{ t('nav.signin') }}</a>
         <a href="/register" class="nav-cta">{{ t('nav.signup') }}</a>
       {% endif %}
-      <a href="/set-lang/{{ 'en' if LANG == 'id' else 'id' }}" class="nav-link" style="font-weight:800;color:var(--coral)" title="Switch language">{{ t('lang.switch') }}</a>
     </div>
+    {% include "_langswitch.html" %}
     <button class="menu-toggle" id="menuToggle" aria-label="Open navigation menu"><i class="ti ti-menu-2"></i></button>
   </div>
 </nav>
