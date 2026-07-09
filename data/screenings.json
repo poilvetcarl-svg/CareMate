@@ -43,7 +43,7 @@
     {
       "key": "cervical_cancer",
       "name": "Cervical Cancer Screening (Pap / HPV test)",
-      "why": "Cervical cancer is among the most preventable cancers — Indonesia has one of the highest burdens in Asia.",
+      "why": "Cervical cancer is among the most preventable cancers, Indonesia has one of the highest burdens in Asia.",
       "frequency": "Pap every 3 years, or HPV test every 5 years (age 30+)",
       "age_min": 21, "age_max": 65,
       "sex": "female",
@@ -100,7 +100,7 @@
     {
       "key": "hiv_screen",
       "name": "HIV Screening",
-      "why": "Recommended at least once for all adults — modern treatment makes early detection life-saving.",
+      "why": "Recommended at least once for all adults, modern treatment makes early detection life-saving.",
       "frequency": "At least once; yearly if at risk",
       "age_min": 18, "age_max": 65,
       "sex": "any",
@@ -121,7 +121,7 @@
     },
     {
       "key": "prostate",
-      "name": "Prostate Check (PSA — discuss with doctor)",
+      "name": "Prostate Check (PSA, discuss with doctor)",
       "why": "PSA screening is a personal decision; discuss benefits and harms with your doctor.",
       "frequency": "Shared decision with your doctor",
       "age_min": 55, "age_max": 69,
@@ -133,7 +133,7 @@
     {
       "key": "eye_exam_diabetic",
       "name": "Diabetic Eye Exam (Retinopathy)",
-      "why": "Diabetes is the leading cause of preventable blindness — annual retina checks catch it in time.",
+      "why": "Diabetes is the leading cause of preventable blindness, annual retina checks catch it in time.",
       "frequency": "Every year",
       "age_min": 18, "age_max": 120,
       "sex": "any",
@@ -169,7 +169,7 @@
     {
       "key": "aaa_screen",
       "name": "Abdominal Aortic Aneurysm Ultrasound",
-      "why": "One-time ultrasound for men 65+ who have ever smoked — a ruptured aneurysm is usually fatal.",
+      "why": "One-time ultrasound for men 65+ who have ever smoked, a ruptured aneurysm is usually fatal.",
       "frequency": "Once",
       "age_min": 65, "age_max": 75,
       "sex": "male",

@@ -67,8 +67,8 @@
     },
     "zoster": {
       "name": "Herpes Zoster (Recombinant)",
-      "schedule": "2 doses, 2–6 months apart; non-live vaccine — safe even for immunocompromised patients",
-      "description": "Recombinant adjuvanted vaccine against herpes zoster (shingles) and postherpetic neuralgia. 91% efficacy. Per PAPDI 2025, recommended at any adult age for patients with diabetes, immunocompromised conditions, HIV, heart disease, lung disease, kidney disease, liver disease, or cancer — not only adults 50+.",
+      "schedule": "2 doses, 2–6 months apart; non-live vaccine, safe even for immunocompromised patients",
+      "description": "Recombinant adjuvanted vaccine against herpes zoster (shingles) and postherpetic neuralgia. 91% efficacy. Per PAPDI 2025, recommended at any adult age for patients with diabetes, immunocompromised conditions, HIV, heart disease, lung disease, kidney disease, liver disease, or cancer, not only adults 50+.",
       "conditions": ["age_50_plus", "immunocompromised", "diabetes", "heart_disease", "lung_disease", "kidney_disease", "liver_disease", "hiv", "cancer", "asplenia"],
       "age_range": [18, 120],
       "priority": "high",
@@ -141,7 +141,7 @@
       "color": "#E17055",
       "image": "https://images.unsplash.com/photo-1612277795421-9bc7706a4a34?w=500&q=80",
       "risk_weight": 1,
-      "sources": ["CDC ACIP 2022", "WHO Hepatitis B Position Paper 2017", "Kemenkes RI — Indonesia HBV Control Program 2022"]
+      "sources": ["CDC ACIP 2022", "WHO Hepatitis B Position Paper 2017", "Kemenkes RI, Indonesia HBV Control Program 2022"]
     },
     "meningococcal": {
       "name": "Meningococcal (MenACWY + MenB)",
@@ -180,7 +180,7 @@
       "color": "#FDCB6E",
       "image": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=500&q=80",
       "risk_weight": 2,
-      "sources": ["CDC Travelers' Health Yellow Book 2024", "WHO Yellow Fever Position Paper 2013", "IHR 2005 — International Health Regulations"]
+      "sources": ["CDC Travelers' Health Yellow Book 2024", "WHO Yellow Fever Position Paper 2013", "IHR 2005, International Health Regulations"]
     },
     "japanese_encephalitis": {
       "name": "Japanese Encephalitis",

@@ -1,5 +1,5 @@
 {
-  "note": "Standard adult reference ranges for common panels. Flags are informational only — never a diagnosis. 'explains' is plain-language education, not medical advice.",
+  "note": "Standard adult reference ranges for common panels. Flags are informational only, never a diagnosis. 'explains' is plain-language education, not medical advice.",
   "tests": {
     "hba1c": {
       "name": "HbA1c",
@@ -12,7 +12,7 @@
         "glycated hemoglobin"
       ],
       "explains": "Your average blood sugar over the past 2-3 months. Higher means a greater risk of diabetes.",
-      "high_means": "Higher levels suggest pre-diabetes or diabetes — your average blood sugar has been running high."
+      "high_means": "Higher levels suggest pre-diabetes or diabetes, your average blood sugar has been running high."
     },
     "fasting_glucose": {
       "name": "Fasting Glucose",
@@ -54,7 +54,7 @@
         "kolesterol ldl"
       ],
       "explains": "The 'bad' cholesterol that builds up in arteries. Lower is better.",
-      "high_means": "The 'bad' cholesterol is high — the main driver of artery plaque. Diet, exercise or statins can lower it."
+      "high_means": "The 'bad' cholesterol is high, the main driver of artery plaque. Diet, exercise or statins can lower it."
     },
     "hdl": {
       "name": "HDL Cholesterol",
@@ -88,8 +88,8 @@
         "systolic",
         "sistolik"
       ],
-      "explains": "The top blood-pressure number — pressure when your heart beats.",
-      "high_means": "Elevated blood pressure (hypertension) — a major, silent risk factor for stroke and heart disease.",
+      "explains": "The top blood-pressure number, pressure when your heart beats.",
+      "high_means": "Elevated blood pressure (hypertension), a major, silent risk factor for stroke and heart disease.",
       "low_means": "Can cause dizziness; sometimes from dehydration or medication."
     },
     "diastolic_bp": {
@@ -101,8 +101,8 @@
         "diastolic",
         "diastolik"
       ],
-      "explains": "The bottom blood-pressure number — pressure when your heart rests.",
-      "high_means": "Elevated blood pressure — worth tracking over several readings.",
+      "explains": "The bottom blood-pressure number, pressure when your heart rests.",
+      "high_means": "Elevated blood pressure, worth tracking over several readings.",
       "low_means": "Usually not concerning unless you have symptoms."
     },
     "creatinine": {
@@ -115,7 +115,7 @@
       ],
       "explains": "A waste product your kidneys filter. High levels can signal reduced kidney function.",
       "high_means": "May reflect reduced kidney function or dehydration; muscular people naturally run a bit higher.",
-      "low_means": "Often harmless — common with low muscle mass."
+      "low_means": "Often harmless, common with low muscle mass."
     },
     "egfr": {
       "name": "eGFR",
@@ -148,7 +148,7 @@
         "sgpt"
       ],
       "explains": "A liver enzyme. Raised levels can indicate liver stress or inflammation.",
-      "high_means": "Raised liver enzymes can mean liver stress — from fatty liver, alcohol, medications or infection."
+      "high_means": "Raised liver enzymes can mean liver stress, from fatty liver, alcohol, medications or infection."
     },
     "ast": {
       "name": "AST (SGOT)",
@@ -173,7 +173,7 @@
       ],
       "explains": "The protein carrying oxygen in your blood. Low means anaemia; high can mean dehydration.",
       "high_means": "Often from dehydration; sometimes the body making extra red cells.",
-      "low_means": "Low hemoglobin is anaemia — commonly from iron deficiency, blood loss, or chronic disease."
+      "low_means": "Low hemoglobin is anaemia, commonly from iron deficiency, blood loss, or chronic disease."
     },
     "vitamin_d": {
       "name": "Vitamin D (25-OH)",
@@ -186,7 +186,7 @@
       ],
       "explains": "Vitamin D level. Low is very common and affects bones and immunity.",
       "high_means": "Rarely high (usually from over-supplementing).",
-      "low_means": "Low vitamin D is very common — from little sun exposure or diet — and affects bones and immunity."
+      "low_means": "Low vitamin D is very common, from little sun exposure or diet, and affects bones and immunity."
     },
     "tsh": {
       "name": "TSH",
@@ -197,7 +197,7 @@
         "thyroid stimulating hormone"
       ],
       "explains": "Thyroid signal hormone. High suggests an underactive thyroid, low an overactive one.",
-      "high_means": "A high TSH usually points to an underactive thyroid (hypothyroidism) — fatigue, weight gain.",
+      "high_means": "A high TSH usually points to an underactive thyroid (hypothyroidism), fatigue, weight gain.",
       "low_means": "A low TSH can point to an overactive thyroid (hyperthyroidism)."
     },
     "hematocrit": {
@@ -237,7 +237,7 @@
       "aliases": [
         "mean corpuscular volume"
       ],
-      "explains": "The average size of your red blood cells — helps classify the type of anaemia.",
+      "explains": "The average size of your red blood cells, helps classify the type of anaemia.",
       "high_means": "Larger red cells often relate to low B12/folate or alcohol use.",
       "low_means": "Smaller red cells often relate to iron deficiency."
     },
@@ -275,9 +275,9 @@
         "trombosit",
         "platelet count"
       ],
-      "explains": "Cells that help blood clot. Low raises bleeding risk; very high can raise clotting risk — relevant in dengue too.",
+      "explains": "Cells that help blood clot. Low raises bleeding risk; very high can raise clotting risk, relevant in dengue too.",
       "high_means": "A high count can raise clotting risk; sometimes follows infection or inflammation.",
-      "low_means": "A low count raises bleeding risk — notably watched in dengue fever."
+      "low_means": "A low count raises bleeding risk, notably watched in dengue fever."
     },
     "wbc": {
       "name": "White Blood Cells (Leukocytes)",
