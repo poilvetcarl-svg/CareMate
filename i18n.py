@@ -1,11 +1,11 @@
 """
 CareMate, lightweight i18n.
-Bahasa Indonesia is the default (the product is made for Indonesia); English is
-the toggle. Short shared strings live here; long paragraphs are written per
+English is the default; Bahasa Indonesia is one click away via the ENG | IDN
+selector. Short shared strings live here; long paragraphs are written per
 language directly in templates with {% if LANG == 'id' %} blocks.
 """
 
-DEFAULT_LANG = "id"
+DEFAULT_LANG = "en"
 
 STRINGS = {
     # navbar
