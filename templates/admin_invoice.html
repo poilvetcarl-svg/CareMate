@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice {{ number }} · CareMate</title>
+  <style>
+    :root{--coral:#FF6B6B;--ink:#1A0A00;--muted:#8a7a6e;--border:#F0E4DD}
+    *{margin:0;box-sizing:border-box;font-family:'Helvetica Neue',Arial,sans-serif}
+    body{background:#F7F1EC;padding:36px 20px;color:var(--ink)}
+    .page{max-width:760px;margin:0 auto;background:#fff;border-radius:16px;padding:44px 48px;box-shadow:0 20px 50px -25px rgba(0,0,0,.25)}
+    .head{display:flex;justify-content:space-between;border-bottom:3px solid var(--coral);padding-bottom:16px;margin-bottom:24px}
+    .logo{font-size:22px;font-weight:900}.logo span{color:var(--coral)}
+    h1{font-size:22px;font-weight:900}
+    .meta{font-size:12px;color:var(--muted);margin-top:4px}
+    .cols{display:flex;justify-content:space-between;margin:18px 0 24px;font-size:13px;line-height:1.7}
+    .cols b{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--coral);display:block;margin-bottom:4px}
+    table{width:100%;border-collapse:collapse}
+    th,td{text-align:left;padding:11px 12px;font-size:13px;border-bottom:1px solid var(--border)}
+    th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+    td.num,th.num{text-align:right}
+    .total td{font-size:16px;font-weight:900;border-bottom:none;padding-top:16px}
+    .pay{background:#FFF6F0;border:1px solid rgba(255,107,107,.25);border-radius:12px;padding:14px 16px;margin-top:22px;font-size:12.5px;line-height:1.6}
+    .note{font-size:11px;color:var(--muted);margin-top:18px;line-height:1.6}
+    .print-btn{position:fixed;top:18px;right:18px;background:var(--coral);color:#fff;border:none;border-radius:12px;padding:11px 20px;font-size:13.5px;font-weight:800;cursor:pointer}
+    @media print{body{background:#fff;padding:0}.page{box-shadow:none;padding:12px}.print-btn{display:none}}
+  </style>
+</head>
+<body>
+  <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+  <div class="page">
+    <div class="head">
+      <div>
+        <h1>Invoice</h1>
+        <div class="meta">{{ number }} · Issued {{ today.strftime('%d %B %Y') }} · Due {{ due.strftime('%d %B %Y') }}</div>
+      </div>
+      <div class="logo">Care<span>Mate</span></div>
+    </div>
+    <div class="cols">
+      <div><b>Billed to</b>{{ company.name }}<br/>{{ company.contact_name or '' }}<br/>{{ company.contact_email }}</div>
+      <div style="text-align:right"><b>From</b>CareMate · Carl Poilvet<br/>privacy@mycaremate.me<br/>mycaremate.me</div>
+    </div>
+    <table>
+      <thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>CareMate Corporate Prevention Program, <b>{{ plan|title }}</b> plan, 12 months</td>
+          <td class="num">{{ n }} employees</td>
+          <td class="num">Rp {{ '{:,.0f}'.format(per).replace(',', '.') }}</td>
+          <td class="num">Rp {{ '{:,.0f}'.format(per * n).replace(',', '.') }}</td>
+        </tr>
+        {% if total > per * n %}
+        <tr><td colspan="3">Annual minimum adjustment</td><td class="num">Rp {{ '{:,.0f}'.format(total - per * n).replace(',', '.') }}</td></tr>
+        {% endif %}
+        <tr class="total"><td colspan="3">Total due</td><td class="num">Rp {{ '{:,.0f}'.format(total).replace(',', '.') }}</td></tr>
+      </tbody>
+    </table>
+    <div class="pay"><b>Payment by bank transfer</b><br/>{{ bank_info }}<br/>Reference: {{ number }}</div>
+    <div class="note">Includes the full employee application, HR dashboard, monthly outcome reports, and support.
+    Prices exclude any applicable taxes. Questions: privacy@mycaremate.me.</div>
+  </div>
+</body>
+</html>

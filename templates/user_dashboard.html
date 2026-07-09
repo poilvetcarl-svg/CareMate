@@ -25,6 +25,7 @@
     <a href="/teleconsultation" class="dash-nav-item">{{ t('side.doctor') }}</a>
     <a href="/clinics" class="dash-nav-item">{{ t('side.findcare') }}</a>
     <a href="/dashboard/reminders" class="dash-nav-item">{{ t('side.reminders') }}</a>
+    <a href="/premium" class="dash-nav-item" style="color:#b8860b;font-weight:800">✦ CareMate+</a>
   </nav>
   <div class="dash-sidebar-footer">
     <div class="dash-user-pill">
@@ -105,7 +106,7 @@
     <div class="dash-col-main">
 
       <!-- WELLBEING COMPANION (Tomo the pet) -->
-      <div class="dash-card mate-card" style="margin-bottom:20px"
+      <div class="dash-card mate-card{{ ' plus' if IS_PLUS }}" style="margin-bottom:20px"
            data-checked="{{ '1' if today_checkin else '' }}"
            data-body="{{ today_checkin.body if today_checkin else '' }}"
            data-mind="{{ today_checkin.mind if today_checkin else '' }}"
@@ -120,6 +121,7 @@
           <div class="mate-info">
             <div class="mate-headline">
               <span class="mate-title">I'm Tomo, your prevention mate</span>
+              {% if IS_PLUS %}<span class="mate-plus-badge">✦ PLUS</span>{% endif %}
               <span class="mate-stage" id="mateStage">Stage {{ pet.stage }} · {{ pet.stage_name }}</span>
               <span class="mate-streak" id="mateStreak"><i class="ti ti-flame"></i> <b id="mateStreakNum">0</b>-day bond</span>
             </div>

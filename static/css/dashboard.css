@@ -1085,3 +1085,7 @@
 .breathe-circle { width: 150px; height: 150px; border-radius: 50%; margin: 12px auto 20px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:15px; letter-spacing:.02em; background: linear-gradient(135deg,#FF6B6B,#FF8E53); box-shadow: 0 16px 40px -10px rgba(255,107,107,0.5); animation: breatheAnim 8s ease-in-out infinite; }
 @keyframes breatheAnim { 0%,100%{transform:scale(.7)} 50%{transform:scale(1.05)} }
 .breathe-sub { font-size: 13px; color: var(--text-secondary); max-width: 280px; margin: 0 auto; line-height: 1.55; }
+
+/* CareMate+ golden Tomo */
+.mate-card.plus .mate-pet .mate-svg { filter: drop-shadow(0 0 12px rgba(255,217,61,0.75)); }
+.mate-plus-badge { font-size: 10px; font-weight: 900; letter-spacing: .06em; color: #8a6508; background: linear-gradient(135deg,#FFE9A3,#FFD93D); padding: 3px 10px; border-radius: 20px; }

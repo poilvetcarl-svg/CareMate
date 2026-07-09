@@ -20,6 +20,8 @@ class User(UserMixin, db.Model):
     sex           = db.Column(db.String(10))
     company_id    = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True)
     department    = db.Column(db.String(80))                   # set when joining via a company invite
+    plan          = db.Column(db.String(20), default='free')   # free | plus
+    plan_expires  = db.Column(db.DateTime)                     # None = no expiry set
     role          = db.Column(db.String(20), default='user')   # user | corporate_admin
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     whatsapp_opt_in = db.Column(db.Boolean, default=False)
@@ -167,6 +169,20 @@ class WearableDevice(db.Model):
     connected_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref=db.backref('wearable', uselist=False, cascade='all, delete-orphan'))
+
+
+# ── PAYMENT (CareMate+ subscriptions; manual transfer or gateway) ──────────────
+class Payment(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('user.id'), index=True, nullable=False)
+    period     = db.Column(db.String(20))                # monthly | yearly
+    amount     = db.Column(db.Integer)                   # IDR
+    method     = db.Column(db.String(30), default='transfer')   # transfer | xendit
+    status     = db.Column(db.String(20), default='pending', index=True)  # pending | approved | rejected
+    reference  = db.Column(db.String(200))               # payer note / external invoice id
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('payments', lazy=True))
 
 
 # ── PILOT LEAD (companies requesting the free corporate wellness pilot) ────────

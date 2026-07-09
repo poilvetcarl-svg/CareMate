@@ -835,6 +835,11 @@
       });
 
       const data = await r.json();
+      if (r.status === 402) {
+        alert((data.message || 'Video limit reached.') + ' Upgrade to CareMate+ for unlimited video consultations.');
+        window.location.href = '/premium';
+        return;
+      }
       if (!data.conversation_url) throw new Error(data.error || JSON.stringify(data));
 
       tavusConvId = data.conversation_id;

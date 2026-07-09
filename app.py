@@ -91,7 +91,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Recycle pooled connections so serverless cold starts don't reuse dead sockets.
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 280}
 
-from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, Event, TerraUser, WearableMetric, PilotLead, seed_clinics
+from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, Event, TerraUser, WearableMetric, PilotLead, Payment, seed_clinics
 db.init_app(app)
 
 from flask_mail import Mail, Message as MailMessage
@@ -122,7 +122,9 @@ with app.app_context():
     for _ddl in ("ALTER TABLE clinic ADD COLUMN website VARCHAR(200)",
                  "ALTER TABLE clinic ADD COLUMN home_service BOOLEAN DEFAULT 0",
                  "ALTER TABLE vaccination_record ADD COLUMN child_id INTEGER",
-                 'ALTER TABLE "user" ADD COLUMN department VARCHAR(80)'):
+                 'ALTER TABLE "user" ADD COLUMN department VARCHAR(80)',
+                 'ALTER TABLE "user" ADD COLUMN plan VARCHAR(20)',
+                 'ALTER TABLE "user" ADD COLUMN plan_expires TIMESTAMP'):
         try:
             db.session.execute(_sql_text(_ddl))
             db.session.commit()
@@ -1636,6 +1638,11 @@ def add_lab_result():
 @app.route("/labs/upload", methods=["POST"])
 @login_required
 def upload_lab_photo():
+    if not is_plus(current_user):
+        flash("Ekstraksi foto lab adalah fitur CareMate+. Anda tetap bisa menambah hasil secara manual."
+              if session.get("lang", DEFAULT_LANG) == "id" else
+              "Lab photo extraction is a CareMate+ feature. You can still add results manually.", "error")
+        return redirect(url_for("premium"))
     if not client:
         flash("AI extraction needs an OpenAI key, you can still add results manually.", "error")
         return redirect(url_for("dashboard"))
@@ -1850,6 +1857,11 @@ def compute_child_schedule(child):
 @app.route("/family/add-child", methods=["POST"])
 @login_required
 def add_child():
+    if not is_plus(current_user) and len(current_user.children) >= FREE_LIMITS["children"]:
+        flash("Paket gratis mencakup 1 profil anak. CareMate+ membuka profil keluarga tanpa batas."
+              if session.get("lang", DEFAULT_LANG) == "id" else
+              "The free plan includes 1 child profile. CareMate+ unlocks unlimited family profiles.", "error")
+        return redirect(url_for("premium"))
     name = request.form.get("name", "").strip()
     dob_str = request.form.get("date_of_birth", "")
     sex = request.form.get("sex", "")
@@ -2032,7 +2044,11 @@ def dashboard_settings():
     if request.method == "POST":
         current_user.name  = request.form.get("name", current_user.name).strip()
         current_user.phone = request.form.get("phone", "").strip() or None
-        current_user.whatsapp_opt_in = request.form.get("whatsapp_opt_in") == "on"
+        wants_wa = request.form.get("whatsapp_opt_in") == "on"
+        if wants_wa and not is_plus(current_user):
+            wants_wa = False
+            flash("WhatsApp reminders are a CareMate+ feature. Email reminders stay free.", "error")
+        current_user.whatsapp_opt_in = wants_wa
         db.session.commit()
         flash("Settings saved.", "success")
     return render_template("dashboard_settings.html")
@@ -2086,14 +2102,175 @@ def admin_leads():
     return render_template("admin_leads.html", leads=leads)
 
 
+@app.route("/premium")
+def premium():
+    return render_template("premium.html", prices=PLUS_PRICES,
+                           bank_info=os.environ.get("BANK_TRANSFER_INFO", ""))
+
+
+@app.route("/premium/confirm", methods=["POST"])
+@login_required
+def premium_confirm():
+    """Manual path: the user says they transferred; we verify and approve in admin."""
+    period = request.form.get("period") if request.form.get("period") in PLUS_PRICES else "monthly"
+    ref = (request.form.get("reference") or "").strip()[:200]
+    if Payment.query.filter_by(user_id=current_user.id, status="pending").count() >= 3:
+        flash("You already have a pending confirmation, we will review it shortly.", "error")
+        return redirect(url_for("premium"))
+    db.session.add(Payment(user_id=current_user.id, period=period,
+                           amount=PLUS_PRICES[period], method="transfer", reference=ref))
+    db.session.commit()
+    log_event("payment_submitted", current_user.id, meta=period)
+    flash("Terima kasih! Kami verifikasi dalam 1 hari kerja dan CareMate+ langsung aktif."
+          if session.get("lang", DEFAULT_LANG) == "id" else
+          "Thank you! We verify within 1 business day and CareMate+ activates right away.", "success")
+    return redirect(url_for("premium"))
+
+
+@app.route("/admin/payments", methods=["GET", "POST"])
+def admin_payments():
+    if request.args.get("key") != os.environ.get("ADMIN_KEY", "caremate-admin"):
+        return "Forbidden", 403
+    if request.method == "POST":
+        p = Payment.query.get(int(request.form.get("payment_id", 0)))
+        action = request.form.get("action")
+        if p and p.status == "pending":
+            if action == "approve":
+                p.status = "approved"
+                _activate_plus(p.user, p.period)
+            elif action == "reject":
+                p.status = "rejected"
+            db.session.commit()
+        return redirect(request.url)
+    payments = Payment.query.order_by(Payment.created_at.desc()).limit(200).all()
+    return render_template("admin_payments.html", payments=payments,
+                           key=request.args.get("key"))
+
+
+# ── XENDIT (dormant until keys exist; QRIS / e-wallets / VA checkout) ─────────
+XENDIT_API_KEY        = os.environ.get("XENDIT_API_KEY", "")
+XENDIT_CALLBACK_TOKEN = os.environ.get("XENDIT_CALLBACK_TOKEN", "")
+
+
+@app.route("/api/pay/xendit/create", methods=["POST"])
+@login_required
+def xendit_create():
+    """Create a hosted Xendit invoice (QRIS, GoPay, OVO, VA...). 503 until keys exist,
+    the premium page falls back to the manual transfer flow."""
+    if not XENDIT_API_KEY:
+        return jsonify({"error": "not_configured"}), 503
+    period = (request.json or {}).get("period")
+    if period not in PLUS_PRICES:
+        return jsonify({"error": "bad_period"}), 400
+    try:
+        resp = http_req.post(
+            "https://api.xendit.co/v2/invoices",
+            auth=(XENDIT_API_KEY, ""),
+            json={
+                "external_id": f"cmplus-{current_user.id}-{period}-{int(datetime.utcnow().timestamp())}",
+                "amount": PLUS_PRICES[period],
+                "currency": "IDR",
+                "description": f"CareMate+ ({period})",
+                "payer_email": current_user.email,
+                "success_redirect_url": url_for("premium", _external=True) + "?paid=1",
+            }, timeout=20)
+        data = resp.json()
+        if resp.status_code in (200, 201) and data.get("invoice_url"):
+            db.session.add(Payment(user_id=current_user.id, period=period,
+                                   amount=PLUS_PRICES[period], method="xendit",
+                                   reference=data.get("id", "")))
+            db.session.commit()
+            return jsonify({"url": data["invoice_url"]})
+        print(f"[Xendit] create failed: {resp.status_code} {data}")
+        return jsonify({"error": "xendit_error"}), 502
+    except Exception as e:
+        print(f"[Xendit] {e}")
+        return jsonify({"error": str(e)}), 502
+
+
+@app.route("/api/xendit/webhook", methods=["POST"])
+def xendit_webhook():
+    if not XENDIT_CALLBACK_TOKEN or \
+       request.headers.get("x-callback-token") != XENDIT_CALLBACK_TOKEN:
+        return jsonify({"error": "unauthorized"}), 403
+    data = request.get_json(silent=True) or {}
+    if data.get("status") == "PAID":
+        p = Payment.query.filter_by(reference=data.get("id", ""), method="xendit").first()
+        if p and p.status == "pending":
+            p.status = "approved"
+            _activate_plus(p.user, p.period)
+    return jsonify({"ok": True})
+
+
+@app.route("/admin/invoice/<int:company_id>")
+def admin_invoice(company_id):
+    """Printable B2B invoice for converting a pilot into a paid plan."""
+    if request.args.get("key") != os.environ.get("ADMIN_KEY", "caremate-admin"):
+        return "Forbidden", 403
+    company = Company.query.get_or_404(company_id)
+    plan = request.args.get("plan", "starter")
+    per = {"starter": 35000, "growth": 25000, "enterprise": 25000}.get(plan, 35000)
+    n = max(len(company.employees), int(request.args.get("n", 0)) or len(company.employees) or 50)
+    total = max(per * n, 5000000)
+    return render_template("admin_invoice.html", company=company, plan=plan, per=per,
+                           n=n, total=total, today=date.today(), due=date.today() + timedelta(days=14),
+                           number=f"CM-{date.today().strftime('%Y%m')}-{company.id:03d}",
+                           bank_info=os.environ.get("BANK_TRANSFER_INFO", "Bank details: set BANK_TRANSFER_INFO in the environment."))
+
+
+# ── CAREMATE+ (premium plan) ──────────────────────────────────────────────────
+PLUS_PRICES = {"monthly": 29000, "yearly": 249000}   # IDR
+FREE_LIMITS = {"children": 1, "video_per_month": 1, "chat_per_day": 15}
+
+
+def is_plus(user):
+    """True when the user has an active CareMate+ subscription."""
+    if not user or not getattr(user, "is_authenticated", True):
+        return False
+    if (user.plan or "free") != "plus":
+        return False
+    return user.plan_expires is None or user.plan_expires >= datetime.utcnow()
+
+
+@app.context_processor
+def _inject_plan():
+    try:
+        return {"IS_PLUS": is_plus(current_user) if current_user.is_authenticated else False}
+    except Exception:
+        return {"IS_PLUS": False}
+
+
+def _activate_plus(user, period):
+    """Extend or start a CareMate+ subscription."""
+    days = 366 if period == "yearly" else 31
+    base = user.plan_expires if (user.plan == "plus" and user.plan_expires
+                                 and user.plan_expires > datetime.utcnow()) else datetime.utcnow()
+    user.plan = "plus"
+    user.plan_expires = base + timedelta(days=days)
+    db.session.commit()
+    log_event("plus_activated", user.id, meta=period)
+
+
 def _checkin_streak(user_id):
-    """Count consecutive days (ending today) with a check-in."""
+    """Count consecutive days (ending today) with a check-in.
+    CareMate+ perk (streak freeze): a single missed day does not break the
+    streak; the bridged day just does not count."""
     days = {c.day for c in DailyCheckin.query.filter_by(user_id=user_id).all()}
+    if not days:
+        return 0
+    freeze = is_plus(User.query.get(user_id))
     streak = 0
     d = date.today()
-    while d in days:
-        streak += 1
+    if d not in days:                     # today not logged yet: start from yesterday
         d = d - timedelta(days=1)
+    while True:
+        if d in days:
+            streak += 1
+            d = d - timedelta(days=1)
+        elif freeze and (d - timedelta(days=1)) in days:
+            d = d - timedelta(days=1)     # bridge one missed day, do not count it
+        else:
+            break
     return streak
 
 
@@ -2872,6 +3049,18 @@ def consult():
 
     doctor = next((d for d in DOCTORS if d["id"] == doctor_id), DOCTORS[0])
 
+    if current_user.is_authenticated and not is_plus(current_user):
+        day_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        used = Event.query.filter(Event.name == "chat_msg", Event.user_id == current_user.id,
+                                  Event.created_at >= day_start).count()
+        if used >= FREE_LIMITS["chat_per_day"]:
+            def limit_msg():
+                yield ("You have reached today's free limit of 15 messages. "
+                       "CareMate+ gives you unlimited chat: mycaremate.me/premium")
+            return Response(stream_with_context(limit_msg()), content_type="text/plain; charset=utf-8")
+    if current_user.is_authenticated:
+        log_event("chat_msg", current_user.id)
+
     if not client:
         def no_key():
             yield "AI doctor not available, please configure OPENAI_API_KEY in your .env file."
@@ -3002,6 +3191,22 @@ def tavus_create_conversation():
     data       = request.json or {}
     doctor_id  = data.get("doctor_id", 1)
     doctor     = next((d for d in DOCTORS if d["id"] == doctor_id), DOCTORS[0])
+
+    # CareMate+ gate: video consultations cost real money per session.
+    # Free accounts get 1 per month; anonymous visitors get 1 per browser session.
+    if current_user.is_authenticated:
+        if not is_plus(current_user):
+            month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            used = TavusSession.query.filter(TavusSession.user_id == current_user.id,
+                                             TavusSession.created_at >= month_start).count()
+            if used >= FREE_LIMITS["video_per_month"]:
+                return jsonify({"error": "upgrade_required",
+                                "message": "Free plan includes 1 video consultation per month."}), 402
+    else:
+        if session.get("anon_video", 0) >= 1:
+            return jsonify({"error": "upgrade_required",
+                            "message": "Create a free account to continue consulting."}), 402
+        session["anon_video"] = session.get("anon_video", 0) + 1
 
     # The logged-in user's name is the source of truth, never let the avatar
     # invent or fall back to a placeholder name (e.g. "Sam").

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="{{ LANG }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
+  <title>CareMate+ · {{ 'Harga' if LANG == 'id' else 'Pricing' }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
+  <style>
+    .pw{max-width:920px;margin:0 auto;padding:110px 24px 60px}
+    .pw h1{font-size:36px;font-weight:900;color:var(--text-primary);text-align:center;letter-spacing:-.02em}
+    .pw .sub{font-size:15px;color:var(--text-muted);text-align:center;max-width:560px;margin:10px auto 34px;line-height:1.6}
+    .plans{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:640px;margin:0 auto 34px}
+    .plan{background:#fff;border:1.5px solid var(--border);border-radius:20px;padding:24px;text-align:center;position:relative}
+    .plan.best{border-color:var(--coral);box-shadow:0 20px 50px -20px rgba(255,107,107,.4)}
+    .best-tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--coral);color:#fff;font-size:11px;font-weight:800;padding:4px 14px;border-radius:20px}
+    .plan .nm{font-size:15px;font-weight:800;color:var(--text-primary)}
+    .plan .pr{font-size:30px;font-weight:900;color:var(--coral);margin:8px 0 2px}
+    .plan .per{font-size:12px;color:var(--text-muted)}
+    .plan .sv{font-size:12px;font-weight:700;color:#1b9e54;margin-top:4px;min-height:16px}
+    .plan button{width:100%;margin-top:14px}
+    table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:30px}
+    th,td{padding:12px 16px;font-size:13.5px;border-bottom:1px solid var(--border);text-align:center}
+    td:first-child,th:first-child{text-align:left}
+    th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);background:#FFF3EC}
+    .y{color:#1b9e54;font-weight:900}.n{color:#c9b8ae}
+    .pay-card{background:#FFF6F0;border:1.5px solid rgba(255,107,107,.25);border-radius:18px;padding:22px 24px;max-width:640px;margin:0 auto}
+    .pay-card h3{font-size:16px;font-weight:900;color:var(--text-primary);margin-bottom:8px}
+    .pay-card p{font-size:13.5px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px}
+    .pay-card input,.pay-card select{width:100%;border:1.5px solid var(--border);border-radius:11px;padding:11px 13px;font-size:14px;font-family:inherit;margin-bottom:10px}
+    .flash-success,.flash-error{max-width:640px;margin:0 auto 18px;border-radius:12px;padding:12px 16px;font-size:13.5px;font-weight:700}
+    .flash-success{background:rgba(46,213,115,.12);color:#1b9e54}
+    .flash-error{background:rgba(229,72,77,.1);color:#E5484D}
+    @media(max-width:620px){.plans{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span class="logo-accent">Mate</span></a>
+    <div class="nav-links">
+      <a href="/clinics" class="nav-link">{{ t('nav.clinics') }}</a>
+      <a href="/teleconsultation" class="nav-link">{{ t('nav.doctors') }}</a>
+      {% if current_user.is_authenticated %}<a href="/dashboard" class="nav-link">{{ t('nav.dashboard') }}</a>
+      {% else %}<a href="/login" class="nav-cta">{{ t('nav.signin') }}</a>{% endif %}
+    </div>
+    {% include "_langswitch.html" %}
+  </div>
+</nav>
+
+<div class="pw">
+  <h1>CareMate<span class="gradient-text">+</span></h1>
+  <p class="sub">{{ 'Semua fitur kesehatan inti tetap gratis, selamanya. CareMate+ menambah kenyamanan, keluarga, dan Tomo yang lebih istimewa.' if LANG == 'id' else 'Every core health feature stays free, forever. CareMate+ adds convenience, family scale, and a more special Tomo.' }}</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}<div class="flash-{{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+
+  {% if IS_PLUS %}
+  <div class="flash-success" style="text-align:center">{{ 'CareMate+ Anda aktif' if LANG == 'id' else 'Your CareMate+ is active' }}{% if current_user.plan_expires %} · {{ 'sampai' if LANG == 'id' else 'until' }} {{ current_user.plan_expires.strftime('%d %b %Y') }}{% endif %} ✦</div>
+  {% endif %}
+
+  <div class="plans">
+    <div class="plan">
+      <div class="nm">{{ 'Bulanan' if LANG == 'id' else 'Monthly' }}</div>
+      <div class="pr">Rp 29rb</div>
+      <div class="per">{{ 'per bulan' if LANG == 'id' else 'per month' }}</div>
+      <div class="sv"></div>
+      <button class="btn-primary" onclick="choose('monthly')">{{ 'Pilih Bulanan' if LANG == 'id' else 'Choose Monthly' }}</button>
+    </div>
+    <div class="plan best">
+      <div class="best-tag">{{ 'Paling hemat' if LANG == 'id' else 'Best value' }}</div>
+      <div class="nm">{{ 'Tahunan' if LANG == 'id' else 'Yearly' }}</div>
+      <div class="pr">Rp 249rb</div>
+      <div class="per">{{ 'per tahun' if LANG == 'id' else 'per year' }}</div>
+      <div class="sv">{{ 'Hemat Rp 99rb vs bulanan' if LANG == 'id' else 'Save Rp 99k vs monthly' }}</div>
+      <button class="btn-primary" onclick="choose('yearly')">{{ 'Pilih Tahunan' if LANG == 'id' else 'Choose Yearly' }}</button>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>{{ 'Fitur' if LANG == 'id' else 'Feature' }}</th><th>{{ 'Gratis' if LANG == 'id' else 'Free' }}</th><th>CareMate+</th></tr></thead>
+    <tbody>
+      <tr><td>{{ 'Penilaian 60 detik + rencana pencegahan' if LANG == 'id' else '60-second assessment + prevention plan' }}</td><td class="y">✓</td><td class="y">✓</td></tr>
+      <tr><td>{{ 'Tomo, check-in harian, XP & evolusi' if LANG == 'id' else 'Tomo, daily check-ins, XP & evolutions' }}</td><td class="y">✓</td><td class="y">✓</td></tr>
+      <tr><td>{{ 'Direktori klinik & pemesanan' if LANG == 'id' else 'Clinic directory & booking' }}</td><td class="y">✓</td><td class="y">✓</td></tr>
+      <tr><td>{{ 'Asisten kesehatan AI (chat)' if LANG == 'id' else 'AI health assistant (chat)' }}</td><td>15/{{ 'hari' if LANG == 'id' else 'day' }}</td><td class="y">{{ 'Tanpa batas' if LANG == 'id' else 'Unlimited' }}</td></tr>
+      <tr><td>{{ 'Konsultasi video dokter AI' if LANG == 'id' else 'AI doctor video consultations' }}</td><td>1/{{ 'bulan' if LANG == 'id' else 'month' }}</td><td class="y">{{ 'Tanpa batas' if LANG == 'id' else 'Unlimited' }}</td></tr>
+      <tr><td>{{ 'Ekstraksi foto hasil lab (AI)' if LANG == 'id' else 'Lab photo AI extraction' }}</td><td class="n">–</td><td class="y">✓</td></tr>
+      <tr><td>{{ 'Profil anak / keluarga' if LANG == 'id' else 'Child / family profiles' }}</td><td>1</td><td class="y">{{ 'Tanpa batas' if LANG == 'id' else 'Unlimited' }}</td></tr>
+      <tr><td>{{ 'Streak freeze: lewat 1 hari, streak aman' if LANG == 'id' else 'Streak freeze: miss a day, keep your streak' }}</td><td class="n">–</td><td class="y">✓</td></tr>
+      <tr><td>{{ 'Aura emas Tomo + lencana Plus' if LANG == 'id' else 'Golden Tomo aura + Plus badge' }}</td><td class="n">–</td><td class="y">✓</td></tr>
+      <tr><td>{{ 'Pengingat WhatsApp' if LANG == 'id' else 'WhatsApp reminders' }}</td><td class="n">–</td><td class="y">✓</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pay-card" id="payCard" style="display:none">
+    <h3 id="payTitle">CareMate+</h3>
+    {% if current_user.is_authenticated %}
+    <p>{{ 'Transfer ke rekening berikut, lalu konfirmasi di bawah. Kami verifikasi dalam 1 hari kerja.' if LANG == 'id' else 'Transfer to the account below, then confirm underneath. We verify within 1 business day.' }}</p>
+    <p style="font-weight:800;color:var(--text-primary)" id="bankInfo">{{ bank_info or ('Detail transfer dikirim via email: privacy@mycaremate.me' if LANG == 'id' else 'Transfer details are sent by email: privacy@mycaremate.me') }}</p>
+    <form method="POST" action="/premium/confirm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="period" id="periodInput" value="monthly">
+      <input name="reference" placeholder="{{ 'Nama pengirim / referensi transfer' if LANG == 'id' else 'Sender name / transfer reference' }}">
+      <button type="submit" class="btn-primary" style="width:100%">{{ 'Saya sudah transfer, aktifkan CareMate+' if LANG == 'id' else 'I have transferred, activate CareMate+' }}</button>
+    </form>
+    {% else %}
+    <p>{{ 'Buat akun gratis dulu, lalu pilih paket Anda.' if LANG == 'id' else 'Create your free account first, then pick your plan.' }}</p>
+    <a href="/register" class="btn-primary" style="display:block;text-align:center;text-decoration:none">{{ t('nav.signup') }}</a>
+    {% endif %}
+  </div>
+
+  <p style="font-size:11.5px;color:var(--text-muted);text-align:center;margin-top:22px">{{ 'Batalkan kapan saja, tanpa perpanjangan otomatis. Fitur kesehatan inti tidak pernah dikunci.' if LANG == 'id' else 'Cancel anytime, no auto-renewal. Core health features are never locked.' }}</p>
+</div>
+
+<script>
+async function choose(period){
+  document.getElementById('periodInput') && (document.getElementById('periodInput').value = period);
+  document.getElementById('payTitle').textContent = 'CareMate+ · ' + (period === 'yearly' ? 'Rp 249.000 / {{ "tahun" if LANG == "id" else "year" }}' : 'Rp 29.000 / {{ "bulan" if LANG == "id" else "month" }}');
+  try {
+    const r = await fetch('/api/pay/xendit/create', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({period})});
+    if (r.ok){ const d = await r.json(); if (d.url){ window.location.href = d.url; return; } }
+  } catch(e){}
+  const card = document.getElementById('payCard');
+  card.style.display = 'block';
+  card.scrollIntoView({behavior:'smooth', block:'center'});
+}
+</script>
+{% include "_footer.html" %}
+</body>
+</html>
