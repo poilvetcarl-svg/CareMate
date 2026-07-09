@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="{{ LANG }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
+  <title>{{ 'Kartu Anggota' if LANG == 'id' else 'Member Card' }} · CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
+  <style>
+    body{background:linear-gradient(135deg,#fff6f2,#ffe9e1);min-height:100vh}
+    .mw{max-width:560px;margin:0 auto;padding:110px 24px 60px}
+    .card{border-radius:22px;padding:26px 28px;color:#fff;box-shadow:0 26px 60px -22px rgba(193,58,29,.55);position:relative;overflow:hidden;
+          background:{{ 'linear-gradient(135deg,#B8860B,#FFD93D 55%,#B8860B)' if IS_PLUS else 'linear-gradient(135deg,#FF6B6B,#FF8E53)' }}}
+    .card::after{content:"";position:absolute;top:-40px;right:-40px;width:190px;height:190px;border-radius:50%;background:rgba(255,255,255,.14)}
+    .c-brand{font-size:19px;font-weight:900}
+    .c-plan{font-size:11px;font-weight:900;letter-spacing:.09em;background:rgba(255,255,255,.25);padding:4px 12px;border-radius:16px}
+    .c-name{font-size:22px;font-weight:900;margin-top:26px;letter-spacing:.01em;text-shadow:0 1px 2px rgba(0,0,0,.15)}
+    .c-meta{font-size:12px;opacity:.92;margin-top:6px;font-weight:600}
+    h2{font-size:15px;font-weight:900;color:var(--text-primary);margin:30px 0 12px}
+    .bshelf{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .bg-badge{background:#fff;border:1px solid rgba(255,107,107,.16);border-radius:14px;padding:12px 8px;text-align:center}
+    .bg-badge i{font-size:22px;color:var(--coral)}
+    .bg-badge.gold i{color:#B8860B}
+    .bg-badge span{display:block;font-size:10.5px;font-weight:800;color:var(--text-primary);margin-top:6px;line-height:1.3}
+    .benefit{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid rgba(255,107,107,.16);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+    .benefit i{color:var(--coral);font-size:20px;flex-shrink:0;margin-top:2px}
+    .benefit b{display:block;font-size:13.5px;color:var(--text-primary)}
+    .benefit p{font-size:12px;color:var(--text-muted);line-height:1.5;margin:2px 0 0}
+    .soon{opacity:.65}
+    .soon .tag{font-size:9.5px;font-weight:900;letter-spacing:.05em;background:rgba(160,120,90,.15);color:#8a6a4e;padding:2px 8px;border-radius:10px;margin-left:6px}
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span class="logo-accent">Mate</span></a>
+    <div class="nav-links">
+      <a href="/dashboard" class="nav-link">{{ t('nav.dashboard') }}</a>
+      <a href="/premium" class="nav-link" style="color:#b8860b;font-weight:800">CareMate+</a>
+    </div>
+    {% include "_langswitch.html" %}
+  </div>
+</nav>
+
+<div class="mw">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span class="c-brand">Care<span style="opacity:.85">Mate</span>{% if IS_PLUS %}+{% endif %}</span>
+      <span class="c-plan">{{ '✦ PLUS MEMBER' if IS_PLUS else ('ANGGOTA GRATIS' if LANG == 'id' else 'FREE MEMBER') }}</span>
+    </div>
+    <div class="c-name">{{ current_user.name or current_user.email }}</div>
+    <div class="c-meta">{{ member_no }} · {{ 'Anggota sejak' if LANG == 'id' else 'Member since' }} {{ since.strftime('%b %Y') }}{% if IS_PLUS and current_user.plan_expires %} · {{ 'aktif s.d.' if LANG == 'id' else 'active until' }} {{ current_user.plan_expires.strftime('%d %b %Y') }}{% endif %}</div>
+    <div class="c-meta" style="margin-top:2px">{{ pet.xp }} XP · {{ 'Tahap' if LANG == 'id' else 'Stage' }} {{ pet.stage }} {{ pet.stage_name }}</div>
+  </div>
+
+  {% if not IS_PLUS %}
+  <div style="text-align:center;margin-top:16px">
+    <a href="/premium" class="btn-primary" style="text-decoration:none;display:inline-block">{{ 'Tingkatkan ke CareMate+' if LANG == 'id' else 'Upgrade to CareMate+' }} ✦</a>
+  </div>
+  {% endif %}
+
+  {% if badges %}
+  <h2>{{ 'Lencana Anda' if LANG == 'id' else 'Your badges' }} ({{ badges|length }})</h2>
+  <div class="bshelf">
+    {% for b in badges %}
+    <div class="bg-badge {{ 'gold' if b.get('gold') }}"><i class="ti {{ b.icon }}"></i><span>{{ b.id_t[0] if LANG == 'id' else b.en[0] }}</span></div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <h2>{{ 'Keuntungan anggota' if LANG == 'id' else 'Member benefits' }}</h2>
+  {% if IS_PLUS %}
+  <div class="benefit"><i class="ti ti-video"></i><div><b>{{ 'Konsultasi video tanpa batas' if LANG == 'id' else 'Unlimited video consultations' }}</b><p>{{ 'Dokter AI kapan pun Anda butuh.' if LANG == 'id' else 'The AI doctor whenever you need it.' }}</p></div></div>
+  <div class="benefit"><i class="ti ti-file-text"></i><div><b>{{ 'Laporan Kesehatan Pribadi' if LANG == 'id' else 'Personal Health Report' }}</b><p>{{ 'Bawa ke setiap kunjungan dokter.' if LANG == 'id' else 'Bring it to every doctor visit.' }} <a href="/report" style="color:var(--coral);font-weight:700">{{ 'Buka' if LANG == 'id' else 'Open' }} →</a></p></div></div>
+  <div class="benefit"><i class="ti ti-flame"></i><div><b>Streak freeze</b><p>{{ 'Lewat satu hari, streak Anda tetap aman.' if LANG == 'id' else 'Miss a day, your streak survives.' }}</p></div></div>
+  {% else %}
+  <div class="benefit"><i class="ti ti-clipboard-heart"></i><div><b>{{ 'Rencana pencegahan gratis' if LANG == 'id' else 'Free prevention plan' }}</b><p>{{ 'Selalu gratis, selamanya.' if LANG == 'id' else 'Always free, forever.' }}</p></div></div>
+  {% endif %}
+  <div class="benefit soon"><i class="ti ti-discount"></i><div><b>{{ 'Diskon klinik & lab rekanan' if LANG == 'id' else 'Partner clinic & lab discounts' }}<span class="tag">{{ 'SEGERA' if LANG == 'id' else 'COMING SOON' }}</span></b><p>{{ 'Sedang dalam pembicaraan dengan klinik rekanan pertama. Anggota Plus mendapat akses lebih dulu.' if LANG == 'id' else 'In discussion with our first partner clinics. Plus members get first access.' }}</p></div></div>
+  <div class="benefit soon"><i class="ti ti-gift"></i><div><b>{{ 'Acara & skin musiman' if LANG == 'id' else 'Seasonal events & skins' }}<span class="tag">{{ 'SEGERA' if LANG == 'id' else 'COMING SOON' }}</span></b><p>{{ 'Tomo edisi spesial di momen-momen besar Indonesia.' if LANG == 'id' else 'Special-edition Tomo for Indonesia\'s big moments.' }}</p></div></div>
+</div>
+{% include "_footer.html" %}
+</body>
+</html>

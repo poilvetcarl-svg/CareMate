@@ -115,7 +115,8 @@
            data-wear="{{ wearable.wellness if wearable else '' }}"
            data-wear-sleep="{{ wearable.sleep_label if wearable else '' }}"
            data-wear-steps="{{ wearable.steps_label if wearable else '' }}"
-           data-stage="{{ pet.stage }}">
+           data-stage="{{ pet.stage }}"
+           data-assessments="{{ assessments|length }}">
         <div class="mate-row">
           <div class="mate-pet skin-{{ current_user.tomo_skin or 'classic' }}" id="matePet">{% include "_mate_pet.svg" %}</div>
           <div class="mate-info">
@@ -195,6 +196,25 @@
           <div class="breathe-circle"><span id="breatheText">Breathe in</span></div>
           <div class="breathe-sub">Follow Tomo. In through your nose, out through your mouth. Just a minute for you.</div>
           <button class="mate-save" onclick="closeBreathe()" style="margin-top:18px">I feel a little better</button>
+        </div>
+      </div>
+
+      <!-- BADGES -->
+      <div class="dash-card" style="margin-bottom:20px">
+        <div class="dash-card-header">
+          <div class="dash-card-title"><i class="ti ti-award" style="color:var(--coral)"></i> {{ 'Lencana' if LANG == 'id' else 'Badges' }}
+            <span style="font-size:12px;color:var(--text-muted);font-weight:600">({{ badges|selectattr('earned')|list|length }}/{{ badges|length }})</span></div>
+          <a href="/member" style="font-size:12px;color:var(--coral);font-weight:700;text-decoration:none">{{ 'Kartu anggota' if LANG == 'id' else 'Member card' }} →</a>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          {% for b in badges %}
+          <div title="{{ (b.id_t[1] if LANG == 'id' else b.en[1]) }}"
+               style="width:76px;text-align:center;padding:10px 4px;border-radius:13px;border:1px solid var(--border);
+                      {{ 'background:#FFF6F0' if b.earned else 'background:var(--bg-secondary);opacity:.45;filter:grayscale(1)' }}">
+            <i class="ti {{ b.icon }}" style="font-size:20px;color:{{ '#B8860B' if b.get('gold') else 'var(--coral)' }}"></i>
+            <div style="font-size:9.5px;font-weight:800;color:var(--text-primary);margin-top:5px;line-height:1.25">{{ b.id_t[0] if LANG == 'id' else b.en[0] }}</div>
+          </div>
+          {% endfor %}
         </div>
       </div>
 
@@ -863,6 +883,20 @@ function closeLabTeleconModal() {
 document.getElementById('labTeleconModal')?.addEventListener('click', function(e) {
   if (e.target === this) closeLabTeleconModal();
 });
+// ── Rescue the pre-signup assessment from localStorage ──
+(function(){
+  const card = document.querySelector('.mate-card');
+  if (!card || parseInt(card.dataset.assessments || '0') > 0) return;
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('lastAssessment') || 'null'); } catch(e){}
+  if (!saved || !saved.risk || !saved.risk.percentage) return;
+  fetch('/api/assessment/import', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({risk: saved.risk, form: saved.form || {}, vaccine_keys: saved.vaccine_keys || []})})
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { if (d && d.imported) location.reload(); })
+    .catch(()=>{});
+})();
+
 // ── Tomo customization (CareMate+) ──
 const IS_PLUS_JS = {{ 'true' if IS_PLUS else 'false' }};
 let pickedSkin = '{{ current_user.tomo_skin or "classic" }}';

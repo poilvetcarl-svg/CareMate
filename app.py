@@ -1276,6 +1276,7 @@ def dashboard():
         # Real synced data (Terra) wins; the deterministic demo is the fallback
         wearable = _real_wearable(current_user.id, today) or _simulated_wearable(current_user.id, today)
     pet = _pet_progress(current_user.id)
+    badges = _badges(current_user.id, pet)
     # Heal rows saved before a test existed in the reference table: re-match + re-flag
     _healed = False
     for lab in lab_results:
@@ -1305,7 +1306,8 @@ def dashboard():
         lab_reference=LAB_REFERENCE,
         wearable_device=wearable_device,
         wearable=wearable,
-        pet=pet
+        pet=pet,
+        badges=badges
     )
 
 
@@ -2104,6 +2106,16 @@ def admin_leads():
     return render_template("admin_leads.html", leads=leads)
 
 
+@app.route("/member")
+@login_required
+def member_card():
+    pet = _pet_progress(current_user.id)
+    return render_template("member.html", pet=pet,
+                           badges=[b for b in _badges(current_user.id, pet) if b["earned"]],
+                           member_no=f"CM-{current_user.id:05d}",
+                           since=current_user.created_at)
+
+
 @app.route("/premium")
 def premium():
     return render_template("premium.html", prices=PLUS_PRICES,
@@ -2403,6 +2415,37 @@ def _pet_progress(user_id):
     }
 
 
+def _badges(user_id, pet):
+    """Achievement badges, computed live from real actions (no storage, no cheating)."""
+    c = pet["counts"]
+    user = User.query.get(user_id)
+    kids = len(user.children) if user else 0
+    return [
+        {"icon": "ti-flag",            "key": "first_step",  "earned": c["checkin"] >= 1,
+         "en": ("First Step", "Log your first daily check-in"), "id_t": ("Langkah Pertama", "Lakukan check-in harian pertama")},
+        {"icon": "ti-clipboard-check", "key": "planner",     "earned": c["assessment"] >= 1,
+         "en": ("The Planner", "Complete a health assessment"), "id_t": ("Sang Perencana", "Selesaikan penilaian kesehatan")},
+        {"icon": "ti-flame",           "key": "week_warrior","earned": pet["streak"] >= 7,
+         "en": ("Week Warrior", "Reach a 7-day check-in streak"), "id_t": ("Pejuang Sepekan", "Capai streak 7 hari")},
+        {"icon": "ti-shield-check",    "key": "guardian",    "earned": c["vaccine"] >= 1,
+         "en": ("Guardian", "Log a vaccination"), "id_t": ("Sang Pelindung", "Catat satu vaksinasi")},
+        {"icon": "ti-flask",           "key": "lab_pro",     "earned": c["lab"] >= 3,
+         "en": ("Lab Pro", "Track 3 lab results"), "id_t": ("Ahli Lab", "Catat 3 hasil lab")},
+        {"icon": "ti-video",           "key": "connected",   "earned": c["consultation"] >= 1,
+         "en": ("Well Connected", "Finish a doctor consultation"), "id_t": ("Terhubung", "Selesaikan satu konsultasi")},
+        {"icon": "ti-map-pin",         "key": "real_step",   "earned": c["booking"] >= 1,
+         "en": ("Real World", "Book a clinic visit"), "id_t": ("Aksi Nyata", "Buat janji di klinik")},
+        {"icon": "ti-users",           "key": "family",      "earned": kids >= 1,
+         "en": ("Family First", "Add a family member"), "id_t": ("Keluarga Utama", "Tambahkan anggota keluarga")},
+        {"icon": "ti-seeding",         "key": "evolved",     "earned": pet["stage"] >= 2,
+         "en": ("Evolved", "Grow your companion to Bud"), "id_t": ("Berevolusi", "Kembangkan pendamping ke tahap Bud")},
+        {"icon": "ti-crown",           "key": "mythic",      "earned": pet["stage"] >= 4, "gold": True,
+         "en": ("Mythic", "Reach the final evolution"), "id_t": ("Mythic", "Capai evolusi tertinggi")},
+        {"icon": "ti-star",            "key": "supporter",   "earned": is_plus(user), "gold": True,
+         "en": ("Founding Supporter", "CareMate+ member"), "id_t": ("Pendukung Awal", "Anggota CareMate+")},
+    ]
+
+
 def log_event(name, user_id=None, meta=None):
     """Record a product-analytics event. Best-effort, never breaks the request."""
     try:
@@ -2412,6 +2455,37 @@ def log_event(name, user_id=None, meta=None):
     except Exception as e:
         db.session.rollback()
         print(f"[log_event] {e}")
+
+
+@app.route("/api/assessment/import", methods=["POST"])
+@login_required
+def import_assessment():
+    """Attach the pre-signup (localStorage) assessment to the new account, so the
+    work an anonymous visitor did is not lost when they register."""
+    if Assessment.query.filter_by(user_id=current_user.id).count() > 0:
+        return jsonify({"ok": True, "skipped": "already has assessments"})
+    data = request.json or {}
+    risk = data.get("risk") or {}
+    form = data.get("form") or {}
+    if not risk.get("percentage"):
+        return jsonify({"error": "no assessment data"}), 400
+    try:
+        db.session.add(Assessment(
+            user_id=current_user.id,
+            age=int(form.get("age") or 0) or None,
+            sex=(form.get("sex") or "")[:10],
+            conditions=json.dumps(form.get("conditions") or []),
+            travel_regions=json.dumps(form.get("travel_regions") or []),
+            risk_score=float(risk.get("percentage")),
+            risk_level=(risk.get("level") or "")[:20],
+            vaccines_recommended=json.dumps(data.get("vaccine_keys") or []),
+        ))
+        db.session.commit()
+        log_event("assessment_imported", current_user.id)
+        return jsonify({"ok": True, "imported": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
 
 
 @app.route("/api/checkin", methods=["POST"])
@@ -3064,6 +3138,8 @@ When someone asks "what tests/screenings do I need at my age?", actually answer 
 Encourage them to run CareMate's free assessment for a plan personalised to their exact age, sex, conditions and lifestyle.
 
 You also know vaccines inside out: Influenza, COVID-19, Tdap/Td, MMR, Varicella, Herpes Zoster, HPV, Pneumococcal, RSV, Hepatitis A & B, Meningococcal, Typhoid, Yellow Fever, Japanese Encephalitis, Rabies, Cholera, plus the IDAI children's schedule, schedules, catch-up timing, contraindications, pregnancy safety, and Indonesia-specific availability. Always educational, never a diagnosis."""
+    if session.get("lang", DEFAULT_LANG) == "id":
+        system_prompt += "\n\nIMPORTANT: The user's interface is set to Bahasa Indonesia. Reply in natural Bahasa Indonesia unless they write in English."
 
     messages = [{"role": "system", "content": system_prompt}]
     for msg in conversation_history[-14:]:
@@ -3150,6 +3226,8 @@ How you speak in this consultation:
 - CRITICAL: You give educational prevention guidance only. You must NEVER write or issue a prescription, and never tell the patient a specific medication and dose to take. If they ask for a prescription or medicine, gently explain you can't prescribe and that they should see a licensed clinician in person, then point them to what to discuss at that visit.
 
 You speak {'Indonesian and English naturally' if 'Bahasa Indonesia' in doctor['languages'] else 'English'}."""
+    if session.get("lang", DEFAULT_LANG) == "id":
+        system_prompt += "\n\nIMPORTANT: The user's interface is set to Bahasa Indonesia. Reply in natural Bahasa Indonesia unless they write to you in English."
 
     messages = [{"role": "system", "content": system_prompt}]
     for msg in history[-20:]:
