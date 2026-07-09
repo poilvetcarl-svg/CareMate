@@ -91,7 +91,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Recycle pooled connections so serverless cold starts don't reuse dead sockets.
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 280}
 
-from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, Event, TerraUser, WearableMetric, PilotLead, Payment, PushSubscription, seed_clinics
+from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, Event, TerraUser, WearableMetric, PilotLead, Payment, PushSubscription, WeightLog, seed_clinics
 db.init_app(app)
 
 from flask_mail import Mail, Message as MailMessage
@@ -1300,6 +1300,12 @@ def dashboard():
     pet = _pet_progress(current_user.id)
     badges = _badges(current_user.id, pet)
     my_referral_link = referral_link(current_user.id)
+    weights = WeightLog.query.filter_by(user_id=current_user.id)\
+        .order_by(WeightLog.day.desc()).limit(10).all()
+    latest_weight = weights[0] if weights else None
+    bmi = _bmi_info(latest_weight.height_cm, latest_weight.weight_kg) if latest_weight else None
+    quest = _todays_quest()
+    quest_done = _quest_done_today(current_user.id)
     # Heal rows saved before a test existed in the reference table: re-match + re-flag
     _healed = False
     for lab in lab_results:
@@ -1332,7 +1338,9 @@ def dashboard():
         pet=pet,
         badges=badges,
         my_referral_link=my_referral_link,
-        vapid_public_key=VAPID_PUBLIC_KEY
+        vapid_public_key=VAPID_PUBLIC_KEY,
+        weights=weights, latest_weight=latest_weight, bmi=bmi,
+        quest=quest, quest_done=quest_done
     )
 
 
@@ -2387,6 +2395,8 @@ PET_XP = {
     "streak_day": 5,     # bonus per day of current check-in streak
     "active_day": 15,    # day with 8000+ real, watch-verified steps
     "referral": 100,     # friend you invited completed their first assessment
+    "weight_log": 5,     # daily weight logged
+    "lifestyle": 10,     # daily lifestyle quest completed
 }
 
 ACTIVE_DAY_STEPS = 8000
@@ -2414,6 +2424,8 @@ def _pet_progress(user_id):
             WearableMetric.user_id == user_id,
             WearableMetric.steps >= ACTIVE_DAY_STEPS).count(),
         "referral": Event.query.filter_by(name="referral_reward", user_id=user_id).count(),
+        "weight_log": WeightLog.query.filter_by(user_id=user_id).count(),
+        "lifestyle": Event.query.filter_by(name="lifestyle_quest", user_id=user_id).count(),
     }
     streak = _checkin_streak(user_id)
     xp = sum(counts[k] * PET_XP[k] for k in counts) + streak * PET_XP["streak_day"]
@@ -2440,6 +2452,45 @@ def _pet_progress(user_id):
         "streak": streak,
         "xp_values": PET_XP,
     }
+
+
+def _bmi_info(height_cm, weight_kg):
+    """BMI with WHO Asian-population cutoffs (relevant thresholds for Indonesia)."""
+    try:
+        h = float(height_cm) / 100.0
+        w = float(weight_kg)
+        if not (1.0 < h < 2.5 and 20 <= w <= 400):
+            return None
+        bmi = round(w / (h * h), 1)
+    except (TypeError, ValueError, ZeroDivisionError):
+        return None
+    if bmi < 18.5:   cat, cat_id, color = "Underweight", "Berat badan kurang", "#0284c7"
+    elif bmi < 23:   cat, cat_id, color = "Healthy", "Sehat", "#1b9e54"
+    elif bmi < 27.5: cat, cat_id, color = "Overweight", "Berat badan berlebih", "#d97706"
+    else:            cat, cat_id, color = "Obese", "Obesitas", "#E5484D"
+    return {"value": bmi, "category": cat, "category_id": cat_id, "color": color,
+            "high": bmi >= 27.5, "elevated": bmi >= 23}
+
+
+LIFESTYLE_QUESTS = [
+    {"en": "Take a 15-minute walk", "id": "Jalan kaki 15 menit"},
+    {"en": "Drink 6 glasses of water", "id": "Minum 6 gelas air putih"},
+    {"en": "No sugary drinks today", "id": "Tanpa minuman manis hari ini"},
+    {"en": "Eat 3 servings of vegetables or fruit", "id": "Makan 3 porsi sayur atau buah"},
+    {"en": "Lights out before 23:00", "id": "Tidur sebelum jam 23:00"},
+    {"en": "Take the stairs instead of the lift", "id": "Naik tangga, bukan lift"},
+    {"en": "10 minutes of stretching", "id": "Peregangan 10 menit"},
+]
+
+
+def _todays_quest():
+    return LIFESTYLE_QUESTS[date.today().toordinal() % len(LIFESTYLE_QUESTS)]
+
+
+def _quest_done_today(user_id):
+    day_start = datetime.combine(date.today(), datetime.min.time())
+    return Event.query.filter(Event.name == "lifestyle_quest", Event.user_id == user_id,
+                              Event.created_at >= day_start).first() is not None
 
 
 def _badges(user_id, pet):
@@ -2482,6 +2533,46 @@ def log_event(name, user_id=None, meta=None):
     except Exception as e:
         db.session.rollback()
         print(f"[log_event] {e}")
+
+
+@app.route("/api/weight", methods=["POST"])
+@login_required
+def log_weight():
+    data = request.json or {}
+    prev = WeightLog.query.filter_by(user_id=current_user.id)\
+        .order_by(WeightLog.day.desc()).first()
+    height = data.get("height_cm") or (prev.height_cm if prev else None)
+    bmi = _bmi_info(height, data.get("weight_kg"))
+    try:
+        w = float(data.get("weight_kg"))
+        if not (20 <= w <= 400):
+            raise ValueError
+    except (TypeError, ValueError):
+        return jsonify({"error": "invalid weight"}), 400
+    row = WeightLog.query.filter_by(user_id=current_user.id, day=date.today()).first()
+    if not row:
+        row = WeightLog(user_id=current_user.id, day=date.today(), weight_kg=w)
+        db.session.add(row)
+    row.weight_kg = w
+    if height:
+        row.height_cm = float(height)
+    db.session.commit()
+    log_event("weight_logged", current_user.id)
+    return jsonify({"ok": True, "bmi": bmi, "pet": _pet_progress(current_user.id)})
+
+
+@app.route("/api/quest/complete", methods=["POST"])
+@login_required
+def complete_quest():
+    if _quest_done_today(current_user.id):
+        return jsonify({"ok": True, "already": True, "pet": _pet_progress(current_user.id)})
+    log_event("lifestyle_quest", current_user.id, meta=_todays_quest()["en"])
+    return jsonify({"ok": True, "pet": _pet_progress(current_user.id)})
+
+
+@app.route("/weight")
+def weight_guide():
+    return render_template("weight_guide.html")
 
 
 # ── WEB PUSH NOTIFICATIONS ────────────────────────────────────────────────────
@@ -3204,9 +3295,23 @@ def recommend():
     error = _validate_assessment(data)
     if error:
         return jsonify({"error": error}), 400
+    bmi = _bmi_info(data.get("height_cm"), data.get("weight_kg"))
+    if bmi and bmi["high"] and "obesity" not in (data.get("conditions") or []):
+        data["conditions"] = list(data.get("conditions") or []) + ["obesity"]
     risk = calculate_risk_score(data)
     vaccines = get_recommended_vaccines(data)
     screenings = get_recommended_screenings(data)
+    # seed the weight log from the assessment for logged-in users
+    if bmi and current_user.is_authenticated:
+        try:
+            row = WeightLog.query.filter_by(user_id=current_user.id, day=date.today()).first()
+            if not row:
+                db.session.add(WeightLog(user_id=current_user.id, day=date.today(),
+                                         weight_kg=float(data.get("weight_kg")),
+                                         height_cm=float(data.get("height_cm"))))
+                db.session.commit()
+        except Exception:
+            db.session.rollback()
 
     # Deterministic fallback, used when no AI key is configured or the call fails
     fallback_summary = (
@@ -3271,6 +3376,7 @@ Write a personal, warm 3-4 sentence message directly to this patient, like a doc
         "risk": risk,
         "vaccines": vaccines,
         "screenings": screenings,
+        "bmi": bmi,
         "ai_summary": ai_summary,
         "total_vaccines": len(vaccines)
     })

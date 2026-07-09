@@ -193,7 +193,10 @@ function collectFormData() {
     try { localStorage.setItem('patientName', patient_name); } catch(e) {}
   }
 
-  return { age: parseInt(age), sex, pregnant, vaccinated_recently: vaccinated, conditions, travel_regions: travelRegions, patient_name };
+  const heightEl = document.getElementById('heightInput'), weightEl = document.getElementById('weightInput');
+  const height_cm = heightEl && heightEl.value ? parseFloat(heightEl.value) : null;
+  const weight_kg = weightEl && weightEl.value ? parseFloat(weightEl.value) : null;
+  return { age: parseInt(age), sex, pregnant, vaccinated_recently: vaccinated, conditions, travel_regions: travelRegions, patient_name, height_cm, weight_kg };
 }
 
 // ===== SUBMIT ASSESSMENT =====
@@ -243,6 +246,7 @@ function renderResults(result) {
 
   // Preventive screenings / health checks
   renderScreenings(result.screenings || []);
+  renderBMI(result.bmi);
 
   // Vaccine count
   const countEl = document.getElementById('vaccineCount');
@@ -292,6 +296,22 @@ function coralSvg(shape) {
   return `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FF6B6B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICON_SVG[shape] || ICON_SVG.shield}</svg>`;
 }
 function screeningIcon(key) { return coralSvg(SCREENING_ICON[key] || 'pulse'); }
+
+function renderBMI(bmi) {
+  document.getElementById('bmiCard')?.remove();
+  if (!bmi) return;
+  const anchorEl = document.getElementById('screeningsSection') || document.getElementById('resultsSection') || document.querySelector('.results-container');
+  if (!anchorEl) return;
+  const div = document.createElement('div');
+  div.id = 'bmiCard';
+  div.style.cssText = 'background:#fff;border:1.5px solid rgba(255,107,107,0.18);border-radius:16px;padding:16px 20px;margin:14px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap';
+  div.innerHTML = '<div style="font-size:26px;font-weight:900;color:' + bmi.color + '">' + bmi.value + '</div>' +
+    '<div style="flex:1;min-width:200px"><div style="font-size:14px;font-weight:800">BMI · <span style="color:' + bmi.color + '">' + bmi.category + '</span></div>' +
+    '<div style="font-size:12px;color:#8a6a4e;margin-top:2px">' +
+    (bmi.elevated ? 'Asian-population cutoffs. See the weight guide for what actually works.' : 'Asian-population cutoffs. Keep it up!') +
+    ' <a href="/weight" style="color:#FF6B6B;font-weight:700">Weight & BMI guide →</a></div></div>';
+  anchorEl.parentNode.insertBefore(div, anchorEl);
+}
 
 function renderScreenings(screenings) {
   document.getElementById('screeningsSection')?.remove();

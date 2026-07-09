@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="{{ LANG }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
+  <title>{{ 'Panduan Berat Badan & BMI' if LANG == 'id' else 'Weight & BMI Guide' }} · CareMate</title>
+  <meta name="description" content="{{ 'Memahami BMI dengan ambang populasi Asia, apa yang benar-benar berhasil untuk berat badan sehat, dan kapan harus ke dokter.' if LANG == 'id' else 'Understand BMI with Asian-population cutoffs, what actually works for healthy weight, and when to see a doctor.' }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
+  <style>
+    .wg{max-width:760px;margin:0 auto;padding:110px 24px 60px}
+    .wg h1{font-size:32px;font-weight:900;color:var(--text-primary);letter-spacing:-.02em}
+    .wg .lead{font-size:15.5px;color:var(--text-secondary);line-height:1.7;margin:12px 0 26px}
+    .wg h2{font-size:19px;font-weight:800;color:var(--text-primary);margin:30px 0 10px}
+    .wg p,.wg li{font-size:14.5px;color:var(--text-secondary);line-height:1.75}
+    .wg ul{margin:8px 0 8px 20px}
+    table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;margin:12px 0}
+    th,td{padding:11px 14px;font-size:13.5px;border-bottom:1px solid var(--border);text-align:left}
+    th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);background:#FFF3EC}
+    .pill{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;vertical-align:-1px}
+    .callout{background:#FFF6F0;border:1.5px solid rgba(255,107,107,.25);border-radius:14px;padding:16px 18px;margin:20px 0}
+    .callout b{color:var(--text-primary)}
+    .warn{background:rgba(229,72,77,.06);border-color:rgba(229,72,77,.25)}
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span class="logo-accent">Mate</span></a>
+    <div class="nav-links">
+      <a href="/#assessment" class="nav-link">{{ t('nav.assessment') }}</a>
+      <a href="/clinics" class="nav-link">{{ t('nav.clinics') }}</a>
+      <a href="/dashboard" class="nav-link">{{ t('nav.dashboard') }}</a>
+    </div>
+    {% include "_langswitch.html" %}
+  </div>
+</nav>
+
+<div class="wg">
+  {% if LANG == 'id' %}
+  <h1>Berat badan sehat, tanpa mitos</h1>
+  <p class="lead">Berat badan adalah salah satu pengungkit pencegahan terbesar: menurunkan 5-10% berat badan saja sudah memperbaiki tekanan darah, gula darah, dan kolesterol. Ini panduan jujur tentang apa yang berhasil.</p>
+
+  <h2>BMI Anda, dengan ambang yang tepat</h2>
+  <p>Untuk populasi Asia, WHO merekomendasikan ambang BMI yang lebih rendah, karena risiko diabetes dan penyakit jantung muncul lebih awal:</p>
+  <table>
+    <thead><tr><th>Kategori</th><th>BMI (populasi Asia)</th><th>Artinya</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill" style="background:#0284c7"></span>Berat badan kurang</td><td>&lt; 18,5</td><td>Cek asupan gizi dan penyebab lain</td></tr>
+      <tr><td><span class="pill" style="background:#1b9e54"></span>Sehat</td><td>18,5 - 22,9</td><td>Pertahankan kebiasaan Anda</td></tr>
+      <tr><td><span class="pill" style="background:#d97706"></span>Berlebih</td><td>23 - 27,4</td><td>Waktu terbaik untuk bertindak</td></tr>
+      <tr><td><span class="pill" style="background:#E5484D"></span>Obesitas</td><td>≥ 27,5</td><td>Skrining HbA1c & lipid direkomendasikan</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Yang benar-benar berhasil</h2>
+  <ul>
+    <li><b>Defisit kecil yang konsisten</b> mengalahkan diet ekstrem. Target realistis: 0,25-0,5 kg per minggu.</li>
+    <li><b>Protein dan sayur lebih dulu</b> di setiap piring; kurangi minuman manis, itu sumber kalori tersembunyi terbesar di Indonesia.</li>
+    <li><b>Gerak harian</b>: 150 menit aktivitas sedang per minggu (jalan cepat sudah cukup). Naik tangga, turun satu halte lebih awal.</li>
+    <li><b>Tidur 7-8 jam</b>: kurang tidur meningkatkan rasa lapar secara hormonal.</li>
+    <li><b>Catat dan pantau</b>: menimbang rutin terbukti membantu. Catat di dasbor CareMate, pendamping Anda ikut tumbuh.</li>
+  </ul>
+
+  <h2>Kapan harus ke dokter</h2>
+  <p>Jika BMI Anda ≥ 27,5, atau ≥ 23 dengan tekanan darah tinggi, gula darah tinggi, atau riwayat keluarga diabetes, bicarakan dengan dokter. Minta pemeriksaan HbA1c dan profil lipid.</p>
+
+  <div class="callout">
+    <b>Tentang obat penurun berat badan (GLP-1 seperti semaglutide atau tirzepatide):</b>
+    obat-obatan ini nyata dan bisa efektif untuk sebagian orang, tetapi merupakan <b>obat resep</b> yang hanya boleh dimulai, dipantau, dan dihentikan oleh dokter berlisensi, dengan mempertimbangkan kondisi Anda secara keseluruhan.
+  </div>
+  <div class="callout warn">
+    <b>CareMate tidak menjual dan tidak meresepkan obat apa pun.</b> Waspadai penjual daring yang menawarkan obat ini tanpa resep, itu ilegal dan berbahaya. Selalu melalui dokter dan apotek berlisensi.
+  </div>
+
+  <h2>Mulai hari ini</h2>
+  <p>Catat berat badan Anda di dasbor (+5 XP), selesaikan misi gaya hidup harian (+10 XP), dan jika skrining direkomendasikan, buat janji di klinik terdekat.</p>
+  {% else %}
+  <h1>Healthy weight, without the myths</h1>
+  <p class="lead">Weight is one of the biggest prevention levers there is: losing just 5-10% of body weight measurably improves blood pressure, blood sugar, and cholesterol. Here is an honest guide to what works.</p>
+
+  <h2>Your BMI, with the right cutoffs</h2>
+  <p>For Asian populations, the WHO recommends lower BMI thresholds, because diabetes and heart-disease risk starts earlier:</p>
+  <table>
+    <thead><tr><th>Category</th><th>BMI (Asian populations)</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill" style="background:#0284c7"></span>Underweight</td><td>&lt; 18.5</td><td>Check nutrition and other causes</td></tr>
+      <tr><td><span class="pill" style="background:#1b9e54"></span>Healthy</td><td>18.5 - 22.9</td><td>Keep doing what you do</td></tr>
+      <tr><td><span class="pill" style="background:#d97706"></span>Overweight</td><td>23 - 27.4</td><td>The best time to act</td></tr>
+      <tr><td><span class="pill" style="background:#E5484D"></span>Obese</td><td>≥ 27.5</td><td>HbA1c & lipid screening recommended</td></tr>
+    </tbody>
+  </table>
+
+  <h2>What actually works</h2>
+  <ul>
+    <li><b>A small, consistent deficit</b> beats extreme diets. Realistic target: 0.25-0.5 kg per week.</li>
+    <li><b>Protein and vegetables first</b> on every plate; cut sugary drinks, the biggest hidden calorie source.</li>
+    <li><b>Daily movement</b>: 150 minutes of moderate activity a week (brisk walking counts). Stairs, one stop earlier.</li>
+    <li><b>Sleep 7-8 hours</b>: short sleep hormonally increases hunger.</li>
+    <li><b>Track it</b>: regular weigh-ins measurably help. Log in your CareMate dashboard, your companion grows with you.</li>
+  </ul>
+
+  <h2>When to see a doctor</h2>
+  <p>If your BMI is ≥ 27.5, or ≥ 23 with high blood pressure, high blood sugar, or a family history of diabetes, talk to a doctor. Ask about an HbA1c test and a lipid panel.</p>
+
+  <div class="callout">
+    <b>About weight-loss medications (GLP-1s such as semaglutide or tirzepatide):</b>
+    these are real and can be effective for some people, but they are <b>prescription medicines</b> that must be started, monitored, and stopped by a licensed doctor who knows your full health picture.
+  </div>
+  <div class="callout warn">
+    <b>CareMate does not sell or prescribe any medication.</b> Be wary of online sellers offering these drugs without a prescription, it is illegal and dangerous. Always go through a licensed doctor and pharmacy.
+  </div>
+
+  <h2>Start today</h2>
+  <p>Log your weight on your dashboard (+5 XP), complete the daily lifestyle quest (+10 XP), and if screening is recommended, book it at a clinic near you.</p>
+  {% endif %}
+
+  <div style="display:flex;gap:12px;margin-top:26px;flex-wrap:wrap">
+    <a href="/dashboard" class="btn-primary" style="text-decoration:none">{{ 'Catat berat saya' if LANG == 'id' else 'Log my weight' }} →</a>
+    <a href="/clinics" class="btn-secondary" style="text-decoration:none">{{ 'Cari klinik untuk skrining' if LANG == 'id' else 'Find a screening clinic' }}</a>
+  </div>
+</div>
+{% include "_footer.html" %}
+</body>
+</html>

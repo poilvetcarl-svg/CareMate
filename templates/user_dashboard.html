@@ -140,6 +140,11 @@
             <div class="mate-actions-row">
               <button class="mate-btn" id="mateBtn" onclick="openMate()">Check in</button>
               <div class="mate-quests">
+                <button class="mate-quest" id="questChip" onclick="doQuest(this)" {{ 'disabled' if quest_done }}
+                        style="{{ 'opacity:.55;cursor:default' if quest_done }}">
+                  <i class="ti {{ 'ti-check' if quest_done else 'ti-target' }}"></i>
+                  {{ quest.id if LANG == 'id' else quest.en }} <b>{{ '✓' if quest_done else '+10' }}</b>
+                </button>
                 {% if pet.counts.assessment == 0 %}
                 <a class="mate-quest" href="/#assessment"><i class="ti ti-clipboard-heart"></i> Assessment <b>+{{ pet.xp_values.assessment }}</b></a>
                 {% endif %}
@@ -231,6 +236,54 @@
           <a class="dash-action-btn" style="background:#25D366" target="_blank" rel="noopener"
              href="https://wa.me/?text={{ ('Coba CareMate, rencana pencegahan kesehatan gratis dalam 60 detik: ' if LANG == 'id' else 'Try CareMate, a free 60-second prevention plan: ') | urlencode }}{{ my_referral_link | urlencode }}">WhatsApp</a>
         </div>
+      </div>
+
+      <!-- WEIGHT & BMI -->
+      <div class="dash-card" style="margin-bottom:20px">
+        <div class="dash-card-header">
+          <div class="dash-card-title"><i class="ti ti-scale" style="color:var(--coral)"></i> {{ 'Berat & BMI' if LANG == 'id' else 'Weight & BMI' }}</div>
+          <a href="/weight" style="font-size:12px;color:var(--coral);font-weight:700;text-decoration:none">{{ 'Panduan' if LANG == 'id' else 'Guide' }} →</a>
+        </div>
+        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+          <div style="min-width:130px">
+            {% if latest_weight %}
+            <div style="font-size:26px;font-weight:900;color:var(--text-primary)">{{ latest_weight.weight_kg }} <span style="font-size:13px;color:var(--text-muted)">kg</span></div>
+            {% if bmi %}<div style="font-size:12px;font-weight:800;margin-top:3px;color:{{ bmi.color }}">BMI {{ bmi.value }} · {{ bmi.category_id if LANG == 'id' else bmi.category }}</div>{% endif %}
+            {% else %}
+            <div style="font-size:13px;color:var(--text-muted)">{{ 'Catat berat pertama Anda (+5 XP/hari)' if LANG == 'id' else 'Log your first weight (+5 XP/day)' }}</div>
+            {% endif %}
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="number" id="weightIn" min="25" max="300" step="0.1" placeholder="kg" style="width:90px;border:1.5px solid var(--border);border-radius:11px;padding:10px 12px;font-size:14px;font-family:inherit">
+            {% if not latest_weight or not latest_weight.height_cm %}
+            <input type="number" id="heightIn" min="100" max="250" placeholder="cm" style="width:90px;border:1.5px solid var(--border);border-radius:11px;padding:10px 12px;font-size:14px;font-family:inherit">
+            {% endif %}
+            <button class="dash-action-btn" onclick="logWeight(this)">{{ 'Catat' if LANG == 'id' else 'Log' }}</button>
+          </div>
+          {% if weights|length >= 2 %}
+          <div style="flex:1;min-width:180px">
+            {% if IS_PLUS %}
+            <div style="display:flex;align-items:flex-end;gap:5px;height:56px">
+              {% set wmax = weights|map(attribute='weight_kg')|max %}
+              {% set wmin = weights|map(attribute='weight_kg')|min %}
+              {% for w in weights|reverse %}
+              <div title="{{ w.day.strftime('%d %b') }}: {{ w.weight_kg }} kg" style="flex:1;max-width:26px;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--coral),#FF8E53);height:{{ (12 + ((w.weight_kg - wmin) / (wmax - wmin) * 40))|int if wmax != wmin else 30 }}px"></div>
+              {% endfor %}
+            </div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:3px;text-align:center">{{ 'Tren 10 hari terakhir' if LANG == 'id' else 'Last 10 entries' }}</div>
+            {% else %}
+            <a href="/premium" style="font-size:12px;font-weight:700;color:#8a6508;background:linear-gradient(135deg,#FFE9A3,#FFD93D);padding:6px 14px;border-radius:16px;text-decoration:none">✦ {{ 'Grafik tren dengan CareMate+' if LANG == 'id' else 'Trend chart with CareMate+' }}</a>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+        {% if bmi and bmi.high %}
+        <div style="margin-top:12px;background:rgba(229,72,77,0.07);border:1px solid rgba(229,72,77,0.2);border-radius:11px;padding:10px 14px;font-size:12.5px;color:var(--text-secondary)">
+          <i class="ti ti-stethoscope" style="color:#E5484D"></i>
+          {{ 'Dengan BMI ini, skrining HbA1c (gula darah) dan profil lipid direkomendasikan.' if LANG == 'id' else 'At this BMI, HbA1c (blood sugar) and lipid panel screenings are recommended.' }}
+          <a href="/clinics" style="color:var(--coral);font-weight:700">{{ 'Cari klinik' if LANG == 'id' else 'Find a clinic' }} →</a>
+        </div>
+        {% endif %}
       </div>
 
       <!-- NOTIFICATIONS PROMPT -->
@@ -908,6 +961,34 @@ function closeLabTeleconModal() {
 document.getElementById('labTeleconModal')?.addEventListener('click', function(e) {
   if (e.target === this) closeLabTeleconModal();
 });
+// ── Weight log + daily lifestyle quest ──
+async function logWeight(btn){
+  const w = parseFloat(document.getElementById('weightIn').value);
+  if (!w) return;
+  const hEl = document.getElementById('heightIn');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/weight', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({weight_kg: w, height_cm: hEl && hEl.value ? parseFloat(hEl.value) : null})});
+    if (r.ok) location.reload();
+  } catch(e){}
+  btn.disabled = false;
+}
+async function doQuest(btn){
+  if (btn.disabled) return;
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/quest/complete', {method:'POST', headers:{'Content-Type':'application/json'}});
+    if (r.ok){
+      const d = await r.json();
+      btn.style.opacity = '.55'; btn.style.cursor = 'default';
+      btn.querySelector('i').className = 'ti ti-check';
+      btn.querySelector('b').textContent = '✓';
+      if (d.pet && typeof updatePetProgress === 'function') updatePetProgress(d.pet, false);
+    }
+  } catch(e){ btn.disabled = false; }
+}
+
 // ── Web push (streak + vaccine reminders) ──
 const VAPID_KEY = "{{ vapid_public_key }}";
 function b64ToU8(b){const p='='.repeat((4-b.length%4)%4);const s=atob((b+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(s,c=>c.charCodeAt(0));}
@@ -1117,6 +1198,7 @@ async function disconnectWatch(){
   };
 
   // live XP + evolution updates after a check-in
+  window.updatePetProgress = updatePetProgress;
   function updatePetProgress(p, didEvolve){
     const xpNum=document.getElementById('mateXpNum'), xpNext=document.getElementById('mateXpNext'),
           xpFill=document.getElementById('mateXpFill'), stEl=document.getElementById('mateStage');

@@ -174,6 +174,18 @@ class WearableDevice(db.Model):
     user = db.relationship('User', backref=db.backref('wearable', uselist=False, cascade='all, delete-orphan'))
 
 
+# ── WEIGHT LOG (daily weight + BMI tracking) ────────────────────────────────────
+class WeightLog(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('user.id'), index=True, nullable=False)
+    day        = db.Column(db.Date, nullable=False)
+    weight_kg  = db.Column(db.Float, nullable=False)
+    height_cm  = db.Column(db.Float)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'day', name='uq_weight_user_day'),)
+
+
 # ── PUSH SUBSCRIPTION (web push notifications) ─────────────────────────────────
 class PushSubscription(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
