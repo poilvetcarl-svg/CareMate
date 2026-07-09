@@ -127,7 +127,9 @@ with app.app_context():
                  'ALTER TABLE "user" ADD COLUMN plan_expires TIMESTAMP',
                  'ALTER TABLE "user" ADD COLUMN tomo_name VARCHAR(24)',
                  'ALTER TABLE "user" ADD COLUMN tomo_skin VARCHAR(20)',
-                 'ALTER TABLE "user" ADD COLUMN referred_by INTEGER'):
+                 'ALTER TABLE "user" ADD COLUMN referred_by INTEGER',
+                 'ALTER TABLE clinic ADD COLUMN featured BOOLEAN DEFAULT 0',
+                 'ALTER TABLE pilot_lead ADD COLUMN kind VARCHAR(20)'):
         try:
             db.session.execute(_sql_text(_ddl))
             db.session.commit()
@@ -2105,6 +2107,11 @@ def about():
     return render_template("about.html")
 
 
+@app.route("/partners")
+def partners():
+    return render_template("partners.html")
+
+
 @app.route("/pilot", methods=["POST"])
 def pilot_request():
     """Corporate pilot request from the homepage B2B section."""
@@ -2115,6 +2122,7 @@ def pilot_request():
               else "Please fill in your company name and email.", "error")
         return redirect(url_for("index") + "#perusahaan")
     db.session.add(PilotLead(
+        kind=(request.form.get("kind") or "pilot")[:20],
         company=company[:160],
         contact=request.form.get("contact", "").strip()[:120],
         email=email[:160],
@@ -2123,10 +2131,12 @@ def pilot_request():
         message=request.form.get("message", "").strip()[:2000],
     ))
     db.session.commit()
-    log_event("pilot_lead", meta=company)
+    log_event("pilot_lead", meta=f"{request.form.get('kind') or 'pilot'}: {company}")
     flash("Terima kasih! Kami akan menghubungi Anda dalam 1-2 hari kerja."
           if session.get("lang", DEFAULT_LANG) == "id"
           else "Thank you! We will get back to you within 1-2 business days.", "success")
+    if request.form.get("kind") == "partner":
+        return redirect(url_for("partners"))
     return redirect(url_for("index") + "#perusahaan")
 
 
@@ -2865,7 +2875,7 @@ def privacy():
 
 @app.route("/clinics")
 def clinics():
-    all_clinics = Clinic.query.order_by(Clinic.rating.desc()).all()
+    all_clinics = Clinic.query.order_by(Clinic.featured.desc(), Clinic.rating.desc()).all()
     booking_confirmed = request.args.get("booking_confirmed")
     return render_template(
         "clinics.html",

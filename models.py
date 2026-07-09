@@ -218,6 +218,7 @@ class PilotLead(db.Model):
     email      = db.Column(db.String(160), nullable=False)
     phone      = db.Column(db.String(40))
     employees  = db.Column(db.String(40))
+    kind       = db.Column(db.String(20), default='pilot')   # pilot | partner
     message    = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -354,6 +355,7 @@ class Clinic(db.Model):
     network          = db.Column(db.String(60))   # e.g. "Prodia", "Kimia Farma"
     website          = db.Column(db.String(200))  # official site, opened directly from the card
     home_service     = db.Column(db.Boolean, default=False)  # offers at-home vaccination
+    featured         = db.Column(db.Boolean, default=False)  # paying/founding partner, shown first with a Partner badge
 
     bookings = db.relationship('Booking', backref='clinic', lazy=True)
 

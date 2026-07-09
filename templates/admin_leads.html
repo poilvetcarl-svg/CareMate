@@ -27,11 +27,12 @@
     <div class="sub">{{ leads|length }} request(s). Reply within 1-2 business days, that is the promise on the site.</div>
     {% if leads %}
     <table>
-      <thead><tr><th>When</th><th>Company</th><th>Contact</th><th>Size</th><th>Message</th></tr></thead>
+      <thead><tr><th>When</th><th>Type</th><th>Company</th><th>Contact</th><th>Size</th><th>Message</th></tr></thead>
       <tbody>
         {% for l in leads %}
         <tr>
           <td>{{ l.created_at.strftime('%d %b %Y') }}</td>
+          <td><b style="color:{{ '#B8860B' if l.kind == 'partner' else 'var(--coral)' }}">{{ (l.kind or 'pilot')|upper }}</b></td>
           <td><b>{{ l.company }}</b></td>
           <td>{{ l.contact }}<br/><a href="mailto:{{ l.email }}">{{ l.email }}</a>{% if l.phone %}<br/>{{ l.phone }}{% endif %}</td>
           <td>{{ l.employees or '?' }}</td>

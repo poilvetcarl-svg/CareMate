@@ -665,6 +665,7 @@
 }
 
 .clinic-card {
+  position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;

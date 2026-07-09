@@ -130,6 +130,7 @@
 
     {% else %}
     {% set cm = clinic_meta.get(clinic.network) %}
+    {% if clinic.featured %}<div style="position:absolute;top:12px;right:14px;font-size:10px;font-weight:900;letter-spacing:.05em;background:linear-gradient(135deg,#FFE9A3,#FFD93D);color:#8a6508;padding:3px 10px;border-radius:12px">★ {{ 'MITRA' if LANG == 'id' else 'PARTNER' }}</div>{% endif %}
     <div class="clinic-head">
       <div class="clinic-brand">
         {% if cm %}<img src="{{ url_for('static', filename=cm.logo) }}" alt="{{ clinic.network }}" />{% else %}<i class="ti ti-building-hospital" style="color:var(--coral)"></i>{% endif %}

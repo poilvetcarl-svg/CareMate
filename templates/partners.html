@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="{{ LANG }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
+  <title>{{ 'Untuk Klinik & Lab' if LANG == 'id' else 'For Clinics & Labs' }} · CareMate</title>
+  <meta name="description" content="{{ 'Dapatkan pasien baru dari CareMate: rujukan terukur untuk vaksinasi, skrining, dan tes lab.' if LANG == 'id' else 'Get new patients from CareMate: measurable referrals for vaccinations, screenings and lab tests.' }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
+  <style>
+    .pt{max-width:960px;margin:0 auto;padding:110px 24px 60px}
+    .pt h1{font-size:34px;font-weight:900;color:var(--text-primary);letter-spacing:-.02em;line-height:1.2}
+    .pt .lead{font-size:15.5px;color:var(--text-secondary);line-height:1.7;margin:14px 0 30px;max-width:640px}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:34px}
+    .pcard{background:#fff;border:1px solid rgba(255,107,107,.16);border-radius:16px;padding:20px}
+    .pcard i{font-size:26px;color:var(--coral)}
+    .pcard h3{font-size:15px;font-weight:800;color:var(--text-primary);margin:10px 0 6px}
+    .pcard p{font-size:12.5px;color:var(--text-muted);line-height:1.6}
+    .offer{background:linear-gradient(135deg,#FFF3EC,#FFE9E1);border:1.5px solid rgba(255,107,107,.3);border-radius:18px;padding:24px 26px;margin-bottom:34px}
+    .form-card{background:#fff;border-radius:20px;padding:26px;box-shadow:0 24px 60px -24px rgba(193,58,29,.3);max-width:640px}
+    .form-card input,.form-card select,.form-card textarea{width:100%;border:1.5px solid var(--border);border-radius:11px;padding:12px 14px;font-size:14px;font-family:inherit;margin-bottom:12px}
+    .flash-success,.flash-error{border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13.5px;font-weight:700}
+    .flash-success{background:rgba(46,213,115,.12);color:#1b9e54}
+    .flash-error{background:rgba(229,72,77,.1);color:#E5484D}
+    @media(max-width:720px){.grid3{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span class="logo-accent">Mate</span></a>
+    <div class="nav-links">
+      <a href="/clinics" class="nav-link">{{ t('nav.clinics') }}</a>
+      <a href="/#perusahaan" class="nav-link">{{ t('nav.business') }}</a>
+      <a href="/about" class="nav-link">{{ t('nav.about') }}</a>
+    </div>
+    {% include "_langswitch.html" %}
+  </div>
+</nav>
+
+<div class="pt">
+  {% if LANG == 'id' %}
+  <h1>Pasien baru untuk klinik dan lab Anda,<br/><span class="gradient-text">terukur dan dapat dibuktikan</span></h1>
+  <p class="lead">CareMate membantu pengguna memahami vaksinasi, skrining, dan tes lab yang mereka butuhkan, lalu mengarahkan mereka ke penyedia layanan. Setiap klik dan pemesanan tercatat, sehingga Anda tahu persis berapa banyak permintaan yang kami kirim.</p>
+  {% else %}
+  <h1>New patients for your clinic or lab,<br/><span class="gradient-text">measured and provable</span></h1>
+  <p class="lead">CareMate helps users understand which vaccinations, screenings and lab tests they need, then routes them to providers. Every click and booking is tracked, so you know exactly how much demand we send you.</p>
+  {% endif %}
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}<div class="flash-{{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+
+  <div class="grid3">
+    <div class="pcard"><i class="ti ti-users"></i>
+      {% if LANG == 'id' %}<h3>Permintaan yang relevan</h3><p>Pengguna kami datang dengan kebutuhan spesifik: vaksin flu, skrining HbA1c, panel lipid, imunisasi anak. Bukan lalu lintas acak.</p>
+      {% else %}<h3>Relevant demand</h3><p>Our users arrive with specific needs: flu shots, HbA1c screenings, lipid panels, child immunizations. Not random traffic.</p>{% endif %}
+    </div>
+    <div class="pcard"><i class="ti ti-chart-bar"></i>
+      {% if LANG == 'id' %}<h3>Rujukan terukur</h3><p>Laporan bulanan: berapa klik, berapa pemesanan, dari CareMate ke Anda. Anda hanya membayar berdasarkan hasil yang terbukti.</p>
+      {% else %}<h3>Measured referrals</h3><p>Monthly reports: how many clicks, how many bookings, from CareMate to you. You only ever pay on proven results.</p>{% endif %}
+    </div>
+    <div class="pcard"><i class="ti ti-star"></i>
+      {% if LANG == 'id' %}<h3>Penempatan Mitra</h3><p>Mitra tampil di urutan teratas direktori dengan lencana Mitra, dan ditawarkan sebagai keuntungan bagi anggota CareMate+.</p>
+      {% else %}<h3>Partner placement</h3><p>Partners appear at the top of the directory with a Partner badge, and are offered as a benefit to CareMate+ members.</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="offer">
+    {% if LANG == 'id' %}
+    <div style="font-size:16px;font-weight:900;color:var(--text-primary)"><i class="ti ti-gift" style="color:var(--coral)"></i> Penawaran mitra perintis</div>
+    <div style="font-size:13.5px;color:var(--text-secondary);line-height:1.65;margin-top:6px">Penempatan unggulan gratis selama 6 bulan untuk klinik dan lab pertama yang bergabung. Sebagai gantinya: diskon anggota untuk pengguna CareMate+ dan kesepakatan biaya per pemesanan yang terverifikasi. Tanpa biaya di muka, tanpa risiko.</div>
+    {% else %}
+    <div style="font-size:16px;font-weight:900;color:var(--text-primary)"><i class="ti ti-gift" style="color:var(--coral)"></i> Founding partner offer</div>
+    <div style="font-size:13.5px;color:var(--text-secondary);line-height:1.65;margin-top:6px">Free featured placement for 6 months for the first clinics and labs to join. In exchange: a member discount for CareMate+ users and a per-verified-booking fee agreement. No upfront cost, no risk.</div>
+    {% endif %}
+  </div>
+
+  <div class="form-card">
+    <div style="font-size:17px;font-weight:900;color:var(--text-primary);margin-bottom:14px">{{ 'Jadi mitra CareMate' if LANG == 'id' else 'Become a CareMate partner' }}</div>
+    <form method="POST" action="/pilot">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="kind" value="partner">
+      <input name="company" required placeholder="{{ 'Nama klinik / lab' if LANG == 'id' else 'Clinic / lab name' }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <input name="contact" placeholder="{{ 'Nama Anda' if LANG == 'id' else 'Your name' }}">
+        <input name="email" type="email" required placeholder="{{ 'Email kerja' if LANG == 'id' else 'Work email' }}">
+      </div>
+      <input name="phone" placeholder="WhatsApp">
+      <textarea name="message" rows="3" placeholder="{{ 'Layanan utama Anda (vaksinasi, lab, MCU...)' if LANG == 'id' else 'Your main services (vaccination, labs, check-ups...)' }}"></textarea>
+      <button type="submit" class="btn-primary" style="width:100%;justify-content:center">{{ 'Ajukan Kemitraan' if LANG == 'id' else 'Request Partnership' }} →</button>
+      <div style="font-size:11.5px;color:var(--text-muted);margin-top:10px;text-align:center">{{ 'Kami balas dalam 1-2 hari kerja.' if LANG == 'id' else 'We reply within 1-2 business days.' }}</div>
+    </form>
+  </div>
+</div>
+{% include "_footer.html" %}
+</body>
+</html>
