@@ -1,5 +1,20 @@
-<div class="lang-switch" aria-label="Language">
-  <a href="/set-lang/en" class="{{ 'on' if LANG == 'en' else '' }}">ENG</a>
-  <span class="lang-sep">|</span>
-  <a href="/set-lang/id" class="{{ 'on' if LANG == 'id' else '' }}">IDN</a>
+<div class="lang-switch" aria-label="Language" style="display:inline-flex;align-items:center;gap:7px;margin-left:10px;flex-shrink:0">
+  <a href="/set-lang/en" title="English" aria-label="English"
+     style="display:inline-flex;line-height:0;border-radius:4px;overflow:hidden;text-decoration:none;border:2px solid {{ 'var(--coral, #FF6B6B)' if LANG == 'en' else 'transparent' }};opacity:{{ '1' if LANG == 'en' else '0.5' }}">
+    <svg width="24" height="16" viewBox="0 0 60 40" role="img" aria-hidden="true">
+      <rect width="60" height="40" fill="#012169"/>
+      <path d="M0,0 60,40 M60,0 0,40" stroke="#fff" stroke-width="8"/>
+      <path d="M0,0 60,40 M60,0 0,40" stroke="#C8102E" stroke-width="3.5"/>
+      <rect x="24" width="12" height="40" fill="#fff"/><rect y="14" width="60" height="12" fill="#fff"/>
+      <rect x="27" width="6" height="40" fill="#C8102E"/><rect y="17" width="60" height="6" fill="#C8102E"/>
+    </svg>
+  </a>
+  <a href="/set-lang/id" title="Bahasa Indonesia" aria-label="Bahasa Indonesia"
+     style="display:inline-flex;line-height:0;border-radius:4px;overflow:hidden;text-decoration:none;border:2px solid {{ 'var(--coral, #FF6B6B)' if LANG == 'id' else 'transparent' }};opacity:{{ '1' if LANG == 'id' else '0.5' }}">
+    <svg width="24" height="16" viewBox="0 0 60 40" role="img" aria-hidden="true">
+      <rect width="60" height="40" fill="#fff"/>
+      <rect width="60" height="20" fill="#E70011"/>
+      <rect width="60" height="40" fill="none" stroke="#00000022" stroke-width="1"/>
+    </svg>
+  </a>
 </div>

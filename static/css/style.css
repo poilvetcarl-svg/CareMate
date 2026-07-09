@@ -943,6 +943,8 @@ body {
   .doctors-grid { grid-template-columns: 1fr; }
   .menu-toggle { display: block; }
   .nav-links { display: none; }
+  .nav-container { padding: 0 16px; }
+  .lang-switch svg { width: 21px; height: 14px; }
   .hiw-steps { grid-template-columns: 1fr; }
   .features-grid { grid-template-columns: 1fr; }
   .trust-section { flex-direction: column; gap: 16px; padding: 28px 24px; }

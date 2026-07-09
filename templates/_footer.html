@@ -3,9 +3,8 @@
     <div class="footer-brand">
       <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span class="logo-accent">Mate</span></a>
       <p>{{ t('footer.tagline') }}</p>
-      <div style="margin-top:12px;display:flex;gap:8px">
-        <a href="/set-lang/id" style="font-size:12px;font-weight:800;text-decoration:none;padding:5px 12px;border-radius:16px;{{ 'background:var(--coral);color:#fff' if LANG == 'id' else 'border:1px solid rgba(255,107,107,0.35);color:var(--coral)' }}">IDN</a>
-        <a href="/set-lang/en" style="font-size:12px;font-weight:800;text-decoration:none;padding:5px 12px;border-radius:16px;{{ 'background:var(--coral);color:#fff' if LANG == 'en' else 'border:1px solid rgba(255,107,107,0.35);color:var(--coral)' }}">ENG</a>
+      <div style="margin-top:12px">
+        {% include "_langswitch.html" %}
       </div>
     </div>
     <div class="footer-links">
