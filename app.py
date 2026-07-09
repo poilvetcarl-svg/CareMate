@@ -120,7 +120,7 @@ with app.app_context():
     # Lightweight migration: add clinic columns introduced after the first schema
     from sqlalchemy import text as _sql_text
     for _ddl in ("ALTER TABLE clinic ADD COLUMN website VARCHAR(200)",
-                 "ALTER TABLE clinic ADD COLUMN home_service BOOLEAN DEFAULT 0",
+                 "ALTER TABLE clinic ADD COLUMN home_service BOOLEAN DEFAULT FALSE",
                  "ALTER TABLE vaccination_record ADD COLUMN child_id INTEGER",
                  'ALTER TABLE "user" ADD COLUMN department VARCHAR(80)',
                  'ALTER TABLE "user" ADD COLUMN plan VARCHAR(20)',
@@ -128,14 +128,19 @@ with app.app_context():
                  'ALTER TABLE "user" ADD COLUMN tomo_name VARCHAR(24)',
                  'ALTER TABLE "user" ADD COLUMN tomo_skin VARCHAR(20)',
                  'ALTER TABLE "user" ADD COLUMN referred_by INTEGER',
-                 'ALTER TABLE clinic ADD COLUMN featured BOOLEAN DEFAULT 0',
+                 'ALTER TABLE clinic ADD COLUMN featured BOOLEAN DEFAULT FALSE',
                  'ALTER TABLE pilot_lead ADD COLUMN kind VARCHAR(20)'):
         try:
             db.session.execute(_sql_text(_ddl))
             db.session.commit()
         except Exception:
             db.session.rollback()   # column already exists
-    seed_clinics()
+    try:
+        seed_clinics()
+    except Exception as _e:
+        # never let seeding take the whole app down
+        db.session.rollback()
+        print(f"[boot] seed_clinics skipped: {_e}")
 
 _api_key = os.environ.get("OPENAI_API_KEY", "")
 client = OpenAI(api_key=_api_key) if _api_key.startswith("sk-") else None
