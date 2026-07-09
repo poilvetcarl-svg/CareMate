@@ -24,6 +24,7 @@ class User(UserMixin, db.Model):
     plan_expires  = db.Column(db.DateTime)                     # None = no expiry set
     tomo_name     = db.Column(db.String(24))                  # CareMate+ custom companion name
     tomo_skin     = db.Column(db.String(20))                   # CareMate+ skin: classic|gold|mint|ocean
+    referred_by   = db.Column(db.Integer)                     # user id of the friend who invited them
     role          = db.Column(db.String(20), default='user')   # user | corporate_admin
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     whatsapp_opt_in = db.Column(db.Boolean, default=False)
@@ -171,6 +172,16 @@ class WearableDevice(db.Model):
     connected_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref=db.backref('wearable', uselist=False, cascade='all, delete-orphan'))
+
+
+# ── PUSH SUBSCRIPTION (web push notifications) ─────────────────────────────────
+class PushSubscription(db.Model):
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('user.id'), index=True, nullable=False)
+    endpoint   = db.Column(db.Text, nullable=False)
+    p256dh     = db.Column(db.String(200))
+    auth       = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 # ── PAYMENT (CareMate+ subscriptions; manual transfer or gateway) ──────────────

@@ -91,7 +91,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Recycle pooled connections so serverless cold starts don't reuse dead sockets.
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 280}
 
-from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, Event, TerraUser, WearableMetric, PilotLead, Payment, seed_clinics
+from models import db, User, Assessment, VaccinationRecord, VaccineReminder, Company, Clinic, Booking, Child, LabResult, ConsultationSummary, DailyCheckin, TavusSession, WearableDevice, LinkClick, Event, TerraUser, WearableMetric, PilotLead, Payment, PushSubscription, seed_clinics
 db.init_app(app)
 
 from flask_mail import Mail, Message as MailMessage
@@ -126,7 +126,8 @@ with app.app_context():
                  'ALTER TABLE "user" ADD COLUMN plan VARCHAR(20)',
                  'ALTER TABLE "user" ADD COLUMN plan_expires TIMESTAMP',
                  'ALTER TABLE "user" ADD COLUMN tomo_name VARCHAR(24)',
-                 'ALTER TABLE "user" ADD COLUMN tomo_skin VARCHAR(20)'):
+                 'ALTER TABLE "user" ADD COLUMN tomo_skin VARCHAR(20)',
+                 'ALTER TABLE "user" ADD COLUMN referred_by INTEGER'):
         try:
             db.session.execute(_sql_text(_ddl))
             db.session.commit()
@@ -915,7 +916,7 @@ def pwa_manifest():
 def pwa_service_worker():
     """Served from root so its scope covers the whole app."""
     sw = """
-const CACHE = 'caremate-v1';
+const CACHE = 'caremate-v2';
 const CORE = ['/', '/offline', '/static/css/style.css', '/static/img/logo-icon.png', '/static/img/favicon-192.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE).catch(() => {})).then(() => self.skipWaiting()));
@@ -934,6 +935,25 @@ self.addEventListener('fetch', e => {
     if (res.ok && req.url.includes('/static/')) { const cp = res.clone(); caches.open(CACHE).then(c => c.put(req, cp)); }
     return res;
   }).catch(() => cached)));
+});
+
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) {}
+  e.waitUntil(self.registration.showNotification(d.title || 'CareMate', {
+    body: d.body || '',
+    icon: '/static/img/favicon-192.png',
+    badge: '/static/img/favicon-192.png',
+    data: { url: d.url || '/dashboard' }
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || '/dashboard';
+  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) { if ('focus' in c) { c.navigate(url); return c.focus(); } }
+    return clients.openWindow(url);
+  }));
 });
 """.strip()
     return app.response_class(sw, mimetype="application/javascript",
@@ -1220,6 +1240,8 @@ def register():
             date_of_birth=dob, whatsapp_opt_in=wa_opt
         )
         user.set_password(password)
+        if session.get("ref") and isinstance(session.get("ref"), int):
+            user.referred_by = session.pop("ref")
         db.session.add(user)
         db.session.commit()
         login_user(user)
@@ -1277,6 +1299,7 @@ def dashboard():
         wearable = _real_wearable(current_user.id, today) or _simulated_wearable(current_user.id, today)
     pet = _pet_progress(current_user.id)
     badges = _badges(current_user.id, pet)
+    my_referral_link = referral_link(current_user.id)
     # Heal rows saved before a test existed in the reference table: re-match + re-flag
     _healed = False
     for lab in lab_results:
@@ -1307,7 +1330,9 @@ def dashboard():
         wearable_device=wearable_device,
         wearable=wearable,
         pet=pet,
-        badges=badges
+        badges=badges,
+        my_referral_link=my_referral_link,
+        vapid_public_key=VAPID_PUBLIC_KEY
     )
 
 
@@ -2361,6 +2386,7 @@ PET_XP = {
     "booking": 100,      # clinic booking (verified real-world action)
     "streak_day": 5,     # bonus per day of current check-in streak
     "active_day": 15,    # day with 8000+ real, watch-verified steps
+    "referral": 100,     # friend you invited completed their first assessment
 }
 
 ACTIVE_DAY_STEPS = 8000
@@ -2387,6 +2413,7 @@ def _pet_progress(user_id):
         "active_day": WearableMetric.query.filter(
             WearableMetric.user_id == user_id,
             WearableMetric.steps >= ACTIVE_DAY_STEPS).count(),
+        "referral": Event.query.filter_by(name="referral_reward", user_id=user_id).count(),
     }
     streak = _checkin_streak(user_id)
     xp = sum(counts[k] * PET_XP[k] for k in counts) + streak * PET_XP["streak_day"]
@@ -2457,6 +2484,148 @@ def log_event(name, user_id=None, meta=None):
         print(f"[log_event] {e}")
 
 
+# ── WEB PUSH NOTIFICATIONS ────────────────────────────────────────────────────
+VAPID_PUBLIC_KEY  = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "").replace("\\n", "\n")
+PUSH_ENABLED = bool(VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY)
+
+
+@app.route("/api/push/subscribe", methods=["POST"])
+@login_required
+def push_subscribe():
+    if not PUSH_ENABLED:
+        return jsonify({"error": "not_configured"}), 503
+    sub = (request.json or {}).get("subscription") or {}
+    endpoint = sub.get("endpoint")
+    keys = sub.get("keys") or {}
+    if not endpoint:
+        return jsonify({"error": "bad subscription"}), 400
+    row = PushSubscription.query.filter_by(endpoint=endpoint).first()
+    if not row:
+        db.session.add(PushSubscription(user_id=current_user.id, endpoint=endpoint,
+                                        p256dh=keys.get("p256dh"), auth=keys.get("auth")))
+        db.session.commit()
+        log_event("push_enabled", current_user.id)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/push/unsubscribe", methods=["POST"])
+@login_required
+def push_unsubscribe():
+    endpoint = (request.json or {}).get("endpoint")
+    if endpoint:
+        PushSubscription.query.filter_by(user_id=current_user.id, endpoint=endpoint).delete()
+        db.session.commit()
+    return jsonify({"ok": True})
+
+
+def _send_push(sub, title, body, url="/dashboard"):
+    """Send one web push; prune the subscription if the browser revoked it."""
+    try:
+        from pywebpush import webpush, WebPushException
+        webpush(
+            subscription_info={"endpoint": sub.endpoint,
+                               "keys": {"p256dh": sub.p256dh, "auth": sub.auth}},
+            data=json.dumps({"title": title, "body": body, "url": url}),
+            vapid_private_key=VAPID_PRIVATE_KEY,
+            vapid_claims={"sub": "mailto:privacy@mycaremate.me"},
+        )
+        return True
+    except Exception as e:
+        msg = str(e)
+        if "410" in msg or "404" in msg:
+            db.session.delete(sub)
+            db.session.commit()
+        else:
+            print(f"[push] {e}")
+        return False
+
+
+@app.route("/api/cron/push")
+def cron_push():
+    """Evening cron (19:00 WIB): streak nudges for users who have not checked in
+    today, and vaccine reminders due tomorrow."""
+    auth = request.headers.get("Authorization", "")
+    cron_secret = os.environ.get("CRON_SECRET", "")
+    authorized = (cron_secret and auth == f"Bearer {cron_secret}") or \
+                 request.args.get("key") == os.environ.get("ADMIN_KEY", "caremate-admin")
+    if not authorized:
+        return jsonify({"error": "unauthorized"}), 403
+    if not PUSH_ENABLED:
+        return jsonify({"ok": False, "reason": "vapid keys not configured"})
+
+    today = date.today()
+    sent = {"streak": 0, "vaccine": 0}
+    subs = PushSubscription.query.limit(500).all()
+    by_user = {}
+    for sub in subs:
+        by_user.setdefault(sub.user_id, []).append(sub)
+
+    for uid, user_subs in by_user.items():
+        user = User.query.get(uid)
+        if not user:
+            continue
+        pet_name = user.tomo_name or "Tomo"
+        # streak nudge if no check-in yet today (only when they have a streak to protect)
+        if not DailyCheckin.query.filter_by(user_id=uid, day=today).first():
+            streak = _checkin_streak(uid)
+            if streak >= 1:
+                for sub in user_subs:
+                    if _send_push(sub, f"{pet_name} misses you",
+                                  f"Check in now to keep your {streak}-day streak alive."):
+                        sent["streak"] += 1
+        # vaccine reminders due tomorrow
+        due = VaccineReminder.query.filter_by(user_id=uid, sent=False)\
+            .filter(VaccineReminder.reminder_date == today + timedelta(days=1)).all()
+        for r in due:
+            for sub in user_subs:
+                if _send_push(sub, "Vaccine reminder",
+                              f"{r.vaccine_name} is scheduled for tomorrow.", "/dashboard/reminders"):
+                    sent["vaccine"] += 1
+    return jsonify({"ok": True, "sent": sent})
+
+
+# ── REFERRAL PROGRAM ──────────────────────────────────────────────────────────
+def _referral_code(user_id):
+    return hmac.new(app.secret_key.encode(), f"ref-{user_id}".encode(),
+                    hashlib.sha256).hexdigest()[:8]
+
+
+def referral_link(user_id):
+    return url_for("referral_landing", token=f"{user_id}-{_referral_code(user_id)}", _external=True)
+
+
+@app.route("/r/<token>")
+def referral_landing(token):
+    """Friend invite link: remember who invited, then show the homepage."""
+    try:
+        uid_s, code = token.split("-", 1)
+        uid = int(uid_s)
+    except ValueError:
+        return redirect("/")
+    if hmac.compare_digest(code, _referral_code(uid)) and User.query.get(uid):
+        session["ref"] = uid
+        log_event("referral_visit", meta=str(uid))
+    return redirect("/")
+
+
+def _award_referral(new_user):
+    """Called when a referred user completes their first assessment."""
+    ref_id = new_user.referred_by
+    if not ref_id or ref_id == new_user.id:
+        return
+    already = Event.query.filter_by(name="referral_reward", user_id=ref_id,
+                                    meta=str(new_user.id)).first()
+    if already:
+        return
+    if Event.query.filter_by(name="referral_reward", user_id=ref_id).count() >= 20:
+        return   # sanity cap
+    log_event("referral_reward", ref_id, meta=str(new_user.id))
+    for sub in PushSubscription.query.filter_by(user_id=ref_id).all():
+        _send_push(sub, "Your invite paid off",
+                   "A friend you invited just completed their assessment. +100 XP for your companion!")
+
+
 @app.route("/api/assessment/import", methods=["POST"])
 @login_required
 def import_assessment():
@@ -2482,6 +2651,7 @@ def import_assessment():
         ))
         db.session.commit()
         log_event("assessment_imported", current_user.id)
+        _award_referral(current_user)
         return jsonify({"ok": True, "imported": True})
     except Exception as e:
         db.session.rollback()
@@ -3092,6 +3262,8 @@ Write a personal, warm 3-4 sentence message directly to this patient, like a doc
             db.session.add(asmt)
             db.session.commit()
             log_event("assessment_completed", current_user.id, meta=risk.get("level"))
+            if Assessment.query.filter_by(user_id=current_user.id).count() == 1:
+                _award_referral(current_user)
         except Exception as e:
             print(f"[Assessment save] {e}")
 

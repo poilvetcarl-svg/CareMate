@@ -218,6 +218,31 @@
         </div>
       </div>
 
+      <!-- INVITE FRIENDS -->
+      <div class="dash-card" style="margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="width:44px;height:44px;border-radius:13px;background:rgba(255,107,107,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-gift" style="color:var(--coral);font-size:22px"></i></div>
+        <div style="flex:1;min-width:220px">
+          <div style="font-size:14.5px;font-weight:800;color:var(--text-primary)">{{ 'Ajak teman, dapat +100 XP' if LANG == 'id' else 'Invite a friend, earn +100 XP' }}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">{{ 'Saat teman Anda menyelesaikan penilaian pertamanya, pendamping Anda tumbuh.' if LANG == 'id' else 'When your friend completes their first assessment, your companion grows.' }}</div>
+          <div style="font-size:12px;font-weight:700;color:var(--coral);margin-top:6px;word-break:break-all" id="refLink">{{ my_referral_link }}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="dash-action-btn" onclick="navigator.clipboard.writeText(document.getElementById('refLink').textContent).then(()=>{this.textContent='{{ 'Tersalin!' if LANG == 'id' else 'Copied!' }}';setTimeout(()=>this.textContent='{{ 'Salin' if LANG == 'id' else 'Copy' }}',1500)})">{{ 'Salin' if LANG == 'id' else 'Copy' }}</button>
+          <a class="dash-action-btn" style="background:#25D366" target="_blank" rel="noopener"
+             href="https://wa.me/?text={{ ('Coba CareMate, rencana pencegahan kesehatan gratis dalam 60 detik: ' if LANG == 'id' else 'Try CareMate, a free 60-second prevention plan: ') | urlencode }}{{ my_referral_link | urlencode }}">WhatsApp</a>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS PROMPT -->
+      <div class="dash-card" id="pushCard" style="margin-bottom:20px;display:none;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="width:44px;height:44px;border-radius:13px;background:rgba(255,107,107,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-bell-ringing" style="color:var(--coral);font-size:22px"></i></div>
+        <div style="flex:1;min-width:220px">
+          <div style="font-size:14.5px;font-weight:800;color:var(--text-primary)">{{ 'Aktifkan pengingat' if LANG == 'id' else 'Turn on reminders' }}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">{{ 'Notifikasi streak dan jadwal vaksinasi, langsung di perangkat Anda.' if LANG == 'id' else 'Streak and vaccination notifications, right on your device.' }}</div>
+        </div>
+        <button class="dash-action-btn" onclick="enablePush(this)">{{ 'Aktifkan' if LANG == 'id' else 'Enable' }}</button>
+      </div>
+
       <!-- CONNECTED DEVICE (smartwatch) -->
       {% if wearable_device and wearable %}
       <div class="dash-card wear2" style="margin-bottom:20px" data-wellness="{{ wearable.wellness }}">
@@ -883,6 +908,31 @@ function closeLabTeleconModal() {
 document.getElementById('labTeleconModal')?.addEventListener('click', function(e) {
   if (e.target === this) closeLabTeleconModal();
 });
+// ── Web push (streak + vaccine reminders) ──
+const VAPID_KEY = "{{ vapid_public_key }}";
+function b64ToU8(b){const p='='.repeat((4-b.length%4)%4);const s=atob((b+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(s,c=>c.charCodeAt(0));}
+(async function(){
+  if (!VAPID_KEY || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (Notification.permission === 'denied') return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    if (!existing) document.getElementById('pushCard').style.display = 'flex';
+  } catch(e){}
+})();
+async function enablePush(btn){
+  try {
+    btn.disabled = true;
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted'){ btn.disabled = false; return; }
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64ToU8(VAPID_KEY)});
+    const r = await fetch('/api/push/subscribe', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({subscription: sub.toJSON()})});
+    if (r.ok) document.getElementById('pushCard').style.display = 'none';
+  } catch(e){ btn.disabled = false; }
+}
+
 // ── Rescue the pre-signup assessment from localStorage ──
 (function(){
   const card = document.querySelector('.mate-card');

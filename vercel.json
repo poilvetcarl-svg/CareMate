@@ -4,7 +4,9 @@
     {
       "src": "app.py",
       "use": "@vercel/python",
-      "config": { "maxLambdaSize": "50mb" }
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
     },
     {
       "src": "static/**",
@@ -12,10 +14,23 @@
     }
   ],
   "routes": [
-    { "src": "/static/(.*)", "dest": "/static/$1" },
-    { "src": "/(.*)", "dest": "app.py" }
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "app.py"
+    }
   ],
   "crons": [
-    { "path": "/api/cron/lifecycle", "schedule": "0 2 * * *" }
+    {
+      "path": "/api/cron/lifecycle",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/push",
+      "schedule": "0 12 * * *"
+    }
   ]
 }
