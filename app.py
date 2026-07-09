@@ -336,12 +336,11 @@ def _doctor_tavus_context(doctor, lang_override=None):
         "Never talk over the patient. Their words always take priority. "
     )
     return (
-        f"You are {doctor['name']}, a {doctor['specialty']} specialist at "
-        f"{doctor['hospital']} in {doctor['city']}, Indonesia. "
-        f"You work for the CareMate platform, a digital health tool "
-        f"that helps patients in Indonesia understand their vaccination needs. "
+        f"You are {doctor['name']}, an AI prevention assistant on the CareMate platform, "
+        f"focused on {doctor['specialty']}. You are not a human doctor and you never claim to be one; "
+        f"if asked, say plainly that you are an AI assistant. You help people in Indonesia understand "
+        f"their vaccination and prevention needs and prepare for visits to real doctors. "
         f"You speak {langs}. "
-        f"You have {doctor.get('experience','extensive')} of clinical experience. "
         + lang_instruction
         + interruption_protocol +
         "Your expertise covers: Indonesian Ministry of Health (Kemenkes) vaccination programs; "
@@ -354,6 +353,8 @@ def _doctor_tavus_context(doctor, lang_override=None):
         "Never use em-dashes (long-dash punctuation); use commas, periods, or colons instead. "
         "For emergencies, direct patients to call 119 (Indonesian emergency services). "
         "Do not fabricate medical data, if unsure, say so and recommend consulting official guidelines. "
+        "You never diagnose. When a result or symptom looks concerning, explain the possible reasons in "
+        "educational terms and tell the patient exactly what to discuss with a licensed doctor. "
         "IMPORTANT: You provide educational prevention guidance only. You must NEVER write, dictate, or "
         "issue a prescription, and never name specific drug doses to take. If the patient asks for a "
         "prescription or medication, explain that you can't prescribe and that they should see a "
@@ -366,12 +367,12 @@ def _doctor_greeting(doctor, lang_override=None):
     use_id = (lang_override == "indonesian") or (lang_override is None and speaks_indonesian)
     if use_id:
         return (
-            f"Halo! Saya {doctor['name']}, spesialis {doctor['specialty']} di platform CareMate. "
+            f"Halo! Saya {doctor['name']}, asisten pencegahan AI di platform CareMate. "
             f"Saya siap membantu Anda dengan pertanyaan seputar vaksinasi dan imunisasi hari ini. "
             f"Apa yang ingin Anda diskusikan?"
         )
     return (
-        f"Hello! I'm {doctor['name']}, your {doctor['specialty']} specialist at CareMate. "
+        f"Hello! I'm {doctor['name']}, your AI prevention assistant at CareMate. "
         f"I'm happy to help you with any questions about vaccinations today. "
         f"What would you like to discuss?"
     )
@@ -384,14 +385,8 @@ _TAVUS_VIDEO_MALE   = "https://cdn.replica.tavus.io/39476/8558b349.mp4"    # Raj
 _TAVUS_VIDEO_FEMALE = "https://cdn.replica.tavus.io/39895/8c44fce6.mp4"  # Anna - Professional (phoenix-4)
 
 DOCTORS = [
-    {"id": 1, "did_photo": "https://images.unsplash.com/photo-1622902046580-2b47f47f5471?w=512&q=85&auto=format&fit=facearea&facepad=2.8", "name": "Dr. Budi Santoso", "specialty": "Internal Medicine & Infectious Disease", "hospital": "RS Pondok Indah", "city": "Jakarta Selatan", "lat": -6.2615, "lng": 106.7890, "rating": 4.9, "reviews": 312, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "15 years", "slots": ["09:00", "10:30", "14:00", "15:30"], "gender": "male", "tts_voice": "onyx"},
-    {"id": 2, "did_photo": "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=512&q=85&auto=format&fit=facearea&facepad=2.8", "name": "Dr. Sari Dewi, Sp.PD", "specialty": "Vaccinology & Travel Medicine", "hospital": "RSUP Cipto Mangunkusumo", "city": "Jakarta Pusat", "lat": -6.1924, "lng": 106.8455, "rating": 4.8, "reviews": 487, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English", "Dutch"], "photo": _TAVUS_VIDEO_FEMALE, "experience": "18 years", "slots": ["08:00", "11:00", "13:00"], "gender": "female", "tts_voice": "nova"},
-    {"id": 3, "name": "Dr. Ahmad Fauzi, Sp.A", "specialty": "Pediatric & Adult Immunization", "hospital": "RS Siloam Hospitals", "city": "Tangerang", "lat": -6.2388, "lng": 106.6402, "rating": 4.7, "reviews": 256, "fee": "Rp 200.000", "available": False, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "12 years", "slots": ["10:00", "14:30", "16:00"], "gender": "male", "tts_voice": "echo"},
-    {"id": 4, "name": "Dr. Maya Kusuma, M.D.", "specialty": "Family Medicine & Preventive Health", "hospital": "Klinik Pratama SehatKu", "city": "Bekasi", "lat": -6.2349, "lng": 106.9896, "rating": 4.6, "reviews": 198, "fee": "Rp 150.000", "available": False, "languages": ["Bahasa Indonesia"], "photo": _TAVUS_VIDEO_FEMALE, "experience": "8 years", "slots": ["09:30", "11:30", "15:00", "17:00"], "gender": "female", "tts_voice": "shimmer"},
-    {"id": 5, "name": "Dr. Hendro Wibowo, Sp.PD", "specialty": "Internal Medicine & Immunology", "hospital": "RS Medistra", "city": "Jakarta Selatan", "lat": -6.2297, "lng": 106.8261, "rating": 4.9, "reviews": 541, "fee": "Rp 350.000", "available": False, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "22 years", "slots": ["Next week"], "gender": "male", "tts_voice": "onyx"},
-    {"id": 6, "name": "Dr. Ratna Puspita, Sp.MK", "specialty": "Clinical Microbiology & Vaccines", "hospital": "RS Hermina Jatinegara", "city": "Jakarta Timur", "lat": -6.2131, "lng": 106.8703, "rating": 4.7, "reviews": 173, "fee": "Rp 200.000", "available": False, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_FEMALE, "experience": "10 years", "slots": ["08:30", "12:00", "16:30"], "gender": "female", "tts_voice": "nova"},
-    {"id": 7, "name": "Dr. Irwan Prasetyo, PhD", "specialty": "Epidemiology & Travel Medicine", "hospital": "RS Premier Bintaro", "city": "Tangerang Selatan", "lat": -6.3013, "lng": 106.7312, "rating": 4.8, "reviews": 329, "fee": "Rp 280.000", "available": False, "languages": ["Bahasa Indonesia", "English", "German"], "photo": _TAVUS_VIDEO_MALE, "experience": "14 years", "slots": ["09:00", "13:30", "15:00"], "gender": "male", "tts_voice": "echo"},
-    {"id": 8, "name": "Dr. Dian Rahayu, Sp.KK", "specialty": "Dermatology & HPV Specialist", "hospital": "Klinik Vaksin Indonesia", "city": "Surabaya", "lat": -7.2574, "lng": 112.7521, "rating": 4.6, "reviews": 215, "fee": "Rp 175.000", "available": False, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_FEMALE, "experience": "9 years", "slots": ["10:30", "14:00", "16:00"], "gender": "female", "tts_voice": "shimmer"}
+    {"id": 1, "did_photo": "https://images.unsplash.com/photo-1622902046580-2b47f47f5471?w=512&q=85&auto=format&fit=facearea&facepad=2.8", "name": "Budi", "specialty": "Everyday prevention & infections", "hospital": "CareMate", "city": "Online", "lat": -6.2088, "lng": 106.8456, "rating": None, "reviews": 0, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_MALE, "experience": "AI assistant", "slots": ["Now"], "gender": "male", "tts_voice": "onyx"},
+    {"id": 2, "did_photo": "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=512&q=85&auto=format&fit=facearea&facepad=2.8", "name": "Sari", "specialty": "Vaccines & screenings", "hospital": "CareMate", "city": "Online", "lat": -6.2088, "lng": 106.8456, "rating": None, "reviews": 0, "fee": "Free", "available": True, "languages": ["Bahasa Indonesia", "English"], "photo": _TAVUS_VIDEO_FEMALE, "experience": "AI assistant", "slots": ["Now"], "gender": "female", "tts_voice": "nova"},
 ]
 
 # -- Rich clinical interaction data: condition → vaccine → structured fields --
@@ -901,7 +896,7 @@ def pwa_manifest():
     manifest = {
         "name": "CareMate, Preventive Health for Indonesia",
         "short_name": "CareMate",
-        "description": "Personalised prevention: vaccines, screenings, labs and an AI doctor, made for Indonesia.",
+        "description": "Personalised prevention: vaccines, screenings, labs and an AI assistant, made for Indonesia.",
         "start_url": "/?source=pwa",
         "scope": "/",
         "display": "standalone",
@@ -1276,6 +1271,52 @@ def logout():
 #  USER DASHBOARD ROUTES
 # ══════════════════════════════════════════════════════════
 
+
+def _next90_plan(last_assessment, lab_results, vaccination_records):
+    """Ordered, dated action list for the next 90 days, derived from real records.
+    Returns at most 5 items; every item links somewhere actionable."""
+    if not last_assessment:
+        return [{"when_en": "This week", "when_id": "Minggu ini",
+                 "text_en": "Take your 60-second assessment to unlock your prevention plan",
+                 "text_id": "Ikuti penilaian 60 detik untuk membuka rencana pencegahan Anda",
+                 "icon": "ti-clipboard-heart", "href": "/#assessment"}]
+    items = []
+    # 1. Flagged lab values: the most time-sensitive follow-up
+    flagged = [l for l in lab_results if l.flag in ("high", "low")]
+    for l in flagged[:2]:
+        items.append({"when_en": "This month", "when_id": "Bulan ini",
+                      "text_en": f"Discuss your {l.test_name} result with a doctor, then re-test",
+                      "text_id": f"Diskusikan hasil {l.test_name} dengan dokter, lalu tes ulang",
+                      "icon": "ti-flask", "href": "/teleconsultation"})
+    # 2. Recommended vaccines not yet recorded, high priority first
+    try:
+        rec_keys = json.loads(last_assessment.vaccines_recommended or "[]")
+    except Exception:
+        rec_keys = []
+    have = {r.vaccine_key for r in vaccination_records}
+    missing = [k for k in rec_keys if k not in have and k in VACCINE_DATA["vaccines"]]
+    missing.sort(key=lambda k: 0 if VACCINE_DATA["vaccines"][k].get("priority") == "high" else 1)
+    for i, k in enumerate(missing[:3 if not flagged else 2]):
+        v = VACCINE_DATA["vaccines"][k]
+        when_en, when_id = ("This week", "Minggu ini") if i == 0 and not flagged else ("Within 90 days", "Dalam 90 hari")
+        items.append({"when_en": when_en, "when_id": when_id,
+                      "text_en": f"Book your {v['name']} vaccine at a clinic near you",
+                      "text_id": f"Jadwalkan vaksin {v['name']} di klinik terdekat",
+                      "icon": "ti-vaccine", "href": "/clinics"})
+    # 3. Adults 40+ with no lab results on file: annual check-up (MCU)
+    if (last_assessment.age or 0) >= 40 and not lab_results:
+        items.append({"when_en": "This month", "when_id": "Bulan ini",
+                      "text_en": "Book an annual check-up (MCU) and add your results to CareMate",
+                      "text_id": "Jadwalkan medical check-up (MCU) tahunan dan tambahkan hasilnya ke CareMate",
+                      "icon": "ti-stethoscope", "href": "/clinics"})
+    if not items:
+        items.append({"when_en": "Ongoing", "when_id": "Berkelanjutan",
+                      "text_en": "You are up to date. Keep your daily check-in streak alive",
+                      "text_id": "Semua sudah terpenuhi. Jaga streak check-in harian Anda",
+                      "icon": "ti-confetti", "href": "/dashboard"})
+    return items[:5]
+
+
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -1347,7 +1388,8 @@ def dashboard():
         my_referral_link=my_referral_link,
         vapid_public_key=VAPID_PUBLIC_KEY,
         weights=weights, latest_weight=latest_weight, bmi=bmi,
-        quest=quest, quest_done=quest_done
+        quest=quest, quest_done=quest_done,
+        plan90=_next90_plan(last_assessment, lab_results, vaccination_records)
     )
 
 
@@ -2882,11 +2924,21 @@ def privacy():
 def clinics():
     all_clinics = Clinic.query.order_by(Clinic.featured.desc(), Clinic.rating.desc()).all()
     booking_confirmed = request.args.get("booking_confirmed")
+    wa_book_url = None
+    if booking_confirmed and current_user.is_authenticated:
+        bk = Booking.query.filter_by(confirmation_code=booking_confirmed,
+                                     user_id=current_user.id).first()
+        if bk and bk.clinic_id:
+            c = Clinic.query.get(bk.clinic_id)
+            if c and c.phone:
+                wa_book_url = url_for("go_clinic", clinic_id=c.id, kind="whatsapp",
+                                      bk=booking_confirmed)
     return render_template(
         "clinics.html",
         clinics=all_clinics,
         vaccines=VACCINE_DATA["vaccines"],
-        booking_confirmed=booking_confirmed
+        booking_confirmed=booking_confirmed,
+        wa_book_url=wa_book_url
     )
 
 
@@ -2900,6 +2952,25 @@ def go_clinic(clinic_id, kind):
     if kind == "whatsapp":
         phone = (clinic.phone or "").replace("+", "").replace(" ", "")
         dest = ("https://wa.me/" + phone) if phone else "/clinics"
+        bk_code = request.args.get("bk")
+        if phone and bk_code and current_user.is_authenticated:
+            bk = Booking.query.filter_by(confirmation_code=bk_code,
+                                         user_id=current_user.id).first()
+            if bk:
+                from urllib.parse import quote
+                when = bk.appointment_date.strftime("%d %b %Y, %H:%M") if bk.appointment_date else "a convenient time"
+                if session.get("lang", DEFAULT_LANG) == "id":
+                    text = (f"Halo {clinic.name}, saya ingin membuat janji untuk "
+                            f"{bk.vaccine_name or 'vaksinasi'} pada {when}. "
+                            f"Permintaan melalui CareMate, kode {bk_code}. "
+                            f"Nama saya: {current_user.name}.")
+                else:
+                    text = (f"Hello {clinic.name}, I would like to book "
+                            f"{bk.vaccine_name or 'a vaccination'} on {when}. "
+                            f"Request sent via CareMate, code {bk_code}. "
+                            f"My name: {current_user.name}.")
+                dest += "?text=" + quote(text)
+                kind = "booking_wa"
     else:
         kind = "book"
         dest = clinic.website or "/clinics"
@@ -3033,7 +3104,7 @@ def book_clinic():
         vaccine_key=vaccine_key,
         vaccine_name=vaccine_name,
         appointment_date=appt_dt,
-        status="confirmed",
+        status="requested",
         confirmation_code=code,
         referral_fee=25000,
         notes=notes
@@ -3495,21 +3566,22 @@ def consult():
 
     if not client:
         def no_key():
-            yield "AI doctor not available, please configure OPENAI_API_KEY in your .env file."
+            yield "AI assistant not available, please configure OPENAI_API_KEY in your .env file."
         return Response(stream_with_context(no_key()), content_type="text/plain; charset=utf-8")
 
     name_line = (f"The patient's name is {patient_name}. Always address them as {patient_name} "
                  f"and never use any other name. ") if patient_name else ""
 
-    system_prompt = f"""You are {doctor['name']}, a {doctor['specialty']} specialist with {doctor['experience']} of experience at {doctor['hospital']} in {doctor['city']}, Indonesia. You're having a live teleconsultation right now.
+    system_prompt = f"""You are {doctor['name']}, an AI prevention assistant on the CareMate platform, focused on {doctor['specialty']}. You're having a live video conversation right now. You are not a human doctor and never claim to be one; if asked, say plainly that you are an AI assistant.
 {name_line}
 
-You're the kind of doctor patients love, you actually listen, you explain things in plain language, and you treat the person in front of you like an intelligent adult. You don't talk down to people, you don't hide behind jargon, and you don't make them feel rushed.
+You're the kind of health guide people love, you actually listen, you explain things in plain language, and you treat the person in front of you like an intelligent adult. You don't talk down to people, you don't hide behind jargon, and you don't make them feel rushed.
 
 How you speak in this consultation:
-- Talk like a real doctor in a real appointment. Natural, flowing sentences, not bullet points or numbered lists
+- Talk like a trusted guide in a real conversation. Natural, flowing sentences, not bullet points or numbered lists
 - React to what the patient actually says. If they seem worried, acknowledge it. If they're asking about something specific, go there with them
-- Share your clinical opinion directly: "Honestly, for someone your age with diabetes, I'd prioritise the pneumococcal vaccine first", not "it may be considered appropriate"
+- Share guideline-based guidance directly: "Honestly, for someone your age with diabetes, the guidelines put the pneumococcal vaccine first", not "it may be considered appropriate"
+- You never diagnose. When something looks concerning, explain the possible reasons in educational terms and say exactly what to discuss with a licensed doctor
 - It's okay to think out loud a little: "That's a good question, actually, the short answer is yes, but there's a nuance worth knowing..."
 - Keep each turn to 3-5 sentences. This is a conversation, not a lecture
 - Never use em-dashes (long-dash punctuation) in your messages. Use commas, periods, or colons instead

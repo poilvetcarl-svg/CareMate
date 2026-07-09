@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
   <link rel="apple-touch-icon" href="/static/img/favicon-192.png" />
-  <title>Teleconsultation, CareMate</title>
-  <meta name="description" content="Talk to a virtual AI doctor about vaccines, screenings, lab results and everyday prevention, live video consultation from anywhere, anytime." />
+  <title>AI Prevention Assistant, CareMate</title>
+  <meta name="description" content="Talk to an AI prevention assistant about vaccines, screenings, lab results and everyday prevention, live video from anywhere, anytime. Never a diagnosis." />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
@@ -110,7 +110,7 @@
   <div class="blob blob-1"></div>
   <div class="blob blob-2"></div>
   <div class="telecon-hero-content">
-    <div class="doctor-status-chip"><span class="chip-dot"></span>{{ available_count }} {{ 'Spesialis Tersedia Sekarang' if LANG == 'id' else 'Specialists Available Now' }}</div>
+    <div class="doctor-status-chip"><span class="chip-dot"></span>{{ 'Tersedia sekarang, tanpa janji' if LANG == 'id' else 'Available now, no appointment needed' }}</div>
     <h1 class="hero-title">{{ t('tc.title.1') }} <span class="gradient-text">{{ t('tc.title.2') }}</span></h1>
     <p class="hero-subtitle">{{ t('tc.subtitle') }}</p>
     <div class="telecon-stats">
@@ -128,11 +128,11 @@
       <div class="consult-ic"><i class="ti ti-video"></i></div>
       <div class="consult-body">
         {% if LANG == 'id' %}
-        <div class="consult-title">Bicara dengan dokter virtual online</div>
+        <div class="consult-title">Bicara dengan asisten pencegahan AI</div>
         <div class="consult-desc">Mulai konsultasi video AI langsung sekarang, bahas vaksinasi, skrining, dan hasil lab Anda.</div>
         <span class="consult-cta">Mulai konsultasi <i class="ti ti-arrow-right"></i></span>
         {% else %}
-        <div class="consult-title">Talk to a virtual doctor online</div>
+        <div class="consult-title">Talk to your AI prevention assistant</div>
         <div class="consult-desc">Start a live AI video consultation right now, discuss your vaccines, screenings and lab results.</div>
         <span class="consult-cta">Start consultation <i class="ti ti-arrow-right"></i></span>
         {% endif %}
@@ -192,7 +192,7 @@
     <div class="vd-step" id="vdStep1">
       <div class="vd-ic"><i class="ti ti-clipboard-heart"></i></div>
       <h3 class="vd-title">Take a quick assessment first?</h3>
-      <p class="vd-sub">It takes about 2 minutes. Your doctor can then walk you through your results live.</p>
+      <p class="vd-sub">It takes about 2 minutes. Your AI assistant can then walk you through your results live.</p>
       <button class="vd-btn vd-primary" onclick="vdAssessment(true)">Yes, take the assessment</button>
       <button class="vd-btn vd-ghost" onclick="vdAssessment(false)">No, just start talking</button>
     </div>
@@ -201,7 +201,7 @@
     <div class="vd-step" id="vdStep2" style="display:none">
       <div class="vd-ic"><i class="ti ti-user"></i></div>
       <h3 class="vd-title">What's your name?</h3>
-      <p class="vd-sub">So your doctor can greet you when the consultation starts.</p>
+      <p class="vd-sub">So your AI assistant can greet you when the consultation starts.</p>
       <input type="text" id="vdName" class="vd-input" placeholder="e.g. Budi Santoso" onkeydown="if(event.key==='Enter')vdStartWithName()" />
       <button class="vd-btn vd-primary" onclick="vdStartWithName()">Start consultation</button>
     </div>
@@ -260,7 +260,7 @@
     <div class="how-step">
       <div class="how-step-num">02</div>
       <div class="how-step-icon"><i class="ti ti-video"></i></div>
-      <h4>Talk to a virtual doctor</h4>
+      <h4>Talk to your AI assistant</h4>
       <p>Start a live AI video consultation, your results loaded in automatically.</p>
     </div>
     <div class="how-arrow"><i class="ti ti-arrow-right"></i></div>
@@ -323,7 +323,7 @@
 <!-- Chatbot -->
 <div class="chatbot-widget" id="chatbotWidget">
   <div class="chatbot-header" onclick="toggleChat()">
-    <img class="chatbot-avatar" src="https://images.pexels.com/photos/4227090/pexels-photo-4227090.jpeg?auto=compress&cs=tinysrgb&w=160&h=160&fit=crop" alt="CareMate doctor" />
+    <img class="chatbot-avatar" src="https://images.pexels.com/photos/4227090/pexels-photo-4227090.jpeg?auto=compress&cs=tinysrgb&w=160&h=160&fit=crop" alt="CareMate assistant" />
     <div class="chatbot-title">
       <span>CareMate Assistant</span>
       <span class="chatbot-status">Online · Ask me anything</span>

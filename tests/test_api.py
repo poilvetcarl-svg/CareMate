@@ -13,10 +13,10 @@ class TestPages:
         assert resp.status_code == 200
         assert b"PAPDI" in resp.data
 
-    def test_teleconsultation_renders_with_doctor_count(self, client):
+    def test_teleconsultation_renders_assistant(self, client):
         resp = client.get("/teleconsultation")
         assert resp.status_code == 200
-        assert b"Specialists Available Now" in resp.data
+        assert b"AI prevention assistant" in resp.data
 
     def test_404_for_unknown_route(self, client):
         resp = client.get("/this-page-does-not-exist")

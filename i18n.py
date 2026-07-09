@@ -12,7 +12,7 @@ STRINGS = {
     "nav.assessment":   {"id": "Penilaian", "en": "Assessment"},
     "nav.how":          {"id": "Cara Kerja", "en": "How It Works"},
     "nav.clinics":      {"id": "Klinik", "en": "Clinics"},
-    "nav.doctors":      {"id": "Dokter", "en": "Doctors"},
+    "nav.doctors":      {"id": "Asisten AI", "en": "AI Assistant"},
     "nav.business":     {"id": "Untuk Perusahaan", "en": "For Companies"},
     "nav.about":        {"id": "Tentang Kami", "en": "About"},
     "nav.signin":       {"id": "Masuk", "en": "Sign In"},
@@ -22,16 +22,16 @@ STRINGS = {
 
     # hero
     "hero.badge":       {"id": "Kesehatan preventif, dibuat untuk Indonesia", "en": "Preventive care, made for Indonesia"},
-    "hero.title.1":     {"id": "Rencana Pencegahan", "en": "Your Family's"},
-    "hero.title.2":     {"id": "Keluarga Anda", "en": "Prevention Plan"},
+    "hero.title.1":     {"id": "Langkah Pencegahan", "en": "Know What to"},
+    "hero.title.2":     {"id": "Berikutnya untuk Anda", "en": "Prevent Next"},
     "hero.title.3":     {"id": "dalam 60 Detik", "en": "in 60 Seconds"},
-    "hero.subtitle":    {"id": "Dapatkan rencana pencegahan pribadi untuk vaksinasi, skrining, dan cek kesehatan, berdasarkan pedoman Kemenkes, PAPDI, dan IDAI, disesuaikan dengan usia, kondisi, gaya hidup, dan risiko keluarga Anda.",
-                         "en": "Get a personalized prevention plan for vaccines, screenings, and health checks, built on Indonesian guidelines from Kemenkes, PAPDI and IDAI, tailored to your age, health profile, lifestyle and family risks."},
+    "hero.subtitle":    {"id": "CareMate memberi tahu apa yang perlu Anda cegah berikutnya: vaksinasi, skrining, dan cek kesehatan, berdasarkan pedoman Kemenkes, PAPDI, dan IDAI, disesuaikan dengan usia, kondisi, hasil lab, dan risiko Anda.",
+                         "en": "CareMate tells you what to prevent next: the vaccines, screenings and check-ups you actually need, built on Indonesian guidelines from Kemenkes, PAPDI and IDAI, tailored to your age, health profile, lab results and risks."},
     "hero.cta":         {"id": "Buat Rencana Saya", "en": "Get My Prevention Plan"},
-    "hero.cta2":        {"id": "Konsultasi Dokter", "en": "Talk to a Doctor"},
+    "hero.cta2":        {"id": "Tanya Asisten AI", "en": "Ask the AI Assistant"},
     "hero.stat.free":   {"id": "Gratis, selamanya", "en": "Free, always"},
     "hero.stat.time":   {"id": "Rata-rata penilaian", "en": "Average assessment"},
-    "hero.stat.ai":     {"id": "Akses dokter AI", "en": "AI doctor access"},
+    "hero.stat.ai":     {"id": "Akses asisten AI", "en": "AI assistant access"},
     "trust.label":      {"id": "Mengikuti pedoman dari", "en": "Following guidelines from"},
 
     # how it works
@@ -46,7 +46,7 @@ STRINGS = {
     "footer.platform":  {"id": "Platform", "en": "Platform"},
     "footer.assessment":{"id": "Penilaian Gratis", "en": "Free Assessment"},
     "footer.findclinic":{"id": "Cari Klinik", "en": "Find a Clinic"},
-    "footer.telecon":   {"id": "Telekonsultasi", "en": "Teleconsultation"},
+    "footer.telecon":   {"id": "Asisten Pencegahan AI", "en": "AI Prevention Assistant"},
     "footer.how":       {"id": "Cara Kerja", "en": "How It Works"},
     "footer.account":   {"id": "Akun Saya", "en": "My Account"},
     "footer.create":    {"id": "Buat Akun", "en": "Create Account"},
@@ -73,14 +73,14 @@ STRINGS = {
                            "en": "CareMate is an independent directory. All brands and logos belong to their respective owners and do not imply affiliation or partnership. Bookings happen through each provider's official channels."},
 
     # teleconsultation
-    "tc.title.1":       {"id": "Bicara dengan", "en": "Talk to a"},
-    "tc.title.2":       {"id": "Dokter Virtual", "en": "Virtual Doctor"},
-    "tc.subtitle":      {"id": "Dokter pencegahan berbasis AI untuk membahas vaksinasi, skrining, hasil lab, dan kesehatan sehari-hari, dari mana saja, kapan saja.",
-                         "en": "An AI prevention doctor you can talk to about vaccines, screenings, lab results, and everyday prevention, from anywhere, anytime."},
+    "tc.title.1":       {"id": "Asisten Pencegahan", "en": "Your AI Prevention"},
+    "tc.title.2":       {"id": "AI Anda", "en": "Assistant"},
+    "tc.subtitle":      {"id": "Asisten AI yang menjelaskan hasil lab, vaksinasi, dan skrining dalam bahasa sederhana, lalu menyiapkan Anda untuk dokter sungguhan. Bukan diagnosis, kapan saja, dari mana saja.",
+                         "en": "An AI assistant that explains your lab results, vaccines and screenings in plain language, then prepares you for your real doctor. Never a diagnosis, anytime, anywhere."},
 
     # b2b
     "b2b.badge":        {"id": "Untuk Perusahaan", "en": "For Companies"},
-    "b2b.title":        {"id": "Program pencegahan untuk karyawan Anda", "en": "A prevention program for your employees"},
+    "b2b.title":        {"id": "Ketahui kebutuhan kesehatan karyawan Anda sebelum mereka sakit", "en": "Know what your employees need before they get sick"},
     "b2b.cta":          {"id": "Ajukan Pilot Gratis", "en": "Request a Free Pilot"},
 
     # misc
@@ -91,7 +91,7 @@ STRINGS = {
     "side.overview":    {"id": "Ringkasan", "en": "Overview"},
     "side.assessment":  {"id": "Penilaian Kesehatan", "en": "Health Assessment"},
     "side.records":     {"id": "Rekam Kesehatan Saya", "en": "My Health Records"},
-    "side.doctor":      {"id": "Konsultasi Dokter", "en": "Talk to a Doctor"},
+    "side.doctor":      {"id": "Asisten AI", "en": "AI Assistant"},
     "side.findcare":    {"id": "Cari Layanan", "en": "Find Care"},
     "side.reminders":   {"id": "Pengingat", "en": "Reminders"},
     "side.signout":     {"id": "Keluar", "en": "Sign Out"},

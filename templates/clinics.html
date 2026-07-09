@@ -201,10 +201,10 @@
       </div>
 
       <div style="background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.15);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--text-secondary)">
-        <i class="ti ti-vaccine" style="color:var(--coral)"></i> After booking, CareMate will automatically set WhatsApp reminders 7 days, 1 day, and the morning of your appointment.
+        <i class="ti ti-brand-whatsapp" style="color:var(--coral)"></i> {{ 'Setelah ini, Anda mengirim permintaan langsung ke klinik lewat WhatsApp dengan pesan yang sudah kami siapkan. Klinik yang mengonfirmasi jadwalnya.' if LANG == 'id' else 'Next, you send the request straight to the clinic on WhatsApp with a message we prepare for you. The clinic confirms your slot.' }}
       </div>
 
-      <button type="submit" class="auth-btn">Confirm Booking →</button>
+      <button type="submit" class="auth-btn">{{ 'Simpan & Siapkan Pesan WhatsApp' if LANG == 'id' else 'Save & Prepare WhatsApp Message' }} →</button>
     </form>
   </div>
 </div>
@@ -215,15 +215,27 @@
   <div class="modal-box" style="max-width:420px">
     <div class="booking-confirm-box">
       <div class="booking-confirm-icon"><i class="ti ti-confetti" style="color:var(--coral)"></i></div>
-      <div style="font-size:20px;font-weight:900;margin-bottom:8px">Booking Confirmed!</div>
-      <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px">Your booking reference number:</div>
+      <div style="font-size:20px;font-weight:900;margin-bottom:8px">{{ 'Permintaan tersimpan!' if LANG == 'id' else 'Request saved!' }}</div>
+      <div style="font-size:14px;color:var(--text-muted);margin-bottom:16px">{{ 'Kode referensi Anda:' if LANG == 'id' else 'Your reference code:' }}</div>
       <div class="booking-confirm-code">{{ booking_confirmed }}</div>
+      {% if wa_book_url %}
+      <div style="font-size:13px;color:var(--text-muted);margin-top:8px;margin-bottom:18px">
+        {{ 'Satu langkah lagi: kirim permintaan ini ke klinik lewat WhatsApp agar mereka mengonfirmasi jadwal Anda.' if LANG == 'id' else 'One more step: send this request to the clinic on WhatsApp so they confirm your slot.' }}
+      </div>
+      <a href="{{ wa_book_url }}" target="_blank" rel="noopener" class="auth-btn" style="max-width:280px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none">
+        <i class="ti ti-brand-whatsapp"></i> {{ 'Kirim ke Klinik via WhatsApp' if LANG == 'id' else 'Send to Clinic on WhatsApp' }}
+      </a>
+      <button onclick="document.getElementById('confirmModal').classList.add('hidden')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-muted);margin-top:14px;text-decoration:underline">
+        {{ 'Nanti saja' if LANG == 'id' else 'Later' }}
+      </button>
+      {% else %}
       <div style="font-size:13px;color:var(--text-muted);margin-top:8px;margin-bottom:24px">
-        WhatsApp reminders will be sent if you've enabled them in your profile.
+        {{ 'Hubungi klinik melalui kanal resminya untuk mengonfirmasi jadwal ini.' if LANG == 'id' else 'Contact the clinic through its official channels to confirm this slot.' }}
       </div>
       <button onclick="document.getElementById('confirmModal').classList.add('hidden')" class="auth-btn" style="max-width:240px;margin:0 auto">
-        Done
+        {{ 'Selesai' if LANG == 'id' else 'Done' }}
       </button>
+      {% endif %}
     </div>
   </div>
 </div>

@@ -381,16 +381,16 @@ function renderDoctorOffer(result) {
   ">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
       <span style="font-size:22px"><i class="ti ti-microphone" style="color:var(--accent)"></i></span>
-      <h3 style="font-size:19px;font-weight:800;color:#1e293b;margin:0">Talk to a Doctor About Your Results</h3>
+      <h3 style="font-size:19px;font-weight:800;color:#1e293b;margin:0">Talk Through Your Results with an AI Assistant</h3>
     </div>
     <p style="font-size:14px;color:#64748b;margin:0 0 22px;line-height:1.6">
-      Your AI doctor already knows your <strong>${riskLevel}</strong> profile and
+      Your AI prevention assistant already knows your <strong>${riskLevel}</strong> profile and
       your ${result.vaccines.length} recommended vaccines.
-      Start a live video consultation, no need to repeat yourself.
+      Start a live video conversation, no need to repeat yourself. Educational guidance, never a diagnosis.
     </p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      ${renderOfferDoctorCard(1, 'Dr. Budi Santoso', 'Internal Medicine & Infectious Disease', 'male')}
-      ${renderOfferDoctorCard(2, 'Dr. Sari Dewi, Sp.PD', 'Vaccinology & Travel Medicine', 'female')}
+      ${renderOfferDoctorCard(1, 'Budi · AI Assistant', 'Everyday prevention & infections', 'male')}
+      ${renderOfferDoctorCard(2, 'Sari · AI Assistant', 'Vaccines & screenings', 'female')}
     </div>
   </div>`;
 

@@ -473,11 +473,11 @@
       <div style="position:relative;z-index:2;text-align:center;padding:24px;">
         <h3 style="color:white;font-size:20px;font-weight:800;margin-bottom:6px;">{{ doctor.name }}</h3>
         <p style="color:rgba(255,255,255,0.7);font-size:13px;">{{ doctor.specialty }}</p>
-        <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">{{ doctor.hospital }}, {{ doctor.city }}</p>
+        <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:4px;">AI Prevention Assistant · CareMate</p>
         <div style="margin-top:16px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:10px 16px;">
           <p style="color:rgba(255,255,255,0.8);font-size:12px;line-height:1.6;">
             <i class="ti ti-message-circle"></i> Video stream unavailable, use the <strong>Text Chat</strong> on the right.<br>
-            The AI doctor will still respond and speak to you.
+            Your AI assistant will still respond and speak to you.
           </p>
         </div>
         <button onclick="initTavus()" style="margin-top:12px;background:rgba(124,58,237,0.3);border:1px solid rgba(124,58,237,0.5);color:white;padding:8px 20px;border-radius:20px;font-size:13px;cursor:pointer;">
@@ -522,15 +522,14 @@
     <!-- NOTES PANEL -->
     <div class="notes-panel" id="notesPanel">
 
-      <!-- Doctor info -->
+      <!-- Assistant info -->
       <div class="note-card">
-        <h4>Doctor Profile</h4>
+        <h4>About this assistant</h4>
         <ul>
-          <li>{{ doctor.name }}</li>
+          <li>{{ doctor.name }} · AI Prevention Assistant</li>
           <li>{{ doctor.specialty }}</li>
-          <li>{{ doctor.hospital }}, {{ doctor.city }}</li>
-          <li>{{ doctor.experience }} experience</li>
-          <li><i class="ti ti-star"></i> {{ doctor.rating }} ({{ doctor.reviews }} reviews)</li>
+          <li>Available 24/7 · {{ doctor.languages | join(', ') }}</li>
+          <li>Educational guidance, never a diagnosis</li>
         </ul>
       </div>
 
@@ -553,7 +552,7 @@
     <!-- TEXT CHAT INPUT AREA -->
     <div class="sidebar-input-area hidden" id="inputArea">
       <div class="input-row">
-        <button class="btn-mic-speak" id="sttBtn" onclick="toggleSpeech()" title="Click to speak" aria-label="Speak to the doctor"><i class="ti ti-microphone"></i></button>
+        <button class="btn-mic-speak" id="sttBtn" onclick="toggleSpeech()" title="Click to speak" aria-label="Speak to your assistant"><i class="ti ti-microphone"></i></button>
         <textarea class="consult-input" id="consultInput" placeholder="Type a question or click the mic to speak…" rows="1"
                   onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendConsultMessage()}"></textarea>
         <button class="btn-send-consult" onclick="sendConsultMessage()" aria-label="Send message"><i class="ti ti-send"></i></button>
@@ -570,7 +569,7 @@
     <h3>Consultation Complete</h3>
     <p>Your session with {{ doctor.name }} has ended. What would you like to do next?</p>
     <div class="end-modal-btns">
-      <a href="/teleconsultation" class="btn-secondary" style="padding:12px 20px;font-size:14px">← Back to Doctors</a>
+      <a href="/teleconsultation" class="btn-secondary" style="padding:12px 20px;font-size:14px">← Back to AI Assistant</a>
       <a href="/" class="btn-primary" style="padding:12px 20px;font-size:14px">New Assessment</a>
     </div>
   </div>
@@ -726,8 +725,8 @@
         else if (!didGreeted) {
           didGreeted = true;
           const greeting = currentLang === 'indonesian'
-            ? `Halo${patientName ? ' ' + patientName : ''}, saya ${DOCTOR_NAME}. Ada yang bisa saya bantu hari ini?`
-            : `Hi${patientName ? ' ' + patientName : ''}, I'm ${DOCTOR_NAME}. How can I help you today?`;
+            ? `Halo${patientName ? ' ' + patientName : ''}, saya ${DOCTOR_NAME}, asisten pencegahan AI Anda. Ada yang bisa saya bantu hari ini?`
+            : `Hi${patientName ? ' ' + patientName : ''}, I'm ${DOCTOR_NAME}, your AI prevention assistant. How can I help you today?`;
           didTalk(greeting);
           appendTranscript('doctor', greeting, DOCTOR_NAME);
           consultHistory.push({ role: 'assistant', content: greeting });
@@ -811,7 +810,7 @@
           if (labContext) {
             const banner = document.createElement('div');
             banner.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(16,185,129,.92);color:#fff;font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px;pointer-events:none';
-            banner.textContent = 'Lab results shared with your doctor';
+            banner.textContent = 'Lab results shared with your AI assistant';
             document.body.appendChild(banner);
             setTimeout(() => banner.remove(), 4000);
           }

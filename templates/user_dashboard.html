@@ -498,11 +498,11 @@
         <!-- Talk to Doctor CTA, always visible when lab results exist -->
         <div style="margin-bottom:14px;padding:14px;border-radius:12px;background:linear-gradient(135deg,#fff1f0,#fff7f6);border:1.5px solid var(--coral);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:160px">
-            <div style="font-size:13.5px;font-weight:700;color:var(--text-primary)">Talk to an AI Doctor</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Discuss your results live, flagged values, next tests & vaccines explained by a doctor in a real video call.</div>
+            <div style="font-size:13.5px;font-weight:700;color:var(--text-primary)">Ask your AI Assistant</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Discuss your results live, flagged values, next tests & vaccines explained in a video conversation. Never a diagnosis.</div>
           </div>
           <button onclick="startLabTeleconsult()" style="flex-shrink:0;background:var(--coral);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap">
-            <i class="ti ti-video" style="color:var(--coral)"></i> Talk to Doctor
+            <i class="ti ti-video" style="color:var(--coral)"></i> Ask AI Assistant
           </button>
         </div>
 
@@ -580,15 +580,15 @@
             <!-- Modal header -->
             <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
               <div>
-                <div style="font-size:15px;font-weight:700">AI Doctor Consultation</div>
-                <div style="font-size:12px;color:var(--text-muted)" id="labTeleconDoctorName">Connecting to doctor…</div>
+                <div style="font-size:15px;font-weight:700">AI Prevention Consultation</div>
+                <div style="font-size:12px;color:var(--text-muted)" id="labTeleconDoctorName">Connecting…</div>
               </div>
               <button onclick="closeLabTeleconModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted)"><i class="ti ti-x"></i></button>
             </div>
 
             <!-- Doctor picker -->
             <div id="labTeleconDoctorPicker" style="padding:16px 20px;overflow-y:auto">
-              <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Choose your doctor, your lab results will be shared automatically:</div>
+              <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Choose your AI assistant, your lab results will be shared automatically:</div>
               <div id="labDoctorCards" style="display:flex;flex-direction:column;gap:10px"></div>
             </div>
 
@@ -596,7 +596,7 @@
             <div id="labTeleconLoading" style="display:none;padding:32px 20px;text-align:center">
               <div style="font-size:28px;margin-bottom:10px"><i class="ti ti-video" style="color:var(--coral)"></i></div>
               <div style="font-size:14px;font-weight:600" id="labTeleconLoadingText">Opening your consultation…</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:5px">Your lab results are being shared with the doctor</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:5px">Your lab results are being shared with your AI assistant</div>
             </div>
           </div>
         </div>
@@ -612,8 +612,8 @@
       <!-- DOCTOR CONSULTATIONS (saved AI consultation summaries) -->
       <div class="dash-card" style="margin-bottom:20px">
         <div class="dash-card-header">
-          <div class="dash-card-title">Doctor Consultations</div>
-          <a class="dash-action-btn" href="/teleconsultation" style="text-decoration:none">Talk to a Doctor</a>
+          <div class="dash-card-title">AI Consultations</div>
+          <a class="dash-action-btn" href="/teleconsultation" style="text-decoration:none">Ask AI Assistant</a>
         </div>
         {% if consultations %}
         <div>
@@ -622,7 +622,7 @@
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">
               <span style="width:30px;height:30px;border-radius:9px;background:rgba(255,107,107,0.12);color:var(--coral);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-video"></i></span>
               <div style="flex:1;min-width:0">
-                <div style="font-size:13.5px;font-weight:700;color:var(--text-primary)">{{ c.doctor_name or 'Virtual Doctor' }}</div>
+                <div style="font-size:13.5px;font-weight:700;color:var(--text-primary)">{{ c.doctor_name or 'AI Assistant' }}</div>
                 <div style="font-size:11px;color:var(--text-muted)">{{ c.doctor_specialty }}{% if c.doctor_specialty %} · {% endif %}{{ c.created_at.strftime('%d %b %Y, %H:%M') }}</div>
               </div>
             </div>
@@ -634,7 +634,7 @@
         {% else %}
         <div class="dash-empty" style="padding:20px 0">
           <div style="font-size:15px;font-weight:700;margin-bottom:6px">No consultations yet</div>
-          <div style="font-size:13px;color:var(--text-muted)">Talk to a virtual doctor and save the summary here for your records.</div>
+          <div style="font-size:13px;color:var(--text-muted)">Talk to your AI assistant and save the summary here for your records.</div>
         </div>
         {% endif %}
       </div>
@@ -676,6 +676,26 @@
           <button class="dash-action-btn" style="margin-top:16px" onclick="openLogModal()">+ Log your first vaccine</button>
         </div>
         {% endif %}
+      </div>
+
+      <!-- Next 90 days prevention plan -->
+      <div class="dash-card" style="margin-top:20px">
+        <div class="dash-card-header">
+          <div class="dash-card-title"><i class="ti ti-calendar-bolt" style="color:var(--coral)"></i> {{ '90 Hari ke Depan' if LANG == 'id' else 'Your Next 90 Days' }}</div>
+          <span style="font-size:12px;color:var(--text-muted)">{{ 'Rencana aksi pencegahan Anda' if LANG == 'id' else 'Your prevention action plan' }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;padding-top:4px">
+          {% for it in plan90 %}
+          <a href="{{ it.href }}" style="display:flex;align-items:center;gap:12px;text-decoration:none;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:11px 14px">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,107,107,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti {{ it.icon }}" style="color:var(--coral);font-size:18px"></i></div>
+            <div style="flex:1;min-width:0">
+              <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--coral)">{{ it.when_id if LANG == 'id' else it.when_en }}</span>
+              <div style="font-size:13px;color:var(--text-primary);font-weight:600;line-height:1.45">{{ it.text_id if LANG == 'id' else it.text_en }}</div>
+            </div>
+            <i class="ti ti-chevron-right" style="color:var(--text-muted)"></i>
+          </a>
+          {% endfor %}
+        </div>
       </div>
 
       <!-- Last assessment -->
@@ -891,10 +911,10 @@ let _labRecoData = null;
 
 // ── Lab Teleconsult Flow ──────────────────────────────────────────────────
 const LAB_DOCTORS = [
-  {id:1, name:"Dr. Budi Santoso", specialty:"Internal Medicine & Infectious Disease", gender:"male", available:true},
-  {id:2, name:"Dr. Sari Dewi, Sp.PD", specialty:"Vaccinology & Travel Medicine", gender:"female", available:true},
-  {id:3, name:"Dr. Ahmad Fauzi, Sp.A", specialty:"Pediatric & Adult Immunization", gender:"male", available:false},
-  {id:4, name:"Dr. Maya Kusuma, M.D.", specialty:"Family Medicine & Preventive Health", gender:"female", available:false}
+  {id:1, name:"Budi · AI Assistant", specialty:"Everyday prevention & infections", gender:"male", available:true},
+  {id:2, name:"Sari · AI Assistant", specialty:"Vaccines & screenings", gender:"female", available:true},
+  {id:3, name:"Ahmad · AI Assistant", specialty:"Child & adult immunization", gender:"male", available:false},
+  {id:4, name:"Maya · AI Assistant", specialty:"Family & preventive health", gender:"female", available:false}
 ];
 
 function startLabTeleconsult() {

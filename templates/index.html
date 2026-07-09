@@ -6,21 +6,21 @@
   <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
   <link rel="apple-touch-icon" href="/static/img/favicon-192.png" />
   {% if LANG == 'id' %}
-  <title>CareMate, Pendamping Kesehatan Preventif Keluarga Anda</title>
-  <meta name="description" content="Rencana vaksinasi pribadi untuk Anda dan anak-anak Anda, penilaian risiko, jadwal IDAI/CDC/WHO, pemesanan klinik, dan pengingat, dalam satu tempat." />
+  <title>CareMate, Ketahui Langkah Pencegahan Anda Berikutnya</title>
+  <meta name="description" content="Platform pencegahan berbasis AI: ketahui vaksinasi, skrining, dan cek kesehatan yang Anda butuhkan berikutnya, berdasarkan usia, risiko, dan hasil lab Anda." />
   {% else %}
-  <title>CareMate, Your Family's Preventive Health Companion</title>
-  <meta name="description" content="Personalised vaccination plans for you and your children, risk assessment, IDAI/CDC/WHO schedules, clinic booking and reminders, in one place." />
+  <title>CareMate, Know What to Prevent Next</title>
+  <meta name="description" content="An AI-powered prevention platform: know which vaccines, screenings and check-ups you need next, based on your age, risks and lab results." />
   {% endif %}
-  <meta property="og:title" content="CareMate, Your Family's Preventive Health Companion" />
-  <meta property="og:description" content="Get your personalised vaccine plan in 60 seconds, book a clinic, and talk to certified doctors, all in one place." />
+  <meta property="og:title" content="CareMate, Know What to Prevent Next" />
+  <meta property="og:description" content="Your personal prevention plan in 60 seconds: vaccines, screenings and check-ups, with an AI assistant that explains everything in plain language." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="{{ request.url_root }}" />
   <meta property="og:image" content="{{ url_for('static', filename='img/logo-full.png', _external=True) }}" />
   <meta property="og:site_name" content="CareMate" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="CareMate, Your Family's Preventive Health Companion" />
-  <meta name="twitter:description" content="Get your personalised vaccine plan in 60 seconds, book a clinic, and talk to an AI prevention doctor, all in one place." />
+  <meta name="twitter:title" content="CareMate, Know What to Prevent Next" />
+  <meta name="twitter:description" content="Your personal prevention plan in 60 seconds: vaccines, screenings and check-ups, with an AI assistant that explains everything." />
   <meta name="twitter:image" content="{{ url_for('static', filename='img/logo-full.png', _external=True) }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -121,8 +121,8 @@
         <div class="tc-ln"><span>HbA1c · 9.0%</span><span class="tc-t red">HIGH</span></div>
         <div class="tc-ln"><span>Flu &amp; Pneumococcal</span><span class="tc-t amb">DUE</span></div>
       </div>
-      <div class="tc-nm"><b>Dr. Sari Dewi, Sp.PD</b><span>Internal Medicine · Jakarta</span></div>
-      <a href="/teleconsultation" class="tc-bar"><i class="ti ti-video"></i>Talk to a Doctor</a>
+      <div class="tc-nm"><b>CareMate AI Assistant</b><span>Prevention guidance · Always available</span></div>
+      <a href="/teleconsultation" class="tc-bar"><i class="ti ti-video"></i>Ask the AI Assistant</a>
     </div>
   </div>
 
@@ -211,9 +211,9 @@
       <div class="section-badge">{{ t('b2b.badge') }}</div>
       <h2 class="section-title">{{ t('b2b.title') }}</h2>
       {% if LANG == 'id' %}
-      <p class="section-subtitle" style="max-width:660px">Program kesejahteraan karyawan yang benar-benar diikuti. Karyawan mendapat rencana pencegahan pribadi, pengingat vaksinasi, dan pendamping kesehatan interaktif. HR mendapat laporan partisipasi agregat, tanpa data medis individu.</p>
+      <p class="section-subtitle" style="max-width:660px">Perusahaan Anda sudah membayar MCU tahunan dan vaksinasi flu. CareMate membuat pengeluaran itu lebih cerdas: setiap karyawan mendapat rencana pencegahan pribadi, dan HR akhirnya melihat partisipasi serta hasilnya, tanpa data medis individu.</p>
       {% else %}
-      <p class="section-subtitle" style="max-width:660px">An employee wellness program people actually use. Employees get a personal prevention plan, vaccination reminders, and an interactive health companion. HR gets aggregate participation reporting, never individual medical data.</p>
+      <p class="section-subtitle" style="max-width:660px">Your company already pays for annual medical check-ups and flu vaccinations. CareMate makes that spend smarter: every employee gets a personal prevention plan, and HR finally sees participation and outcomes, never individual medical data.</p>
       {% endif %}
     </div>
 
@@ -222,6 +222,7 @@
         {% set b2b_points = [
           ('ti-clipboard-heart', 'Penilaian risiko untuk semua karyawan dalam 60 detik', 'A 60-second risk assessment for every employee'),
           ('ti-vaccine', 'Kampanye vaksinasi flu dan skrining tahunan yang terukur', 'Measurable flu vaccination and annual screening campaigns'),
+          ('ti-stethoscope', 'MCU yang lebih cerdas: rekomendasi berbasis pedoman tentang siapa membutuhkan pemeriksaan apa, dan tindak lanjut setelah hasilnya keluar', 'Smarter MCU: guideline-based recommendations on who needs which panel, and follow-through after results come back'),
           ('ti-chart-bar', 'Dasbor HR: partisipasi dan aksi pencegahan, teragregasi dan anonim', 'HR dashboard: participation and prevention actions, aggregated and anonymous'),
           ('ti-heart', 'Keterlibatan berkelanjutan lewat pendamping kesehatan, bukan sekadar tantangan langkah yang cepat ditinggalkan', 'Lasting engagement through a health companion, not another step challenge people abandon')
         ] %}
@@ -290,9 +291,9 @@
       <strong style="color:var(--text-primary)">CareMate starts before.</strong>
     </p>
     <p class="section-subtitle" style="max-width:680px;margin-top:14px">
-      From vaccines and early detection to nutrition, mental well-being, lifestyle habits,
-      and family health, CareMate helps you understand what to do, when to do it, and why
-      it matters, so prevention becomes part of everyday life, not an emergency reaction.
+      Vaccines, screenings, check-ups and lab results: CareMate tells you what to do,
+      when to do it, and why it matters, so prevention becomes part of everyday life,
+      not an emergency reaction.
     </p>
   </div>
 
@@ -326,8 +327,8 @@
 
     <div class="pillar-tile">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7c-4 0-6.5 2.7-6.5 6 0 3.6 2.7 7 5 7 .9 0 1-.4 1.5-.4s.6.4 1.5.4c2.3 0 5-3.4 5-7 0-3.3-2.5-6-6.5-6z"/><path d="M12 7c0-2 1.5-3.5 3.5-4"/></svg>
-      <div class="pillar-name">Nutrition <span class="pillar-soon">soon</span></div>
-      <div class="pillar-desc">Food as prevention</div>
+      <div class="pillar-name">Check-Ups</div>
+      <div class="pillar-desc">Annual MCU, made smarter</div>
     </div>
 
     <div class="pillar-tile">
@@ -338,8 +339,8 @@
 
     <div class="pillar-tile">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 119.5 4a7 7 0 0010.5 10.5z"/></svg>
-      <div class="pillar-name">Lifestyle <span class="pillar-soon">soon</span></div>
-      <div class="pillar-desc">Sleep, movement, habits</div>
+      <div class="pillar-name">Lifestyle</div>
+      <div class="pillar-desc">Weight, habits, daily quests</div>
     </div>
 
     <div class="pillar-tile">
@@ -393,7 +394,7 @@
                  class="text-input"
                  onfocus="this.style.borderColor='var(--coral)'"
                  onblur="this.style.borderColor='rgba(255,107,107,0.2)'" />
-          <p class="form-hint">{{ 'Dokter akan menyapa Anda dengan nama ini saat konsultasi.' if LANG == 'id' else 'Your doctor will use this name to greet you during the consultation.' }}</p>
+          <p class="form-hint">{{ 'Asisten AI akan menyapa Anda dengan nama ini saat konsultasi.' if LANG == 'id' else 'Your AI assistant will use this name to greet you during the consultation.' }}</p>
         </div>
 
         <div class="form-group">
@@ -753,7 +754,7 @@
 <!-- ===== CHATBOT ===== -->
 <div class="chatbot-widget" id="chatbotWidget">
   <div class="chatbot-header" onclick="toggleChat()">
-    <img class="chatbot-avatar" src="https://images.pexels.com/photos/4227090/pexels-photo-4227090.jpeg?auto=compress&cs=tinysrgb&w=160&h=160&fit=crop" alt="CareMate doctor" />
+    <img class="chatbot-avatar" src="https://images.pexels.com/photos/4227090/pexels-photo-4227090.jpeg?auto=compress&cs=tinysrgb&w=160&h=160&fit=crop" alt="CareMate assistant" />
     <div class="chatbot-title">
       <span>CareMate Assistant</span>
       <span class="chatbot-status">Online · Ask me anything</span>

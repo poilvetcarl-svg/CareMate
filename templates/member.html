@@ -72,7 +72,7 @@
 
   <h2>{{ 'Keuntungan anggota' if LANG == 'id' else 'Member benefits' }}</h2>
   {% if IS_PLUS %}
-  <div class="benefit"><i class="ti ti-video"></i><div><b>{{ 'Konsultasi video tanpa batas' if LANG == 'id' else 'Unlimited video consultations' }}</b><p>{{ 'Dokter AI kapan pun Anda butuh.' if LANG == 'id' else 'The AI doctor whenever you need it.' }}</p></div></div>
+  <div class="benefit"><i class="ti ti-video"></i><div><b>{{ 'Konsultasi video tanpa batas' if LANG == 'id' else 'Unlimited video consultations' }}</b><p>{{ 'Asisten AI kapan pun Anda butuh.' if LANG == 'id' else 'Your AI assistant whenever you need it.' }}</p></div></div>
   <div class="benefit"><i class="ti ti-file-text"></i><div><b>{{ 'Laporan Kesehatan Pribadi' if LANG == 'id' else 'Personal Health Report' }}</b><p>{{ 'Bawa ke setiap kunjungan dokter.' if LANG == 'id' else 'Bring it to every doctor visit.' }} <a href="/report" style="color:var(--coral);font-weight:700">{{ 'Buka' if LANG == 'id' else 'Open' }} →</a></p></div></div>
   <div class="benefit"><i class="ti ti-flame"></i><div><b>Streak freeze</b><p>{{ 'Lewat satu hari, streak Anda tetap aman.' if LANG == 'id' else 'Miss a day, your streak survives.' }}</p></div></div>
   {% else %}
