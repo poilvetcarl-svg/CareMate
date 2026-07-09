@@ -22,6 +22,8 @@ class User(UserMixin, db.Model):
     department    = db.Column(db.String(80))                   # set when joining via a company invite
     plan          = db.Column(db.String(20), default='free')   # free | plus
     plan_expires  = db.Column(db.DateTime)                     # None = no expiry set
+    tomo_name     = db.Column(db.String(24))                  # CareMate+ custom companion name
+    tomo_skin     = db.Column(db.String(20))                   # CareMate+ skin: classic|gold|mint|ocean
     role          = db.Column(db.String(20), default='user')   # user | corporate_admin
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     whatsapp_opt_in = db.Column(db.Boolean, default=False)

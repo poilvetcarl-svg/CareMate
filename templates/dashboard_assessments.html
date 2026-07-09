@@ -46,6 +46,26 @@
   </div>
 
   {% if assessments %}
+  {% if assessments|length >= 2 %}
+  <div class="dash-card" style="margin-bottom:16px">
+    <div class="dash-card-header"><div class="dash-card-title"><i class="ti ti-chart-line" style="color:var(--coral)"></i> Score trend</div>
+      {% if not IS_PLUS %}<a href="/premium" style="font-size:11px;font-weight:900;color:#8a6508;background:linear-gradient(135deg,#FFE9A3,#FFD93D);padding:4px 12px;border-radius:20px;text-decoration:none">✦ CareMate+</a>{% endif %}</div>
+    {% if IS_PLUS %}
+    <div style="display:flex;align-items:flex-end;gap:10px;height:110px;padding-top:6px">
+      {% for a in (assessments|reverse|list)[-10:] %}
+      {% set sc = (100 - a.risk_score)|int if a.risk_score is not none else 0 %}
+      <div style="flex:1;max-width:56px;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <b style="font-size:12px">{{ sc }}</b>
+        <div style="width:100%;height:{{ [sc, 4]|max }}px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--coral),#FF8E53)"></div>
+        <span style="font-size:9.5px;color:var(--text-muted)">{{ a.created_at.strftime('%d/%m') }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="font-size:13px;color:var(--text-muted)">See how your prevention score evolves across assessments with CareMate+.</div>
+    {% endif %}
+  </div>
+  {% endif %}
   <div class="dash-card">
     {% for a in assessments %}
     {% set conds = a.conditions | from_json if a.conditions else [] %}

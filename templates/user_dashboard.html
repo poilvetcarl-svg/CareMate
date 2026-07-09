@@ -117,10 +117,11 @@
            data-wear-steps="{{ wearable.steps_label if wearable else '' }}"
            data-stage="{{ pet.stage }}">
         <div class="mate-row">
-          <div class="mate-pet" id="matePet">{% include "_mate_pet.svg" %}</div>
+          <div class="mate-pet skin-{{ current_user.tomo_skin or 'classic' }}" id="matePet">{% include "_mate_pet.svg" %}</div>
           <div class="mate-info">
             <div class="mate-headline">
-              <span class="mate-title">I'm Tomo, your prevention mate</span>
+              <span class="mate-title">I'm {{ current_user.tomo_name or 'Tomo' }}, your prevention mate</span>
+              <button class="mate-edit" onclick="openCustomize()" aria-label="Customize companion" title="Customize"><i class="ti ti-pencil"></i></button>
               {% if IS_PLUS %}<span class="mate-plus-badge">✦ PLUS</span>{% endif %}
               <span class="mate-stage" id="mateStage">Stage {{ pet.stage }} · {{ pet.stage_name }}</span>
               <span class="mate-streak" id="mateStreak"><i class="ti ti-flame"></i> <b id="mateStreakNum">0</b>-day bond</span>
@@ -153,7 +154,7 @@
       <div class="mate-overlay" id="mateOverlay" onclick="if(event.target===this)closeMate()">
         <div class="mate-modal">
           <button class="mate-modal-close" onclick="closeMate()" aria-label="Close">&times;</button>
-          <div class="mate-pet xl" id="matePetBig">{% include "_mate_pet.svg" %}</div>
+          <div class="mate-pet xl skin-{{ current_user.tomo_skin or 'classic' }}" id="matePetBig">{% include "_mate_pet.svg" %}</div>
           <div class="mate-speech" id="mateSpeech">Hi! How are you feeling today?</div>
 
           <div class="mate-slider-block">
@@ -167,6 +168,23 @@
 
           <button class="mate-save" id="mateSave" onclick="saveMate()">Save how I feel</button>
           <div class="mate-action" id="mateAction" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- TOMO CUSTOMIZE (CareMate+ perk) -->
+      <div class="mate-overlay" id="customizeOverlay" onclick="if(event.target===this)closeCustomize()">
+        <div class="mate-modal" style="max-width:360px">
+          <button class="mate-modal-close" onclick="closeCustomize()" aria-label="Close">&times;</button>
+          <div style="font-size:17px;font-weight:900;margin-bottom:4px">Customize your companion <span class="mate-plus-badge">✦ PLUS</span></div>
+          <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:16px">Give it a name and a look. Only you see the name; everyone envies the look.</div>
+          <input id="tomoNameInput" maxlength="24" placeholder="Companion name (e.g. Tomo)" value="{{ current_user.tomo_name or '' }}"
+                 style="width:100%;border:1.5px solid var(--border);border-radius:11px;padding:11px 13px;font-size:14px;font-family:inherit;margin-bottom:14px">
+          <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px">
+            {% for sk in ['classic','gold','mint','ocean'] %}
+            <button class="skin-swatch sw-{{ sk }} {{ 'on' if (current_user.tomo_skin or 'classic') == sk }}" data-skin="{{ sk }}" onclick="pickSkin(this)" aria-label="{{ sk }} skin"></button>
+            {% endfor %}
+          </div>
+          <button class="mate-save" onclick="saveCustomize()">Save my companion</button>
         </div>
       </div>
 
@@ -845,6 +863,28 @@ function closeLabTeleconModal() {
 document.getElementById('labTeleconModal')?.addEventListener('click', function(e) {
   if (e.target === this) closeLabTeleconModal();
 });
+// ── Tomo customization (CareMate+) ──
+const IS_PLUS_JS = {{ 'true' if IS_PLUS else 'false' }};
+let pickedSkin = '{{ current_user.tomo_skin or "classic" }}';
+function openCustomize(){
+  if (!IS_PLUS_JS){ window.location.href = '/premium'; return; }
+  document.getElementById('customizeOverlay').classList.add('open');
+}
+function closeCustomize(){ document.getElementById('customizeOverlay').classList.remove('open'); }
+function pickSkin(btn){
+  pickedSkin = btn.dataset.skin;
+  document.querySelectorAll('.skin-swatch').forEach(b => b.classList.toggle('on', b === btn));
+}
+async function saveCustomize(){
+  const name = document.getElementById('tomoNameInput').value.trim();
+  try {
+    const r = await fetch('/api/pet/customize', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name: name, skin: pickedSkin})});
+    if (r.status === 402){ window.location.href = '/premium'; return; }
+    if (r.ok) location.reload();
+  } catch(e){}
+}
+
 // ── Connected device (smartwatch) ──
 async function connectWatch(provider){
   try{

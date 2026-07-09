@@ -124,7 +124,9 @@ with app.app_context():
                  "ALTER TABLE vaccination_record ADD COLUMN child_id INTEGER",
                  'ALTER TABLE "user" ADD COLUMN department VARCHAR(80)',
                  'ALTER TABLE "user" ADD COLUMN plan VARCHAR(20)',
-                 'ALTER TABLE "user" ADD COLUMN plan_expires TIMESTAMP'):
+                 'ALTER TABLE "user" ADD COLUMN plan_expires TIMESTAMP',
+                 'ALTER TABLE "user" ADD COLUMN tomo_name VARCHAR(24)',
+                 'ALTER TABLE "user" ADD COLUMN tomo_skin VARCHAR(20)'):
         try:
             db.session.execute(_sql_text(_ddl))
             db.session.commit()
@@ -2125,6 +2127,67 @@ def premium_confirm():
           if session.get("lang", DEFAULT_LANG) == "id" else
           "Thank you! We verify within 1 business day and CareMate+ activates right away.", "success")
     return redirect(url_for("premium"))
+
+
+PET_SKINS = ("classic", "gold", "mint", "ocean")
+
+
+@app.route("/api/pet/customize", methods=["POST"])
+@login_required
+def pet_customize():
+    """CareMate+ perk: name your companion and pick a skin."""
+    if not is_plus(current_user):
+        return jsonify({"error": "upgrade_required"}), 402
+    data = request.json or {}
+    name = (data.get("name") or "").strip()[:24]
+    skin = data.get("skin")
+    if name:
+        current_user.tomo_name = name
+    if skin in PET_SKINS:
+        current_user.tomo_skin = skin
+    db.session.commit()
+    log_event("pet_customized", current_user.id, meta=skin or name)
+    return jsonify({"ok": True, "name": current_user.tomo_name, "skin": current_user.tomo_skin})
+
+
+@app.route("/report")
+@login_required
+def health_report():
+    """CareMate+ perk: the personal health report, a printable health passport
+    with everything a doctor visit needs."""
+    if not is_plus(current_user):
+        flash("Laporan Kesehatan Pribadi adalah fitur CareMate+."
+              if session.get("lang", DEFAULT_LANG) == "id" else
+              "The Personal Health Report is a CareMate+ feature.", "error")
+        return redirect(url_for("premium"))
+    assessments = Assessment.query.filter_by(user_id=current_user.id)\
+        .order_by(Assessment.created_at.asc()).all()
+    labs = LabResult.query.filter_by(user_id=current_user.id)\
+        .order_by(LabResult.date_taken.desc()).all()
+    labs_by_test = {}
+    for lab in labs:
+        labs_by_test.setdefault(lab.test_key or lab.test_name, []).append(lab)
+    vaccinations = VaccinationRecord.query.filter_by(user_id=current_user.id)\
+        .order_by(VaccinationRecord.date_given.desc()).all()
+    consultations = ConsultationSummary.query.filter_by(user_id=current_user.id)\
+        .order_by(ConsultationSummary.created_at.desc()).limit(3).all()
+    last = assessments[-1] if assessments else None
+    due_vaccines = []
+    if last and last.vaccines_recommended:
+        try:
+            keys = json.loads(last.vaccines_recommended)
+            have = {v.vaccine_key for v in vaccinations}
+            due_vaccines = [VACCINE_DATA["vaccines"][k]["name"]
+                            for k in keys if k in VACCINE_DATA["vaccines"] and k not in have][:8]
+        except Exception:
+            pass
+    flagged = [l for l in labs if l.flag in ("high", "low")][:6]
+    pet = _pet_progress(current_user.id)
+    return render_template("health_report.html", assessments=assessments,
+                           labs_by_test=labs_by_test, vaccinations=vaccinations,
+                           consultations=consultations, last=last,
+                           due_vaccines=due_vaccines, flagged=flagged, pet=pet,
+                           lab_reference=LAB_REFERENCE, today=date.today())
 
 
 @app.route("/admin/payments", methods=["GET", "POST"])

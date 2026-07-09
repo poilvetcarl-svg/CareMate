@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="{{ LANG }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
+  <title>{{ 'Laporan Kesehatan Pribadi' if LANG == 'id' else 'Personal Health Report' }} · CareMate</title>
+  <style>
+    :root{--coral:#FF6B6B;--ink:#1A0A00;--muted:#8a7a6e;--border:#F0E4DD}
+    *{margin:0;box-sizing:border-box;font-family:'Helvetica Neue',Arial,sans-serif}
+    body{background:#F7F1EC;color:var(--ink);padding:36px 20px}
+    .page{max-width:800px;margin:0 auto;background:#fff;border-radius:18px;padding:44px 48px;box-shadow:0 20px 50px -25px rgba(0,0,0,.25)}
+    .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid var(--coral);padding-bottom:16px;margin-bottom:22px}
+    .logo{font-size:22px;font-weight:900}.logo span{color:var(--coral)}
+    h1{font-size:23px;font-weight:900}
+    .meta{font-size:12px;color:var(--muted);margin-top:4px}
+    .plusbadge{font-size:10px;font-weight:900;letter-spacing:.06em;color:#8a6508;background:linear-gradient(135deg,#FFE9A3,#FFD93D);padding:3px 10px;border-radius:20px;vertical-align:middle}
+    h2{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--coral);margin:24px 0 10px}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .kpi{border:1px solid var(--border);border-radius:12px;padding:13px}
+    .kpi b{display:block;font-size:22px;font-weight:900;color:var(--coral)}
+    .kpi span{font-size:10.5px;color:var(--muted);font-weight:700}
+    table{width:100%;border-collapse:collapse}
+    th,td{text-align:left;padding:8px 10px;font-size:12.5px;border-bottom:1px solid var(--border)}
+    th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+    .trend{display:flex;align-items:flex-end;gap:8px;height:90px;padding:8px 2px 0}
+    .tb{flex:1;max-width:52px;display:flex;flex-direction:column;align-items:center;gap:4px}
+    .tb i{display:block;width:100%;border-radius:5px 5px 0 0;background:linear-gradient(180deg,var(--coral),#FF8E53)}
+    .tb span{font-size:9.5px;color:var(--muted)}
+    .tb b{font-size:11px}
+    .flag{font-size:10px;font-weight:800;padding:2px 8px;border-radius:12px}
+    .flag.high{background:rgba(229,72,77,.12);color:#E5484D}.flag.low{background:rgba(2,132,199,.12);color:#0284c7}
+    .prep{background:#FFF6F0;border:1px solid rgba(255,107,107,.25);border-radius:12px;padding:14px 16px}
+    .prep li{font-size:12.5px;line-height:1.7;margin-left:16px;color:#5b4636}
+    .note{font-size:10.5px;color:var(--muted);margin-top:20px;border-top:1px solid var(--border);padding-top:12px;line-height:1.6}
+    .print-btn{position:fixed;top:18px;right:18px;background:var(--coral);color:#fff;border:none;border-radius:12px;padding:11px 20px;font-size:13.5px;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(255,107,107,.4)}
+    @media print{body{background:#fff;padding:0}.page{box-shadow:none;padding:14px}.print-btn{display:none}}
+  </style>
+</head>
+<body>
+  <button class="print-btn" onclick="window.print()">{{ 'Cetak / Simpan PDF' if LANG == 'id' else 'Print / Save as PDF' }}</button>
+  <div class="page">
+    <div class="head">
+      <div>
+        <h1>{{ 'Laporan Kesehatan Pribadi' if LANG == 'id' else 'Personal Health Report' }} <span class="plusbadge">✦ PLUS</span></h1>
+        <div class="meta">{{ current_user.name or current_user.email }}{% if current_user.age %} · {{ current_user.age }} {{ 'tahun' if LANG == 'id' else 'years' }}{% endif %} · {{ today.strftime('%d %B %Y') }}</div>
+      </div>
+      <div class="logo">Care<span>Mate</span></div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><b>{{ (100 - last.risk_score)|int if last and last.risk_score is not none else '–' }}</b><span>{{ 'Skor pencegahan' if LANG == 'id' else 'Prevention score' }}</span></div>
+      <div class="kpi"><b>{{ vaccinations|length }}</b><span>{{ 'Vaksinasi tercatat' if LANG == 'id' else 'Vaccinations recorded' }}</span></div>
+      <div class="kpi"><b>{{ labs_by_test|length }}</b><span>{{ 'Jenis tes lab' if LANG == 'id' else 'Lab tests tracked' }}</span></div>
+      <div class="kpi"><b>{{ pet.streak }}</b><span>{{ 'Hari streak check-in' if LANG == 'id' else 'Day check-in streak' }}</span></div>
+    </div>
+
+    {% if assessments|length >= 2 %}
+    <h2>{{ 'Riwayat skor pencegahan' if LANG == 'id' else 'Prevention score history' }}</h2>
+    <div class="trend">
+      {% for a in assessments[-8:] %}
+      {% set sc = (100 - a.risk_score)|int if a.risk_score is not none else 0 %}
+      <div class="tb"><b>{{ sc }}</b><i style="height:{{ [sc, 4]|max }}px"></i><span>{{ a.created_at.strftime('%d/%m') }}</span></div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if due_vaccines or flagged %}
+    <h2>{{ 'Untuk dibahas dengan dokter Anda' if LANG == 'id' else 'To discuss with your doctor' }}</h2>
+    <div class="prep"><ul>
+      {% for v in due_vaccines %}<li>{{ 'Vaksin yang direkomendasikan namun belum tercatat:' if LANG == 'id' else 'Recommended vaccine not yet recorded:' }} <b>{{ v }}</b></li>{% endfor %}
+      {% for l in flagged %}<li>{{ l.test_name }}: <b>{{ l.value }} {{ l.unit }}</b> <span class="flag {{ l.flag }}">{{ l.flag|upper }}</span> ({{ l.date_taken.strftime('%d %b %Y') }})</li>{% endfor %}
+      <li>{{ 'Tanyakan kapan pemeriksaan lanjutan berikutnya diperlukan.' if LANG == 'id' else 'Ask when your next follow-up tests are due.' }}</li>
+    </ul></div>
+    {% endif %}
+
+    <h2>{{ 'Riwayat vaksinasi' if LANG == 'id' else 'Vaccination history' }}</h2>
+    {% if vaccinations %}
+    <table>
+      <thead><tr><th>{{ 'Vaksin' if LANG == 'id' else 'Vaccine' }}</th><th>{{ 'Dosis' if LANG == 'id' else 'Dose' }}</th><th>{{ 'Tanggal' if LANG == 'id' else 'Date' }}</th><th>{{ 'Klinik' if LANG == 'id' else 'Clinic' }}</th></tr></thead>
+      <tbody>
+      {% for v in vaccinations[:12] %}
+      <tr><td><b>{{ v.vaccine_name }}</b></td><td>{{ v.dose_number }}</td><td>{{ v.date_given.strftime('%d %b %Y') }}</td><td>{{ v.clinic_name or '' }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p style="font-size:12.5px;color:var(--muted)">{{ 'Belum ada vaksinasi tercatat.' if LANG == 'id' else 'No vaccinations recorded yet.' }}</p>{% endif %}
+
+    <h2>{{ 'Hasil lab terakhir' if LANG == 'id' else 'Latest lab results' }}</h2>
+    {% if labs_by_test %}
+    <table>
+      <thead><tr><th>{{ 'Tes' if LANG == 'id' else 'Test' }}</th><th>{{ 'Terakhir' if LANG == 'id' else 'Latest' }}</th><th>{{ 'Sebelumnya' if LANG == 'id' else 'Previous' }}</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for key, series in labs_by_test.items() %}
+      {% set l = series[0] %}
+      <tr>
+        <td><b>{{ l.test_name }}</b></td>
+        <td>{{ l.value }} {{ l.unit }} <span style="color:var(--muted);font-size:10.5px">({{ l.date_taken.strftime('%d %b %y') }})</span></td>
+        <td>{% if series|length > 1 %}{{ series[1].value }} {{ series[1].unit }}{% else %}–{% endif %}</td>
+        <td>{% if l.flag in ('high','low') %}<span class="flag {{ l.flag }}">{{ l.flag|upper }}</span>{% else %}{{ 'normal' if l.flag == 'normal' else '–' }}{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p style="font-size:12.5px;color:var(--muted)">{{ 'Belum ada hasil lab.' if LANG == 'id' else 'No lab results yet.' }}</p>{% endif %}
+
+    {% if consultations %}
+    <h2>{{ 'Konsultasi terakhir' if LANG == 'id' else 'Recent consultations' }}</h2>
+    {% for c in consultations %}
+    <p style="font-size:12px;color:#5b4636;line-height:1.6;margin-bottom:8px"><b>{{ c.created_at.strftime('%d %b %Y') }} · {{ c.doctor_name }}:</b> {{ c.summary[:220] }}{% if c.summary|length > 220 %}…{% endif %}</p>
+    {% endfor %}
+    {% endif %}
+
+    <div class="note">
+      {{ 'Dokumen ini dibuat oleh CareMate dari data yang Anda catat sendiri, bersifat informatif dan bukan rekam medis resmi ataupun diagnosis. Bawa ke konsultasi Anda sebagai bahan diskusi.' if LANG == 'id' else 'Generated by CareMate from your self-recorded data. Informational only, not an official medical record or a diagnosis. Bring it to your consultation as a discussion aid.' }}
+      · mycaremate.me
+    </div>
+  </div>
+</body>
+</html>
