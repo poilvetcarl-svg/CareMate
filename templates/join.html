@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="{{ LANG }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
+  <title>{{ 'Gabung' if LANG == 'id' else 'Join' }} {{ company.name }} · CareMate</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.35.0/tabler-icons-outline.min.css" rel="stylesheet" />
+  <style>
+    body{background:linear-gradient(135deg,#fff6f2,#ffe9e1);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .join-box{background:#fff;border-radius:24px;padding:38px 34px;max-width:440px;width:100%;text-align:center;box-shadow:0 30px 70px -25px rgba(193,58,29,0.35)}
+    .join-ic{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--coral),#FF8E53);color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 18px;box-shadow:0 12px 26px rgba(255,107,107,0.4)}
+    h1{font-size:22px;font-weight:900;color:var(--text-primary);margin-bottom:8px}
+    .sub{font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:24px}
+    select{width:100%;border:1.5px solid rgba(255,107,107,0.25);border-radius:13px;padding:13px 15px;font-size:15px;font-family:inherit;margin-bottom:16px;color:var(--text-primary)}
+    .join-note{font-size:11.5px;color:var(--text-muted);margin-top:14px;line-height:1.5}
+  </style>
+</head>
+<body>
+  <div class="join-box">
+    <div class="join-ic"><i class="ti ti-building"></i></div>
+    {% if LANG == 'id' %}
+    <h1>Gabung program {{ company.name }}</h1>
+    <p class="sub">Perusahaan Anda mengundang Anda ke program pencegahan CareMate. Pilih departemen Anda untuk mulai, tim dengan skor tertinggi menang.</p>
+    {% else %}
+    <h1>Join {{ company.name }}'s program</h1>
+    <p class="sub">Your company invited you to the CareMate prevention program. Pick your department to start, the team with the highest score wins.</p>
+    {% endif %}
+    <form method="POST" action="/join/{{ token }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <select name="department" required>
+        <option value="">{{ 'Pilih departemen Anda' if LANG == 'id' else 'Select your department' }}</option>
+        {% for d in departments %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="btn-primary" style="width:100%;justify-content:center">{{ 'Gabung Sekarang' if LANG == 'id' else 'Join Now' }} →</button>
+    </form>
+    <div class="join-note">
+      {% if LANG == 'id' %}HR hanya melihat statistik agregat dan anonim, tidak pernah data kesehatan pribadi Anda.
+      {% else %}HR only ever sees aggregate, anonymous statistics, never your personal health data.{% endif %}
+    </div>
+  </div>
+</body>
+</html>

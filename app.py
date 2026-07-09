@@ -121,7 +121,8 @@ with app.app_context():
     from sqlalchemy import text as _sql_text
     for _ddl in ("ALTER TABLE clinic ADD COLUMN website VARCHAR(200)",
                  "ALTER TABLE clinic ADD COLUMN home_service BOOLEAN DEFAULT 0",
-                 "ALTER TABLE vaccination_record ADD COLUMN child_id INTEGER"):
+                 "ALTER TABLE vaccination_record ADD COLUMN child_id INTEGER",
+                 'ALTER TABLE "user" ADD COLUMN department VARCHAR(80)'):
         try:
             db.session.execute(_sql_text(_ddl))
             db.session.commit()
@@ -994,6 +995,8 @@ def login():
         if user and user.check_password(password):
             login_user(user)
             log_event("login", user.id)
+            if session.get("pending_join"):
+                return redirect(url_for("join_company", token=session["pending_join"]))
             next_page = request.args.get("next")
             return redirect(next_page or url_for("dashboard"))
         flash("Invalid email or password.", "error")
@@ -1019,7 +1022,8 @@ def _set_locale():
 
 @app.context_processor
 def _inject_i18n():
-    lang = session.get("lang", DEFAULT_LANG)
+    from flask import has_request_context
+    lang = session.get("lang", DEFAULT_LANG) if has_request_context() else DEFAULT_LANG
     def t(key):
         entry = STRINGS.get(key)
         if not entry:
@@ -1216,7 +1220,13 @@ def register():
         db.session.commit()
         login_user(user)
         log_event("signup", user.id)
+        try:
+            send_lifecycle_email(user, "welcome")
+        except Exception as e:
+            print(f"[welcome email] {e}")
         flash("Welcome to CareMate!", "success")
+        if session.get("pending_join"):
+            return redirect(url_for("join_company", token=session["pending_join"]))
         return redirect(url_for("onboarding"))
 
     return render_template("auth.html", mode="register", page_title="Create Account")
@@ -2515,6 +2525,58 @@ def corporate_logout():
     return redirect(url_for("corporate_login"))
 
 
+def _company_join_code(company_id):
+    """Deterministic invite code per company, no schema change needed."""
+    return hmac.new(app.secret_key.encode(), f"join-{company_id}".encode(),
+                    hashlib.sha256).hexdigest()[:10]
+
+
+DEPARTMENTS = ["Sales", "Marketing", "Finance", "HR", "IT", "Operations", "Other"]
+
+
+def _company_stats(company):
+    """Aggregate, anonymous participation stats for the HR dashboard + report."""
+    from sqlalchemy import func
+    employees = company.employees
+    ids = [e.id for e in employees]
+    if not ids:
+        return {"employees": employees, "active7": 0, "checkins": 0, "xp_total": 0,
+                "participation": 0, "departments": []}
+
+    def grouped(model):
+        return dict(db.session.query(model.user_id, func.count(model.id))
+                    .filter(model.user_id.in_(ids)).group_by(model.user_id).all())
+
+    per = {
+        "checkin": grouped(DailyCheckin), "assessment": grouped(Assessment),
+        "lab": grouped(LabResult), "vaccine": grouped(VaccinationRecord),
+        "consultation": grouped(ConsultationSummary), "booking": grouped(Booking),
+    }
+    xp_user = {uid: sum(per[k].get(uid, 0) * PET_XP[k] for k in per) for uid in ids}
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    active_ids = {r[0] for r in db.session.query(Event.user_id)
+                  .filter(Event.user_id.in_(ids), Event.created_at >= week_ago).distinct()}
+    engaged = [uid for uid in ids if xp_user.get(uid, 0) > 0]
+
+    # department leaderboard by total Tomo XP
+    dept_map = {}
+    for e in employees:
+        d = e.department or "Unassigned"
+        dept_map.setdefault(d, {"name": d, "members": 0, "xp": 0})
+        dept_map[d]["members"] += 1
+        dept_map[d]["xp"] += xp_user.get(e.id, 0)
+    departments = sorted(dept_map.values(), key=lambda x: x["xp"], reverse=True)
+
+    return {
+        "employees": employees,
+        "active7": len(active_ids),
+        "checkins": sum(per["checkin"].values()),
+        "xp_total": sum(xp_user.values()),
+        "participation": round(len(engaged) / len(ids) * 100) if ids else 0,
+        "departments": departments,
+    }
+
+
 @app.route("/corporate/dashboard")
 def corporate_dashboard():
     company = _get_corp()
@@ -2526,6 +2588,9 @@ def corporate_dashboard():
 
     total_pending = sum(len(e.pending_reminders()) for e in employees)
     total_assess  = sum(len(e.assessments) for e in employees)
+    stats = _company_stats(company)
+    join_url = url_for("join_company", token=f"{company.id}-{_company_join_code(company.id)}",
+                       _external=True)
 
     return render_template(
         "corporate_dashboard.html",
@@ -2534,8 +2599,56 @@ def corporate_dashboard():
         coverage=coverage,
         vaccines=VACCINE_DATA["vaccines"],
         total_pending_reminders=total_pending,
-        total_assessments=total_assess
+        total_assessments=total_assess,
+        stats=stats,
+        join_url=join_url
     )
+
+
+@app.route("/corporate/report")
+def corporate_report():
+    """Printable pilot outcome report, the document HR forwards upward."""
+    company = _get_corp()
+    if not company:
+        return redirect(url_for("corporate_login"))
+    stats = _company_stats(company)
+    total_assess = sum(len(e.assessments) for e in company.employees)
+    total_vax = sum(len(e.vaccination_records) for e in company.employees)
+    return render_template("corporate_report.html", company=company, stats=stats,
+                           coverage=company.vaccination_coverage,
+                           vaccines=VACCINE_DATA["vaccines"],
+                           total_assessments=total_assess, total_vaccinations=total_vax,
+                           today=date.today())
+
+
+@app.route("/join/<token>", methods=["GET", "POST"])
+def join_company(token):
+    """Employee joins their company's program via the HR invite link."""
+    try:
+        cid_s, code = token.split("-", 1)
+        cid = int(cid_s)
+    except ValueError:
+        return redirect("/")
+    company = Company.query.get(cid)
+    if not company or not hmac.compare_digest(code, _company_join_code(cid)):
+        flash("Invite link is not valid.", "error")
+        return redirect("/")
+
+    if not current_user.is_authenticated:
+        session["pending_join"] = token
+        flash(f"Create your free account to join {company.name}'s prevention program.", "success")
+        return redirect(url_for("register"))
+
+    if request.method == "POST":
+        current_user.company_id = company.id
+        current_user.department = (request.form.get("department") or "Other")[:80]
+        db.session.commit()
+        session.pop("pending_join", None)
+        log_event("company_join", current_user.id, meta=company.name)
+        flash(f"You joined {company.name}'s prevention program.", "success")
+        return redirect(url_for("dashboard"))
+
+    return render_template("join.html", company=company, departments=DEPARTMENTS, token=token)
 
 
 @app.route("/corporate/dashboard/remind/<vaccine_key>")
@@ -3620,6 +3733,97 @@ def send_email_reminder(to_email, user_name, vaccine_name, reminder_date, days_u
 
 # Expose email helper to reminders module
 app.send_email_reminder = send_email_reminder
+
+
+# ══════════════════════════════════════════════════════════
+#  LIFECYCLE EMAILS (welcome + activation nudges)
+# ══════════════════════════════════════════════════════════
+
+LIFECYCLE_EMAILS = {
+    "welcome": {
+        "subject": "Welcome to CareMate, your prevention plan is one step away",
+        "heading": "Welcome to CareMate!",
+        "body": ("You now have a place to stay ahead of disease instead of chasing it. "
+                 "Start with the free 60-second health assessment: you will get a personal "
+                 "prevention plan for vaccines, screenings and everyday health, built on "
+                 "Kemenkes, PAPDI, IDAI, CDC and WHO guidelines. Tomo, your prevention mate, "
+                 "is waiting on your dashboard."),
+        "cta_label": "Take my 60-second assessment",
+        "cta_url": "https://mycaremate.me/#assessment",
+    },
+    "day3": {
+        "subject": "Your prevention plan is still waiting (it takes 60 seconds)",
+        "heading": "Your plan is one minute away",
+        "body": ("You created your CareMate account a few days ago but have not run your "
+                 "health assessment yet. It takes about 60 seconds and tells you exactly "
+                 "which vaccines and screenings matter for you, and which ones you can skip."),
+        "cta_label": "Get my prevention plan",
+        "cta_url": "https://mycaremate.me/#assessment",
+    },
+    "day7": {
+        "subject": "Tomo misses you, and your streak is waiting",
+        "heading": "One week in, how are you doing?",
+        "body": ("A quick daily check-in keeps Tomo, your prevention mate, healthy and growing, "
+                 "and keeps your own prevention on track. It takes ten seconds: how is your "
+                 "body, how is your mind. Small habits are the whole game."),
+        "cta_label": "Check in with Tomo",
+        "cta_url": "https://mycaremate.me/dashboard",
+    },
+}
+
+
+def send_lifecycle_email(user, kind):
+    """Send one lifecycle email. No-ops gracefully when MAIL is not configured.
+    Dedupes via the Event ledger (email_<kind>)."""
+    spec = LIFECYCLE_EMAILS.get(kind)
+    if not spec or not user.email:
+        return False
+    if Event.query.filter_by(name=f"email_{kind}", user_id=user.id).first():
+        return False
+    if not app.config.get("MAIL_USERNAME"):
+        print(f"[Email MOCK] lifecycle {kind} -> {user.email}")
+        log_event(f"email_{kind}", user.id)
+        return True
+    try:
+        html = render_template("email/lifecycle.html", heading=spec["heading"],
+                               body=spec["body"], cta_label=spec["cta_label"],
+                               cta_url=spec["cta_url"])
+        mail.send(MailMessage(subject=spec["subject"], recipients=[user.email], html=html))
+        log_event(f"email_{kind}", user.id)
+        return True
+    except Exception as e:
+        print(f"[Email ERROR] lifecycle {kind}: {e}")
+        return False
+
+
+@app.route("/api/cron/lifecycle")
+def cron_lifecycle():
+    """Daily cron (Vercel): sends day-3 activation and day-7 habit nudges.
+    Authorized via Vercel's CRON_SECRET bearer token or the admin key."""
+    auth = request.headers.get("Authorization", "")
+    cron_secret = os.environ.get("CRON_SECRET", "")
+    authorized = (cron_secret and auth == f"Bearer {cron_secret}") or \
+                 request.args.get("key") == os.environ.get("ADMIN_KEY", "caremate-admin")
+    if not authorized:
+        return jsonify({"error": "unauthorized"}), 403
+
+    now = datetime.utcnow()
+    sent = {"day3": 0, "day7": 0}
+
+    # day 3: signed up 3-4 days ago, never completed an assessment
+    for u in User.query.filter(User.created_at <= now - timedelta(days=3),
+                               User.created_at > now - timedelta(days=4)).limit(50):
+        if not Assessment.query.filter_by(user_id=u.id).first():
+            if send_lifecycle_email(u, "day3"):
+                sent["day3"] += 1
+
+    # day 7: signed up 7-8 days ago
+    for u in User.query.filter(User.created_at <= now - timedelta(days=7),
+                               User.created_at > now - timedelta(days=8)).limit(50):
+        if send_lifecycle_email(u, "day7"):
+            sent["day7"] += 1
+
+    return jsonify({"ok": True, "sent": sent})
 
 
 @app.errorhandler(404)

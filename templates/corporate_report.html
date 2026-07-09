@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/static/img/favicon-64.png" />
+  <title>Prevention Program Report · {{ company.name }} · CareMate</title>
+  <style>
+    :root{--coral:#FF6B6B;--ink:#1A0A00;--muted:#8a7a6e;--border:#F0E4DD}
+    *{margin:0;box-sizing:border-box;font-family:'DM Sans','Helvetica Neue',Arial,sans-serif}
+    body{background:#F7F1EC;color:var(--ink);padding:36px 20px}
+    .page{max-width:820px;margin:0 auto;background:#fff;border-radius:18px;padding:44px 48px;box-shadow:0 20px 50px -25px rgba(0,0,0,0.25)}
+    .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid var(--coral);padding-bottom:18px;margin-bottom:26px}
+    .logo{font-size:22px;font-weight:900}.logo span{color:var(--coral)}
+    h1{font-size:24px;font-weight:900;margin-bottom:4px}
+    .meta{font-size:12.5px;color:var(--muted)}
+    h2{font-size:15px;font-weight:800;margin:26px 0 12px;text-transform:uppercase;letter-spacing:.05em;color:var(--coral)}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .kpi{border:1px solid var(--border);border-radius:13px;padding:16px}
+    .kpi b{display:block;font-size:26px;font-weight:900;color:var(--coral)}
+    .kpi span{font-size:11px;color:var(--muted);font-weight:700}
+    table{width:100%;border-collapse:collapse;margin-top:4px}
+    th,td{text-align:left;padding:9px 12px;font-size:13px;border-bottom:1px solid var(--border)}
+    th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800}
+    td.num{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+    .bar{background:#FBEDE6;border-radius:6px;height:9px;overflow:hidden}
+    .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--coral),#FF8E53)}
+    .note{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:26px;border-top:1px solid var(--border);padding-top:14px}
+    .print-btn{position:fixed;top:18px;right:18px;background:var(--coral);color:#fff;border:none;border-radius:12px;padding:11px 20px;font-size:13.5px;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(255,107,107,0.4)}
+    @media print{ body{background:#fff;padding:0} .page{box-shadow:none;border-radius:0;padding:20px} .print-btn{display:none} }
+  </style>
+</head>
+<body>
+  <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+  <div class="page">
+    <div class="head">
+      <div>
+        <h1>Prevention Program Report</h1>
+        <div class="meta">{{ company.name }} · Prepared {{ today.strftime('%d %B %Y') }} · Program since {{ company.created_at.strftime('%d %B %Y') }}</div>
+      </div>
+      <div class="logo">Care<span>Mate</span></div>
+    </div>
+
+    <h2>Participation</h2>
+    <div class="kpis">
+      <div class="kpi"><b>{{ stats.employees|length }}</b><span>Enrolled employees</span></div>
+      <div class="kpi"><b>{{ stats.participation }}%</b><span>Took at least one prevention action</span></div>
+      <div class="kpi"><b>{{ stats.active7 }}</b><span>Active in the last 7 days</span></div>
+      <div class="kpi"><b>{{ stats.checkins }}</b><span>Wellbeing check-ins logged</span></div>
+    </div>
+
+    <h2>Prevention actions completed</h2>
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi"><b>{{ total_assessments }}</b><span>Health risk assessments</span></div>
+      <div class="kpi"><b>{{ total_vaccinations }}</b><span>Vaccinations recorded</span></div>
+      <div class="kpi"><b>{{ stats.xp_total }}</b><span>Total engagement points</span></div>
+    </div>
+
+    {% if stats.departments %}
+    <h2>Team engagement leaderboard</h2>
+    <table>
+      <thead><tr><th>Department</th><th style="text-align:right">Members</th><th style="text-align:right">Engagement points</th><th style="width:34%">Relative</th></tr></thead>
+      <tbody>
+        {% set maxxp = stats.departments[0].xp if stats.departments[0].xp else 1 %}
+        {% for d in stats.departments %}
+        <tr>
+          <td><b>{{ d.name }}</b></td>
+          <td class="num">{{ d.members }}</td>
+          <td class="num">{{ d.xp }}</td>
+          <td><div class="bar"><i style="width:{{ (d.xp / maxxp * 100)|int if maxxp else 0 }}%"></i></div></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    <h2>Vaccination coverage</h2>
+    <table>
+      <thead><tr><th>Vaccine</th><th style="text-align:right">Coverage</th><th style="width:40%">&nbsp;</th></tr></thead>
+      <tbody>
+        {% for key, pct in coverage.items() %}
+        {% if pct > 0 %}
+        <tr>
+          <td>{{ vaccines[key].name if key in vaccines else key }}</td>
+          <td class="num">{{ pct }}%</td>
+          <td><div class="bar"><i style="width:{{ pct }}%"></i></div></td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="note">
+      All figures are aggregated and anonymous; CareMate never shares an individual employee's health data with the employer.
+      Engagement points reflect completed prevention actions (check-ins, assessments, lab results, vaccinations, consultations, clinic bookings).
+      Report generated by CareMate (mycaremate.me) for {{ company.name }}.
+    </div>
+  </div>
+</body>
+</html>

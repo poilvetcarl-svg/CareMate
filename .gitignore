@@ -40,3 +40,6 @@ logs/
 
 # Design exploration drafts (not part of the app)
 design_proposals/
+
+# Sales materials (keep out of the public repo)
+sales/

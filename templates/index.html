@@ -283,8 +283,8 @@
 <!-- ===== WHY PREVENTION ===== -->
 <section class="features-section" style="text-align:center">
   <div class="section-header" style="margin-bottom:40px">
-    <div class="section-badge">Why CareMate</div>
-    <h2 class="section-title">Get Ahead of <span class="gradient-text">Disease</span></h2>
+    <div class="section-badge">{{ 'Mengapa CareMate' if LANG == 'id' else 'Why CareMate' }}</div>
+    {% if LANG == 'id' %}<h2 class="section-title">Selangkah di Depan <span class="gradient-text">Penyakit</span></h2>{% else %}<h2 class="section-title">Get Ahead of <span class="gradient-text">Disease</span></h2>{% endif %}
     <p class="section-subtitle" style="max-width:640px">
       Most healthcare starts after something goes wrong.<br/>
       <strong style="color:var(--text-primary)">CareMate starts before.</strong>
@@ -359,9 +359,9 @@
 <section class="assessment-section" id="assessment">
   <div class="assessment-container">
     <div class="assessment-header">
-      <div class="section-badge">Free Assessment</div>
-      <h2 class="section-title">Get Your Personalized<br /><span class="gradient-text">Prevention Plan</span></h2>
-      <p class="section-subtitle">Takes less than 2 minutes. Clinically validated. Completely private.</p>
+      <div class="section-badge">{{ 'Penilaian Gratis' if LANG == 'id' else 'Free Assessment' }}</div>
+      {% if LANG == 'id' %}<h2 class="section-title">Dapatkan Rencana<br /><span class="gradient-text">Pencegahan Pribadi Anda</span></h2>{% else %}<h2 class="section-title">Get Your Personalized<br /><span class="gradient-text">Prevention Plan</span></h2>{% endif %}
+      <p class="section-subtitle">{{ 'Kurang dari 2 menit. Berbasis pedoman klinis. Sepenuhnya privat.' if LANG == 'id' else 'Takes less than 2 minutes. Clinically validated. Completely private.' }}</p>
     </div>
 
     <div class="form-card" id="assessmentForm">
@@ -369,40 +369,40 @@
       <div class="steps-bar">
         <div class="step active" data-step="1">
           <div class="step-circle">1</div>
-          <span>Profile</span>
+          <span>{{ 'Profil' if LANG == 'id' else 'Profile' }}</span>
         </div>
         <div class="step-line"></div>
         <div class="step" data-step="2">
           <div class="step-circle">2</div>
-          <span>Health</span>
+          <span>{{ 'Kesehatan' if LANG == 'id' else 'Health' }}</span>
         </div>
         <div class="step-line"></div>
         <div class="step" data-step="3">
           <div class="step-circle">3</div>
-          <span>Travel</span>
+          <span>{{ 'Perjalanan' if LANG == 'id' else 'Travel' }}</span>
         </div>
       </div>
 
       <!-- STEP 1: BASIC PROFILE -->
       <div class="form-step" id="step1">
-        <h3 class="step-title">Tell us about yourself</h3>
+        <h3 class="step-title">{{ 'Ceritakan tentang diri Anda' if LANG == 'id' else 'Tell us about yourself' }}</h3>
 
         <div class="form-group">
-          <label class="form-label">Your Name <span class="required">*</span></label>
+          <label class="form-label">{{ 'Nama Anda' if LANG == 'id' else 'Your Name' }} <span class="required">*</span></label>
           <input type="text" id="patientNameInput" placeholder="e.g. Budi Santoso"
                  class="text-input"
                  onfocus="this.style.borderColor='var(--coral)'"
                  onblur="this.style.borderColor='rgba(255,107,107,0.2)'" />
-          <p class="form-hint">Your doctor will use this name to greet you during the consultation.</p>
+          <p class="form-hint">{{ 'Dokter akan menyapa Anda dengan nama ini saat konsultasi.' if LANG == 'id' else 'Your doctor will use this name to greet you during the consultation.' }}</p>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Age <span class="required">*</span></label>
+          <label class="form-label">{{ 'Usia' if LANG == 'id' else 'Age' }} <span class="required">*</span></label>
           <div class="age-input-group">
             <input type="range" id="ageSlider" min="18" max="100" value="35" class="age-slider" oninput="updateAge(this.value)" />
             <div class="age-display">
               <span id="ageValue">35</span>
-              <span class="age-unit">years old</span>
+              <span class="age-unit">{{ 'tahun' if LANG == 'id' else 'years old' }}</span>
             </div>
           </div>
           <div class="age-labels">
@@ -411,76 +411,76 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Biological Sex <span class="required">*</span></label>
+          <label class="form-label">{{ 'Jenis Kelamin' if LANG == 'id' else 'Biological Sex' }} <span class="required">*</span></label>
           <div class="option-group" id="sexGroup">
             <label class="option-card">
               <input type="radio" name="sex" value="male" />
               <div class="option-content">
                 <span class="option-icon"><i class="ti ti-gender-male"></i></span>
-                <span>Male</span>
+                <span>{{ 'Laki-laki' if LANG == 'id' else 'Male' }}</span>
               </div>
             </label>
             <label class="option-card">
               <input type="radio" name="sex" value="female" />
               <div class="option-content">
                 <span class="option-icon"><i class="ti ti-gender-female"></i></span>
-                <span>Female</span>
+                <span>{{ 'Perempuan' if LANG == 'id' else 'Female' }}</span>
               </div>
             </label>
             <label class="option-card">
               <input type="radio" name="sex" value="other" />
               <div class="option-content">
                 <span class="option-icon"><i class="ti ti-gender-bigender"></i></span>
-                <span>Other</span>
+                <span>{{ 'Lainnya' if LANG == 'id' else 'Other' }}</span>
               </div>
             </label>
           </div>
           <p id="sexHint" style="display:none;font-size:12px;color:#ef4444;margin-top:6px;font-weight:600">
-            <i class="ti ti-alert-triangle" style="color:var(--coral)"></i> Please select a biological sex to continue.
+            <i class="ti ti-alert-triangle" style="color:var(--coral)"></i> {{ 'Silakan pilih jenis kelamin untuk melanjutkan.' if LANG == 'id' else 'Please select a biological sex to continue.' }}
           </p>
         </div>
 
         <div class="form-group" id="pregnancyGroup" style="display:none">
-          <label class="form-label">Are you currently pregnant?</label>
+          <label class="form-label">{{ 'Apakah Anda sedang hamil?' if LANG == 'id' else 'Are you currently pregnant?' }}</label>
           <div class="option-group">
             <label class="option-card">
               <input type="radio" name="pregnant" value="yes" />
-              <div class="option-content"><span class="option-icon"><i class="ti ti-baby-carriage"></i></span><span>Yes</span></div>
+              <div class="option-content"><span class="option-icon"><i class="ti ti-baby-carriage"></i></span><span>{{ 'Ya' if LANG == 'id' else 'Yes' }}</span></div>
             </label>
             <label class="option-card">
               <input type="radio" name="pregnant" value="no" checked />
-              <div class="option-content"><span class="option-icon"><i class="ti ti-x"></i></span><span>No</span></div>
+              <div class="option-content"><span class="option-icon"><i class="ti ti-x"></i></span><span>{{ 'Tidak' if LANG == 'id' else 'No' }}</span></div>
             </label>
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Vaccination history</label>
+          <label class="form-label">{{ 'Riwayat vaksinasi' if LANG == 'id' else 'Vaccination history' }}</label>
           <div class="vax-group">
             <label class="vax-card">
               <input type="radio" name="vaccinated_recently" value="yes" />
               <div class="vax-content">
                 <span class="vax-ic"><i class="ti ti-circle-check"></i></span>
-                <span class="vax-tx"><b>Up to date</b><span>All current</span></span>
+                <span class="vax-tx"><b>{{ 'Sudah lengkap' if LANG == 'id' else 'Up to date' }}</b><span>{{ 'Semua terkini' if LANG == 'id' else 'All current' }}</span></span>
               </div>
             </label>
             <label class="vax-card">
               <input type="radio" name="vaccinated_recently" value="no" checked />
               <div class="vax-content">
                 <span class="vax-ic"><i class="ti ti-help-circle"></i></span>
-                <span class="vax-tx"><b>Not sure</b><span>Or outdated</span></span>
+                <span class="vax-tx"><b>{{ 'Tidak yakin' if LANG == 'id' else 'Not sure' }}</b><span>{{ 'Atau belum lengkap' if LANG == 'id' else 'Or outdated' }}</span></span>
               </div>
             </label>
           </div>
         </div>
 
-        <button class="btn-next" onclick="goToStep(2)">Continue →</button>
+        <button class="btn-next" onclick="goToStep(2)">{{ 'Lanjut' if LANG == 'id' else 'Continue' }} →</button>
       </div>
 
       <!-- STEP 2: HEALTH CONDITIONS -->
       <div class="form-step hidden" id="step2">
-        <h3 class="step-title">Health conditions</h3>
-        <p class="step-desc">Select all that apply. This helps us prioritize vaccines that matter most for your safety.</p>
+        <h3 class="step-title">{{ 'Kondisi kesehatan' if LANG == 'id' else 'Health conditions' }}</h3>
+        <p class="step-desc">{{ 'Pilih semua yang sesuai. Ini membantu kami memprioritaskan vaksinasi yang paling penting untuk keselamatan Anda.' if LANG == 'id' else 'Select all that apply. This helps us prioritize vaccines that matter most for your safety.' }}</p>
 
         <div class="conditions-grid" id="conditionsGrid">
           <label class="condition-card">
@@ -488,31 +488,31 @@
             <div class="condition-content">
               <span class="condition-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6 6 10.5a6 6 0 11-12 0C6 9 12 3 12 3z"/></svg></span>
               <span class="condition-name">Diabetes</span>
-              <span class="condition-risk">High risk</span>
+              <span class="condition-risk">{{ 'Risiko tinggi' if LANG == 'id' else 'High risk' }}</span>
             </div>
           </label>
           <label class="condition-card">
             <input type="checkbox" name="conditions" value="heart_disease" />
             <div class="condition-content">
               <span class="condition-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20S4 15 4 9.5A3.5 3.5 0 0112 7a3.5 3.5 0 018 2.5C20 15 12 20 12 20z"/><path d="M6 12h2l1.5-3 2 5 1.5-2H18"/></svg></span>
-              <span class="condition-name">Heart Disease</span>
-              <span class="condition-risk">High risk</span>
+              <span class="condition-name">{{ 'Penyakit Jantung' if LANG == 'id' else 'Heart Disease' }}</span>
+              <span class="condition-risk">{{ 'Risiko tinggi' if LANG == 'id' else 'High risk' }}</span>
             </div>
           </label>
           <label class="condition-card">
             <input type="checkbox" name="conditions" value="lung_disease" />
             <div class="condition-content">
               <span class="condition-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M12 9c0 6-1 9-3.5 9C6 18 5 16 5 13c0-2 .6-3.6 1.6-4.6C7.6 7.4 9 8 9.5 9.5"/><path d="M12 9c0 6 1 9 3.5 9 2.5 0 3.5-2 3.5-5 0-2-.6-3.6-1.6-4.6C16.4 7.4 15 8 14.5 9.5"/></svg></span>
-              <span class="condition-name">Lung Disease (COPD/Asthma)</span>
-              <span class="condition-risk">High risk</span>
+              <span class="condition-name">{{ 'Penyakit Paru (PPOK/Asma)' if LANG == 'id' else 'Lung Disease (COPD/Asthma)' }}</span>
+              <span class="condition-risk">{{ 'Risiko tinggi' if LANG == 'id' else 'High risk' }}</span>
             </div>
           </label>
           <label class="condition-card">
             <input type="checkbox" name="conditions" value="cancer" />
             <div class="condition-content">
               <span class="condition-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13l-3.5 7 3-1.5L12 21l2.5-2.5 3 1.5L14 13"/><path d="M9.5 14C7.5 11.5 7 9.5 7 8a5 5 0 0110 0c0 1.5-.5 3.5-2.5 6"/></svg></span>
-              <span class="condition-name">Cancer / Chemotherapy</span>
-              <span class="condition-risk">Very high risk</span>
+              <span class="condition-name">{{ 'Kanker / Kemoterapi' if LANG == 'id' else 'Cancer / Chemotherapy' }}</span>
+              <span class="condition-risk">{{ 'Risiko sangat tinggi' if LANG == 'id' else 'Very high risk' }}</span>
             </div>
           </label>
           <label class="condition-card">
@@ -520,134 +520,134 @@
             <div class="condition-content">
               <span class="condition-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7.5"/><circle cx="9.8" cy="10" r="1.3"/><circle cx="14.4" cy="13" r="1"/><circle cx="11" cy="15" r="0.9"/></svg></span>
               <span class="condition-name">HIV / AIDS</span>
-              <span class="condition-risk">Very high risk</span>
+              <span class="condition-risk">{{ 'Risiko sangat tinggi' if LANG == 'id' else 'Very high risk' }}</span>
             </div>
           </label>
           <label class="condition-card">
             <input type="checkbox" name="conditions" value="kidney_disease" />
             <div class="condition-content">
               <span class="condition-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5c-3 0-5 3-5 7s2 7 5 7c1.7 0 3-1.3 3-3 0-1.2-.6-1.8-.6-2.5S17 9.5 17 8.2C17 6.4 15.7 5 14 5z"/></svg></span>
-              <span class="condition-name">Kidney Disease</span>
-              <span class="condition-risk">High risk</span>
+              <span class="condition-name">{{ 'Penyakit Ginjal' if LANG == 'id' else 'Kidney Disease' }}</span>
+              <span class="condition-risk">{{ 'Risiko tinggi' if LANG == 'id' else 'High risk' }}</span>
             </div>
           </label>
           <label class="condition-card">
             <input type="checkbox" name="conditions" value="liver_disease" />
             <div class="condition-content">
               <span class="condition-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8c5-2.5 11-2.5 16 0 0 5-2.5 8.5-6.5 9.5-1.3.3-2-.4-3-1.3S8 13.5 6.5 12.8 4 10 4 8z"/></svg></span>
-              <span class="condition-name">Liver Disease</span>
-              <span class="condition-risk">High risk</span>
+              <span class="condition-name">{{ 'Penyakit Hati' if LANG == 'id' else 'Liver Disease' }}</span>
+              <span class="condition-risk">{{ 'Risiko tinggi' if LANG == 'id' else 'High risk' }}</span>
             </div>
           </label>
           <label class="condition-card">
             <input type="checkbox" name="conditions" value="immunocompromised" />
             <div class="condition-content">
               <span class="condition-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"/><path d="M9 11.5h6"/></svg></span>
-              <span class="condition-name">Immunocompromised</span>
-              <span class="condition-risk">Very high risk</span>
+              <span class="condition-name">{{ 'Imunokompromais' if LANG == 'id' else 'Immunocompromised' }}</span>
+              <span class="condition-risk">{{ 'Risiko sangat tinggi' if LANG == 'id' else 'Very high risk' }}</span>
             </div>
           </label>
           <label class="condition-card">
             <input type="checkbox" name="conditions" value="asplenia" />
             <div class="condition-content">
               <span class="condition-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5c-3 0-5 3-5 7s2 7 5 7c1.7 0 3-1.3 3-3 0-1.2-.6-1.8-.6-2.5"/><path d="M4 4l16 16"/></svg></span>
-              <span class="condition-name">No Spleen (Asplenia)</span>
-              <span class="condition-risk">Very high risk</span>
+              <span class="condition-name">{{ 'Tanpa Limpa (Asplenia)' if LANG == 'id' else 'No Spleen (Asplenia)' }}</span>
+              <span class="condition-risk">{{ 'Risiko sangat tinggi' if LANG == 'id' else 'Very high risk' }}</span>
             </div>
           </label>
           <label class="condition-card">
             <input type="checkbox" name="conditions" value="smoking" />
             <div class="condition-content">
               <span class="condition-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="13.5" width="13" height="3" rx="1"/><path d="M18.5 6.5c1 1 1 2.2 0 3.2M15.5 5.5c1.4 1.4 1.4 3 0 4.4"/><path d="M19 13.5v3M21 13.5v3"/></svg></span>
-              <span class="condition-name">Smoking</span>
-              <span class="condition-risk">Moderate risk</span>
+              <span class="condition-name">{{ 'Merokok' if LANG == 'id' else 'Smoking' }}</span>
+              <span class="condition-risk">{{ 'Risiko sedang' if LANG == 'id' else 'Moderate risk' }}</span>
             </div>
           </label>
           <label class="condition-card">
             <input type="checkbox" name="conditions" value="obesity" />
             <div class="condition-content">
               <span class="condition-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v3.5l2.2-2"/><path d="M8.5 17h7"/></svg></span>
-              <span class="condition-name">Obesity (BMI ≥ 30)</span>
-              <span class="condition-risk">Moderate risk</span>
+              <span class="condition-name">{{ 'Obesitas (IMT ≥ 30)' if LANG == 'id' else 'Obesity (BMI ≥ 30)' }}</span>
+              <span class="condition-risk">{{ 'Risiko sedang' if LANG == 'id' else 'Moderate risk' }}</span>
             </div>
           </label>
           <label class="condition-card none-card">
             <input type="checkbox" name="conditions" value="none" id="noneCondition" />
             <div class="condition-content">
               <span class="condition-icon none-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
-              <span class="condition-name">None of the above</span>
-              <span class="condition-risk">Low risk</span>
+              <span class="condition-name">{{ 'Tidak ada di atas' if LANG == 'id' else 'None of the above' }}</span>
+              <span class="condition-risk">{{ 'Risiko rendah' if LANG == 'id' else 'Low risk' }}</span>
             </div>
           </label>
         </div>
 
         <div class="step-nav">
-          <button class="btn-back" onclick="goToStep(1)">← Back</button>
-          <button class="btn-next" onclick="goToStep(3)">Continue →</button>
+          <button class="btn-back" onclick="goToStep(1)">← {{ 'Kembali' if LANG == 'id' else 'Back' }}</button>
+          <button class="btn-next" onclick="goToStep(3)">{{ 'Lanjut' if LANG == 'id' else 'Continue' }} →</button>
         </div>
       </div>
 
       <!-- STEP 3: TRAVEL -->
       <div class="form-step hidden" id="step3">
-        <h3 class="step-title">Travel &amp; Lifestyle</h3>
-        <p class="step-desc">International travel can expose you to diseases not common in your home country.</p>
+        <h3 class="step-title">{{ 'Perjalanan & Gaya Hidup' if LANG == 'id' else 'Travel and Lifestyle' }}</h3>
+        <p class="step-desc">{{ 'Perjalanan internasional dapat memaparkan Anda pada penyakit yang tidak umum di negara asal Anda.' if LANG == 'id' else 'International travel can expose you to diseases not common in your home country.' }}</p>
 
         <div class="form-group">
-          <label class="form-label">Do you plan to travel internationally?</label>
+          <label class="form-label">{{ 'Apakah Anda berencana bepergian ke luar negeri?' if LANG == 'id' else 'Do you plan to travel internationally?' }}</label>
           <div class="option-group">
             <label class="option-card">
               <input type="radio" name="travel" value="yes" id="travelYes" onchange="toggleTravel(true)" />
-              <div class="option-content"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4L3 11l6 2 2 6 3-5 5-2z"/></svg></span><span>Yes</span></div>
+              <div class="option-content"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4L3 11l6 2 2 6 3-5 5-2z"/></svg></span><span>{{ 'Ya' if LANG == 'id' else 'Yes' }}</span></div>
             </label>
             <label class="option-card">
               <input type="radio" name="travel" value="no" checked id="travelNo" onchange="toggleTravel(false)" />
-              <div class="option-content"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg></span><span>No plans</span></div>
+              <div class="option-content"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg></span><span>{{ 'Tidak ada rencana' if LANG == 'id' else 'No plans' }}</span></div>
             </label>
           </div>
         </div>
 
         <div class="form-group hidden" id="travelRegions">
-          <label class="form-label">Select your travel destinations</label>
+          <label class="form-label">{{ 'Pilih tujuan perjalanan Anda' if LANG == 'id' else 'Select your travel destinations' }}</label>
           <div class="regions-grid">
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="Southeast Asia" />
-              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>Southeast Asia</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>{{ 'Asia Tenggara' if LANG == 'id' else 'Southeast Asia' }}</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="South Asia" />
-              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>South Asia</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>{{ 'Asia Selatan' if LANG == 'id' else 'South Asia' }}</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="East Asia" />
-              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>East Asia</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>{{ 'Asia Timur' if LANG == 'id' else 'East Asia' }}</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="Sub-Saharan Africa" />
-              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>Sub-Saharan Africa</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>{{ 'Afrika Sub-Sahara' if LANG == 'id' else 'Sub-Saharan Africa' }}</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="Latin America" />
-              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>Latin America</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>{{ 'Amerika Latin' if LANG == 'id' else 'Latin America' }}</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="Middle East" />
-              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>Middle East</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>{{ 'Timur Tengah' if LANG == 'id' else 'Middle East' }}</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="Europe" />
-              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>Europe</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>{{ 'Eropa' if LANG == 'id' else 'Europe' }}</span></div>
             </label>
             <label class="region-card">
               <input type="checkbox" name="travel_regions" value="North America" />
-              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>North America</span></div>
+              <div class="region-content"><span><i class="ti ti-world" style="color:var(--coral)"></i></span><span>{{ 'Amerika Utara' if LANG == 'id' else 'North America' }}</span></div>
             </label>
           </div>
         </div>
 
         <div class="step-nav">
-          <button class="btn-back" onclick="goToStep(2)">← Back</button>
+          <button class="btn-back" onclick="goToStep(2)">← {{ 'Kembali' if LANG == 'id' else 'Back' }}</button>
           <button class="btn-submit" onclick="submitAssessment()">
-            <span class="btn-submit-text">Get My Results</span>
+            <span class="btn-submit-text">{{ 'Lihat Hasil Saya' if LANG == 'id' else 'Get My Results' }}</span>
             <span class="btn-submit-icon"><i class="ti ti-microscope" style="color:var(--coral)"></i></span>
           </button>
         </div>

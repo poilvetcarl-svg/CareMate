@@ -47,8 +47,18 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <span class="corp-plan-badge">{{ company.plan | upper }} Plan</span>
-      <a href="/corporate/dashboard/invite" class="btn-primary" style="padding:10px 20px;font-size:13px">+ Invite Employee</a>
+      <a href="/corporate/report" class="btn-primary" style="padding:10px 20px;font-size:13px"><i class="ti ti-file-analytics" style="vertical-align:-2px"></i> Pilot Report</a>
     </div>
+  </div>
+
+  <!-- Invite link -->
+  <div style="background:linear-gradient(135deg,rgba(255,107,107,0.07),rgba(255,142,83,0.06));border:1.5px solid rgba(255,107,107,0.2);border-radius:16px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px">
+      <div style="font-size:14px;font-weight:800;color:var(--text-primary)"><i class="ti ti-link" style="color:var(--coral)"></i> Employee invite link</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:3px">Share this link with your employees. They create a free account, pick their department, and appear in your stats automatically.</div>
+      <div style="font-size:12.5px;font-weight:700;color:var(--coral);margin-top:7px;word-break:break-all" id="joinUrl">{{ join_url }}</div>
+    </div>
+    <button class="dash-action-btn" onclick="navigator.clipboard.writeText(document.getElementById('joinUrl').textContent).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy link',1600)})">Copy link</button>
   </div>
 
   <!-- Flash messages -->
@@ -95,6 +105,60 @@
       </div>
     </div>
   </div>
+
+  <!-- Engagement stats -->
+  <div class="dash-stats">
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(46,213,115,0.12);color:#1b9e54"><i class="ti ti-activity"></i></div>
+      <div>
+        <div class="dash-stat-value">{{ stats.participation }}%</div>
+        <div class="dash-stat-label">Participation Rate</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(255,107,107,0.1);color:var(--coral)"><i class="ti ti-flame"></i></div>
+      <div>
+        <div class="dash-stat-value">{{ stats.active7 }}</div>
+        <div class="dash-stat-label">Active This Week</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(2,132,199,0.1);color:#0284c7"><i class="ti ti-mood-smile"></i></div>
+      <div>
+        <div class="dash-stat-value">{{ stats.checkins }}</div>
+        <div class="dash-stat-label">Wellbeing Check-ins</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon" style="background:rgba(255,217,61,0.18);color:#b8860b"><i class="ti ti-trophy"></i></div>
+      <div>
+        <div class="dash-stat-value">{{ stats.xp_total }}</div>
+        <div class="dash-stat-label">Engagement Points</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Department competition -->
+  {% if stats.departments and stats.departments|length > 0 %}
+  <div class="dash-card" style="margin-bottom:20px">
+    <div class="dash-card-header">
+      <div class="dash-card-title"><i class="ti ti-trophy" style="color:var(--coral)"></i> Team Competition</div>
+      <span style="font-size:12px;color:var(--text-muted)">Total engagement points per department, aggregated and anonymous</span>
+    </div>
+    {% set maxxp = stats.departments[0].xp if stats.departments[0].xp else 1 %}
+    {% for d in stats.departments %}
+    <div style="display:flex;align-items:center;gap:14px;padding:9px 0;{{ 'border-bottom:1px solid var(--border)' if not loop.last }}">
+      <div style="width:26px;font-size:14px;font-weight:900;color:{{ 'var(--coral)' if loop.index <= 3 else 'var(--text-muted)' }}">#{{ loop.index }}</div>
+      <div style="width:130px;font-size:13.5px;font-weight:700;color:var(--text-primary)">{{ d.name }}</div>
+      <div style="flex:1;background:rgba(160,120,90,0.12);border-radius:8px;height:10px;overflow:hidden">
+        <div style="height:100%;border-radius:8px;background:linear-gradient(90deg,var(--coral),#FF8E53);width:{{ (d.xp / maxxp * 100)|int if maxxp else 0 }}%"></div>
+      </div>
+      <div style="width:90px;text-align:right;font-size:13px;font-weight:800;color:var(--text-primary)">{{ d.xp }} <span style="font-size:11px;color:var(--text-muted);font-weight:600">pts</span></div>
+      <div style="width:80px;text-align:right;font-size:11.5px;color:var(--text-muted)">{{ d.members }} {{ 'member' if d.members == 1 else 'members' }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
   <div class="dash-cols">
 

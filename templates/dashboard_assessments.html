@@ -16,12 +16,12 @@
 <aside class="dash-sidebar">
   <div class="dash-logo"><a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span>Mate</span></a></div>
   <nav class="dash-nav">
-    <a href="/dashboard" class="dash-nav-item">Overview</a>
-    <a href="/dashboard/assessments" class="dash-nav-item active">Health Assessment</a>
-    <a href="/dashboard/records" class="dash-nav-item">My Health Records</a>
-    <a href="/teleconsultation" class="dash-nav-item">Talk to a Doctor</a>
-    <a href="/clinics" class="dash-nav-item">Find Care</a>
-    <a href="/dashboard/reminders" class="dash-nav-item">Reminders</a>
+    <a href="/dashboard" class="dash-nav-item">{{ t('side.overview') }}</a>
+    <a href="/dashboard/assessments" class="dash-nav-item active">{{ t('side.assessment') }}</a>
+    <a href="/dashboard/records" class="dash-nav-item">{{ t('side.records') }}</a>
+    <a href="/teleconsultation" class="dash-nav-item">{{ t('side.doctor') }}</a>
+    <a href="/clinics" class="dash-nav-item">{{ t('side.findcare') }}</a>
+    <a href="/dashboard/reminders" class="dash-nav-item">{{ t('side.reminders') }}</a>
   </nav>
   <div class="dash-sidebar-footer">
     <div class="dash-user-pill">
@@ -31,7 +31,7 @@
         <div style="font-size:11px;color:var(--text-muted)">{{ current_user.email }}</div>
       </div>
     </div>
-    <a href="/logout" class="dash-logout-btn">Sign Out</a>
+    <a href="/logout" class="dash-logout-btn">{{ t('side.signout') }}</a>
   </div>
 </aside>
 

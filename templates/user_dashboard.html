@@ -19,12 +19,12 @@
     <a href="/" class="nav-logo"><img src="/static/img/logo-icon.png" alt="" class="nav-logo-icon" />Care<span>Mate</span></a>
   </div>
   <nav class="dash-nav">
-    <a href="/dashboard" class="dash-nav-item active">Overview</a>
-    <a href="/dashboard/assessments" class="dash-nav-item">Health Assessment</a>
-    <a href="/dashboard/records" class="dash-nav-item">My Health Records</a>
-    <a href="/teleconsultation" class="dash-nav-item">Talk to a Doctor</a>
-    <a href="/clinics" class="dash-nav-item">Find Care</a>
-    <a href="/dashboard/reminders" class="dash-nav-item">Reminders</a>
+    <a href="/dashboard" class="dash-nav-item active">{{ t('side.overview') }}</a>
+    <a href="/dashboard/assessments" class="dash-nav-item">{{ t('side.assessment') }}</a>
+    <a href="/dashboard/records" class="dash-nav-item">{{ t('side.records') }}</a>
+    <a href="/teleconsultation" class="dash-nav-item">{{ t('side.doctor') }}</a>
+    <a href="/clinics" class="dash-nav-item">{{ t('side.findcare') }}</a>
+    <a href="/dashboard/reminders" class="dash-nav-item">{{ t('side.reminders') }}</a>
   </nav>
   <div class="dash-sidebar-footer">
     <div class="dash-user-pill">
@@ -34,7 +34,7 @@
         <div style="font-size:11px;color:var(--text-muted)">{{ current_user.email }}</div>
       </div>
     </div>
-    <a href="/logout" class="dash-logout-btn">Sign Out</a>
+    <a href="/logout" class="dash-logout-btn">{{ t('side.signout') }}</a>
   </div>
 </aside>
 
@@ -45,7 +45,7 @@
   <div class="dash-header">
     <div>
       <h1 class="dash-title">Hello, {{ current_user.name.split()[0] if current_user.name else 'there' }} <i class="ti ti-hand-stop" style="color:var(--coral)"></i></h1>
-      <p class="dash-sub">Here's your prevention overview: vaccines, screenings, labs and everyday health.</p>
+      <p class="dash-sub">{{ t('dash.sub') }}</p>
     </div>
   </div>
 
@@ -73,28 +73,28 @@
       <div class="dash-stat-icon" style="background:rgba(255,107,107,0.1);color:var(--coral)"><i class="ti ti-vaccine"></i></div>
       <div>
         <div class="dash-stat-value">{{ vaccination_records|length }}</div>
-        <div class="dash-stat-label">Vaccines Recorded</div>
+        <div class="dash-stat-label">{{ t('dash.stat.vax') }}</div>
       </div>
     </div>
     <div class="dash-stat-card">
       <div class="dash-stat-icon" style="background:rgba(255,107,107,0.1);color:var(--coral)"><i class="ti ti-bell"></i></div>
       <div>
         <div class="dash-stat-value">{{ pending_reminders|length }}</div>
-        <div class="dash-stat-label">Upcoming Reminders</div>
+        <div class="dash-stat-label">{{ t('dash.stat.rem') }}</div>
       </div>
     </div>
     <div class="dash-stat-card">
       <div class="dash-stat-icon" style="background:rgba(255,107,107,0.1);color:var(--coral)"><i class="ti ti-clipboard-heart"></i></div>
       <div>
         <div class="dash-stat-value">{{ assessments|length }}</div>
-        <div class="dash-stat-label">Assessments Done</div>
+        <div class="dash-stat-label">{{ t('dash.stat.assess') }}</div>
       </div>
     </div>
     <div class="dash-stat-card">
       <div class="dash-stat-icon" style="background:rgba(255,107,107,0.1);color:var(--coral)"><i class="ti ti-map-pin"></i></div>
       <div>
         <div class="dash-stat-value">{{ bookings|length }}</div>
-        <div class="dash-stat-label">Clinic Bookings</div>
+        <div class="dash-stat-label">{{ t('dash.stat.book') }}</div>
       </div>
     </div>
   </div>

@@ -86,4 +86,19 @@ STRINGS = {
     # misc
     "lang.switch":      {"id": "EN", "en": "ID"},
     "about.title":      {"id": "Tentang CareMate", "en": "About CareMate"},
+
+    # dashboard chrome
+    "side.overview":    {"id": "Ringkasan", "en": "Overview"},
+    "side.assessment":  {"id": "Penilaian Kesehatan", "en": "Health Assessment"},
+    "side.records":     {"id": "Rekam Kesehatan Saya", "en": "My Health Records"},
+    "side.doctor":      {"id": "Konsultasi Dokter", "en": "Talk to a Doctor"},
+    "side.findcare":    {"id": "Cari Layanan", "en": "Find Care"},
+    "side.reminders":   {"id": "Pengingat", "en": "Reminders"},
+    "side.signout":     {"id": "Keluar", "en": "Sign Out"},
+    "dash.sub":         {"id": "Ringkasan pencegahan Anda: vaksinasi, skrining, lab, dan kesehatan sehari-hari.",
+                         "en": "Here's your prevention overview: vaccines, screenings, labs and everyday health."},
+    "dash.stat.vax":    {"id": "Vaksin Tercatat", "en": "Vaccines Recorded"},
+    "dash.stat.rem":    {"id": "Pengingat Mendatang", "en": "Upcoming Reminders"},
+    "dash.stat.assess": {"id": "Penilaian Selesai", "en": "Assessments Done"},
+    "dash.stat.book":   {"id": "Janji Klinik", "en": "Clinic Bookings"},
 }

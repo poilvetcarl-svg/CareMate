@@ -19,6 +19,7 @@ class User(UserMixin, db.Model):
     date_of_birth = db.Column(db.Date)
     sex           = db.Column(db.String(10))
     company_id    = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True)
+    department    = db.Column(db.String(80))                   # set when joining via a company invite
     role          = db.Column(db.String(20), default='user')   # user | corporate_admin
     created_at    = db.Column(db.DateTime, default=datetime.utcnow)
     whatsapp_opt_in = db.Column(db.Boolean, default=False)
