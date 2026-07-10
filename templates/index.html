@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANG }}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -137,6 +137,21 @@
     <a href="https://www.kemkes.go.id" target="_blank" rel="noopener" class="trust-logo">Kemenkes RI</a>
     <a href="https://www.papdi.or.id" target="_blank" rel="noopener" class="trust-logo">PAPDI</a>
     <a href="https://www.idai.or.id" target="_blank" rel="noopener" class="trust-logo">IDAI</a>
+  </div>
+</section>
+
+<!-- ===== MISSION COUNTER ===== -->
+<section style="background:linear-gradient(135deg,#FF6B6B,#FF8E53);padding:26px 24px;text-align:center">
+  <div style="max-width:760px;margin:0 auto;color:#fff">
+    <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.85">{{ 'Misi kami' if LANG == 'id' else 'Our mission' }}</div>
+    <div style="font-size:clamp(18px,3vw,24px);font-weight:900;margin-top:6px;line-height:1.35">
+      {% if LANG == 'id' %}1.000.000 orang Indonesia tahu apa yang harus dicegah berikutnya{% else %}1,000,000 Indonesians knowing what to prevent next{% endif %}
+    </div>
+    <div style="font-size:14px;font-weight:700;margin-top:8px;opacity:.95">
+      <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:100px;padding:5px 16px;display:inline-block">
+        {{ '{:,}'.format(plans_count or 0).replace(',', '.') if LANG == 'id' else '{:,}'.format(plans_count or 0) }} {{ 'rencana pencegahan dibuat sejauh ini. Kami baru mulai.' if LANG == 'id' else 'prevention plans created so far. We are just getting started.' }}
+      </span>
+    </div>
   </div>
 </section>
 

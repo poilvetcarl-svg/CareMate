@@ -887,7 +887,13 @@ def get_recommended_screenings(data):
 
 @app.route("/")
 def index():
-    return render_template("index.html", current_user=current_user)
+    # Mission counter: real prevention plans created (demo accounts excluded)
+    try:
+        plans_count = db.session.query(Assessment.id).join(User, Assessment.user_id == User.id)\
+            .filter(~User.email.like("%@sample.mycaremate.me")).count()
+    except Exception:
+        plans_count = 0
+    return render_template("index.html", current_user=current_user, plans_count=plans_count)
 
 
 # ── PWA (installable Android/mobile app) ──────────────────────────────────────
@@ -1725,10 +1731,12 @@ def add_lab_result():
 @login_required
 def upload_lab_photo():
     if not is_plus(current_user):
-        flash("Ekstraksi foto lab adalah fitur CareMate+. Anda tetap bisa menambah hasil secara manual."
-              if session.get("lang", DEFAULT_LANG) == "id" else
-              "Lab photo extraction is a CareMate+ feature. You can still add results manually.", "error")
-        return redirect(url_for("premium"))
+        used = Event.query.filter_by(name="lab_photo", user_id=current_user.id).count()
+        if used >= 1:
+            flash("Foto lab gratis Anda sudah terpakai. CareMate+ membuatnya tanpa batas, atau tambahkan hasil secara manual."
+                  if session.get("lang", DEFAULT_LANG) == "id" else
+                  "You've used your free lab photo. CareMate+ makes it unlimited, or you can add results manually.", "error")
+            return redirect(url_for("premium"))
     if not client:
         flash("AI extraction needs an OpenAI key, you can still add results manually.", "error")
         return redirect(url_for("dashboard"))
@@ -1786,6 +1794,7 @@ def upload_lab_photo():
         saved += 1
     db.session.commit()
     if saved:
+        log_event("lab_photo", current_user.id, meta=f"{saved} values")
         flash(f"Read {saved} value(s) from your report. Review them below, and discuss anything flagged with your doctor.", "success")
     else:
         flash("No readable values found in that photo, try a clearer picture or add them manually.", "error")

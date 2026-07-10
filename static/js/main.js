@@ -268,6 +268,125 @@ function renderResults(result) {
 
   // Inject "Discuss with a Doctor" section above CTA
   renderDoctorOffer(result);
+
+  // Shareable score card + WhatsApp share
+  renderShareCard(result);
+}
+
+// ===== SHAREABLE PREVENTION SCORE CARD =====
+function shareCardStrings() {
+  const id = (document.documentElement.lang || 'en') === 'id';
+  return {
+    title:    id ? 'Bagikan skor Anda' : 'Share your score',
+    sub:      id ? 'Ajak orang yang Anda sayangi mengetahui skor mereka juga.' : 'Help someone you care about learn theirs too.',
+    myScore:  id ? 'Skor Pencegahan Saya' : 'My Prevention Score',
+    tagline:  id ? 'Kamu sudah tahu skormu?' : 'Do you know yours?',
+    cta:      id ? '60 detik, gratis · mycaremate.me' : '60 seconds, free · mycaremate.me',
+    waBtn:    id ? 'Bagikan di WhatsApp' : 'Share on WhatsApp',
+    imgBtn:   id ? 'Bagikan gambar' : 'Share the image',
+    dlBtn:    id ? 'Unduh kartu' : 'Download card',
+    waText: s => id
+      ? `Skor Pencegahan saya ${s}/100 di CareMate. Kamu sudah tahu skormu? 60 detik, gratis: https://mycaremate.me`
+      : `My Prevention Score is ${s}/100 on CareMate. Do you know yours? It takes 60 seconds, free: https://mycaremate.me`,
+  };
+}
+
+function drawScoreCard(score) {
+  const S = shareCardStrings();
+  const c = document.createElement('canvas');
+  c.width = 1080; c.height = 1080;
+  const x = c.getContext('2d');
+
+  const bg = x.createLinearGradient(0, 0, 1080, 1080);
+  bg.addColorStop(0, '#FF6B6B'); bg.addColorStop(1, '#FF8E53');
+  x.fillStyle = bg; x.fillRect(0, 0, 1080, 1080);
+
+  // inner card
+  x.fillStyle = '#FFF8F4';
+  x.beginPath(); x.roundRect(70, 70, 940, 940, 48); x.fill();
+
+  x.font = '900 64px "DM Sans", Arial, sans-serif';
+  const wc = x.measureText('Care').width, wm = x.measureText('Mate').width;
+  const sx = 540 - (wc + wm) / 2;
+  x.textAlign = 'left';
+  x.fillStyle = '#1A0A00'; x.fillText('Care', sx, 195);
+  x.fillStyle = '#FF6B6B'; x.fillText('Mate', sx + wc, 195);
+  x.textAlign = 'center';
+
+  x.fillStyle = '#8a7a6e';
+  x.font = '700 40px "DM Sans", Arial, sans-serif';
+  x.fillText(S.myScore, 540, 300);
+
+  // score ring
+  const cx = 540, cy = 560, r = 190;
+  x.lineWidth = 42; x.lineCap = 'round';
+  x.strokeStyle = 'rgba(255,107,107,0.15)';
+  x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.stroke();
+  const ringColor = score >= 70 ? '#2ED573' : (score >= 45 ? '#FF8E53' : '#E5484D');
+  x.strokeStyle = ringColor;
+  x.beginPath(); x.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(score, 100) / 100); x.stroke();
+
+  x.fillStyle = '#1A0A00';
+  x.font = '900 190px "DM Sans", Arial, sans-serif';
+  x.fillText(String(score), cx, cy + 55);
+  x.fillStyle = '#8a7a6e';
+  x.font = '700 44px "DM Sans", Arial, sans-serif';
+  x.fillText('/100', cx, cy + 125);
+
+  x.fillStyle = '#1A0A00';
+  x.font = '800 52px "DM Sans", Arial, sans-serif';
+  x.fillText(S.tagline, 540, 870);
+  x.fillStyle = '#FF6B6B';
+  x.font = '700 36px "DM Sans", Arial, sans-serif';
+  x.fillText(S.cta, 540, 935);
+  return c;
+}
+
+function renderShareCard(result) {
+  document.getElementById('shareCardSection')?.remove();
+  const risk = result.risk || {};
+  const score = Math.round(risk.prevention_score ?? (100 - (risk.percentage ?? 50)));
+  const S = shareCardStrings();
+
+  const anchor = document.getElementById('doctorOfferSection') ||
+                 document.getElementById('screeningsSection') ||
+                 document.querySelector('.vaccines-section');
+  if (!anchor) return;
+
+  const canvas = drawScoreCard(score);
+  const wa = 'https://wa.me/?text=' + encodeURIComponent(S.waText(score));
+
+  const el = document.createElement('div');
+  el.id = 'shareCardSection';
+  el.style.cssText = 'margin:32px 0;background:#fff;border:1px solid rgba(255,107,107,0.2);border-radius:20px;padding:26px;text-align:center';
+  el.innerHTML = `
+    <h3 style="font-size:19px;font-weight:800;color:#1e293b;margin:0 0 4px">${S.title}</h3>
+    <p style="font-size:13.5px;color:#64748b;margin:0 0 18px">${S.sub}</p>
+    <div id="shareCardPreview" style="max-width:290px;margin:0 auto 18px;border-radius:16px;overflow:hidden;box-shadow:0 16px 40px -16px rgba(193,58,29,.45)"></div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <a href="${wa}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;font-weight:800;font-size:14px;padding:12px 22px;border-radius:12px;text-decoration:none"><i class="ti ti-brand-whatsapp"></i> ${S.waBtn}</a>
+      <button id="shareImgBtn" style="display:none;align-items:center;gap:8px;background:#FF6B6B;color:#fff;font-weight:800;font-size:14px;padding:12px 22px;border-radius:12px;border:none;cursor:pointer"><i class="ti ti-share"></i> ${S.imgBtn}</button>
+      <button id="shareDlBtn" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:#FF6B6B;border:1.5px solid #FF6B6B;font-weight:800;font-size:14px;padding:12px 22px;border-radius:12px;cursor:pointer"><i class="ti ti-download"></i> ${S.dlBtn}</button>
+    </div>`;
+  anchor.insertAdjacentElement('afterend', el);
+
+  canvas.style.cssText = 'width:100%;display:block';
+  document.getElementById('shareCardPreview').appendChild(canvas);
+
+  canvas.toBlob(blob => {
+    if (!blob) return;
+    const file = new File([blob], 'my-prevention-score.png', { type: 'image/png' });
+    const dl = document.getElementById('shareDlBtn');
+    dl.onclick = () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'my-prevention-score.png'; a.click();
+    };
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      const btn = document.getElementById('shareImgBtn');
+      btn.style.display = 'inline-flex';
+      btn.onclick = () => navigator.share({ files: [file], text: S.waText(score) }).catch(() => {});
+    }
+  }, 'image/png');
 }
 
 // ===== PREVENTIVE SCREENINGS =====
