@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, session, Response, stream_with_context, redirect, url_for, flash
+from werkzeug.security import generate_password_hash
 from flask_cors import CORS
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import CSRFProtect
