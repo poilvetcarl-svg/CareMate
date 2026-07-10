@@ -355,6 +355,11 @@ function renderShareCard(result) {
 
   const canvas = drawScoreCard(score);
   const wa = 'https://wa.me/?text=' + encodeURIComponent(S.waText(score));
+  const track = name => { try {
+    navigator.sendBeacon
+      ? navigator.sendBeacon('/api/track', new Blob([JSON.stringify({name})], {type: 'application/json'}))
+      : fetch('/api/track', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name}), keepalive: true});
+  } catch (e) {} };
 
   const el = document.createElement('div');
   el.id = 'shareCardSection';
@@ -364,7 +369,7 @@ function renderShareCard(result) {
     <p style="font-size:13.5px;color:#64748b;margin:0 0 18px">${S.sub}</p>
     <div id="shareCardPreview" style="max-width:290px;margin:0 auto 18px;border-radius:16px;overflow:hidden;box-shadow:0 16px 40px -16px rgba(193,58,29,.45)"></div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <a href="${wa}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;font-weight:800;font-size:14px;padding:12px 22px;border-radius:12px;text-decoration:none"><i class="ti ti-brand-whatsapp"></i> ${S.waBtn}</a>
+      <a href="${wa}" target="_blank" rel="noopener" id="shareWaBtn" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;font-weight:800;font-size:14px;padding:12px 22px;border-radius:12px;text-decoration:none"><i class="ti ti-brand-whatsapp"></i> ${S.waBtn}</a>
       <button id="shareImgBtn" style="display:none;align-items:center;gap:8px;background:#FF6B6B;color:#fff;font-weight:800;font-size:14px;padding:12px 22px;border-radius:12px;border:none;cursor:pointer"><i class="ti ti-share"></i> ${S.imgBtn}</button>
       <button id="shareDlBtn" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:#FF6B6B;border:1.5px solid #FF6B6B;font-weight:800;font-size:14px;padding:12px 22px;border-radius:12px;cursor:pointer"><i class="ti ti-download"></i> ${S.dlBtn}</button>
     </div>`;
@@ -372,19 +377,21 @@ function renderShareCard(result) {
 
   canvas.style.cssText = 'width:100%;display:block';
   document.getElementById('shareCardPreview').appendChild(canvas);
+  document.getElementById('shareWaBtn').addEventListener('click', () => track('share_wa'));
 
   canvas.toBlob(blob => {
     if (!blob) return;
     const file = new File([blob], 'my-prevention-score.png', { type: 'image/png' });
     const dl = document.getElementById('shareDlBtn');
     dl.onclick = () => {
+      track('share_download');
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob); a.download = 'my-prevention-score.png'; a.click();
     };
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       const btn = document.getElementById('shareImgBtn');
       btn.style.display = 'inline-flex';
-      btn.onclick = () => navigator.share({ files: [file], text: S.waText(score) }).catch(() => {});
+      btn.onclick = () => { track('share_native'); navigator.share({ files: [file], text: S.waText(score) }).catch(() => {}); };
     }
   }, 'image/png');
 }

@@ -4607,6 +4607,19 @@ def page_not_found(e):
     return render_template("404.html"), 404
 
 
+@app.route("/api/track", methods=["POST"])
+def api_track():
+    """Anonymous client-side event beacon, whitelisted names only.
+    Used to measure the share-card experiment (kill criterion: <5% of assessments)."""
+    allowed = {"share_wa", "share_native", "share_download"}
+    name = (request.get_json(silent=True) or {}).get("name", "")
+    if name not in allowed:
+        return jsonify({"ok": False}), 400
+    log_event(name, current_user.id if current_user.is_authenticated else None,
+              meta=(request.referrer or "")[:200])
+    return jsonify({"ok": True})
+
+
 # Exempt all /api/* routes from CSRF, they're called via fetch() with JSON,
 # not HTML form submissions. Must be done after all routes are registered.
 for _rule in app.url_map.iter_rules():
