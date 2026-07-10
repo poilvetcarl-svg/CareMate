@@ -2999,6 +2999,61 @@ def go_clinic(clinic_id, kind):
     return redirect(dest, code=302)
 
 
+@app.route("/admin/seed-demo")
+def admin_seed_demo():
+    """One-time, idempotent: create the labeled demo company used on sales calls.
+    Runs on whatever DB this deployment points at (prod seeding without DB creds)."""
+    if request.args.get("key") != os.environ.get("ADMIN_KEY", "caremate-admin"):
+        return "Forbidden", 403
+    if Company.query.filter_by(contact_email="demo@mycaremate.me").first():
+        return jsonify({"ok": True, "status": "already seeded"})
+    import random as _rnd
+    _rnd.seed(42)
+    comp = Company(name="Demo Company (Sample Data)", industry="Technology",
+                   employee_size="50-200", contact_email="demo@mycaremate.me",
+                   contact_name="Demo HR", plan="starter")
+    comp.set_password(os.environ.get("DEMO_PASSWORD", "CareMate-Demo-2026!"))
+    db.session.add(comp); db.session.flush()
+    first = ["Andi","Siti","Budi","Dewi","Rizky","Putri","Agus","Maya","Dimas","Ratna",
+             "Fajar","Indah","Yoga","Lestari","Hendra","Ayu","Bayu","Nina"]
+    depts = ["Sales"]*4 + ["Marketing"]*3 + ["Finance"]*3 + ["HR"]*2 + ["IT"]*3 + ["Operations"]*3
+    today = date.today()
+    users = []
+    for i, (fn, dept) in enumerate(zip(first, depts), 1):
+        u = User(name=f"{fn} (Demo)", email=f"demo-emp-{i:02d}@sample.mycaremate.me",
+                 password_hash=generate_password_hash(f"demo-{_rnd.random()}"),
+                 company_id=comp.id, department=dept)
+        db.session.add(u); users.append(u)
+    db.session.flush()
+    for idx, u in enumerate(users):
+        if idx >= 15:
+            continue
+        streak = _rnd.randint(3, 14)
+        for d in range(streak):
+            day = today - timedelta(days=d)
+            db.session.add(DailyCheckin(user_id=u.id, day=day, body=_rnd.randint(3, 5),
+                                        mind=_rnd.randint(3, 5),
+                                        created_at=datetime.combine(day, datetime.min.time().replace(hour=8))))
+        db.session.add(Assessment(user_id=u.id, age=_rnd.randint(26, 54),
+                                  sex=_rnd.choice(["male", "female"]),
+                                  conditions=json.dumps([]), travel_regions=json.dumps([]),
+                                  risk_score=_rnd.randint(15, 45), risk_level="moderate",
+                                  vaccines_recommended=json.dumps(["influenza", "hepatitis_b", "tdap"]),
+                                  created_at=datetime.utcnow() - timedelta(days=_rnd.randint(1, 20))))
+        if idx < 9:
+            db.session.add(VaccinationRecord(user_id=u.id, vaccine_key="influenza",
+                                             vaccine_name="Influenza (Flu)",
+                                             date_given=today - timedelta(days=_rnd.randint(2, 15)),
+                                             clinic_name="Demo Clinic"))
+        for d in range(min(streak, 7)):
+            db.session.add(Event(name="checkin", user_id=u.id, meta="demo",
+                                 created_at=datetime.utcnow() - timedelta(days=d, hours=3)))
+    db.session.commit()
+    st = _company_stats(comp)
+    return jsonify({"ok": True, "company_id": comp.id, "employees": len(users),
+                    "participation": st["participation"], "active7": st["active7"]})
+
+
 @app.route("/admin/clicks")
 def admin_clicks():
     """Per-partner click-through report (proof of referral volume for partners)."""
