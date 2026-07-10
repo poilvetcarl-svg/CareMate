@@ -1,0 +1,19 @@
+name: keep-warm
+
+# Keeps the Vercel function warm and the Neon database awake so visitors
+# never pay the cold-start penalty. GitHub schedules are best-effort and may
+# drift a few minutes; that is fine for this purpose.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: |
+          curl -s -o /dev/null --max-time 30 \
+            -w "health %{http_code} in %{time_total}s\n" \
+            https://mycaremate.me/health

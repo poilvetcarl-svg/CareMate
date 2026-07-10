@@ -115,11 +115,25 @@ app.jinja_env.filters['from_json'] = lambda s: _json.loads(s) if s else []
 def _gen_code(n=8):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=n))
 
-# Initialise DB + seed clinics on first run
+# Initialise DB + seed clinics on first run.
+# Cold-start cost matters on serverless: the sentinel below is ONE cheap query.
+# When it succeeds the schema is already current and we skip create_all, the
+# migration DDL and seeding entirely. IMPORTANT: whenever you add a migration,
+# point the sentinel at the NEWEST column so the new DDL runs once.
 with app.app_context():
+    from sqlalchemy import text as _sql_text
+    try:
+        db.session.execute(_sql_text("SELECT kind FROM pilot_lead LIMIT 1"))
+        db.session.commit()
+        _schema_current = True
+    except Exception:
+        db.session.rollback()
+        _schema_current = False
+
+if not _schema_current:
+  with app.app_context():
     db.create_all()
     # Lightweight migration: add clinic columns introduced after the first schema
-    from sqlalchemy import text as _sql_text
     for _ddl in ("ALTER TABLE clinic ADD COLUMN website VARCHAR(200)",
                  "ALTER TABLE clinic ADD COLUMN home_service BOOLEAN DEFAULT FALSE",
                  "ALTER TABLE vaccination_record ADD COLUMN child_id INTEGER",

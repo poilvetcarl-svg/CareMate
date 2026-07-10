@@ -32,5 +32,8 @@
       "path": "/api/cron/push",
       "schedule": "0 12 * * *"
     }
+  ],
+  "regions": [
+    "sin1"
   ]
 }
