@@ -5,6 +5,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from flask_wtf.csrf import CSRFProtect
 from openai import OpenAI
 import os
+import secrets
 import json
 import math
 import base64
@@ -123,7 +124,7 @@ def _gen_code(n=8):
 with app.app_context():
     from sqlalchemy import text as _sql_text
     try:
-        db.session.execute(_sql_text('SELECT avatar FROM "user" LIMIT 1'))
+        db.session.execute(_sql_text("SELECT sync_token FROM wearable_device LIMIT 1"))
         db.session.commit()
         _schema_current = True
     except Exception:
@@ -145,7 +146,8 @@ if not _schema_current:
                  'ALTER TABLE "user" ADD COLUMN referred_by INTEGER',
                  'ALTER TABLE clinic ADD COLUMN featured BOOLEAN DEFAULT FALSE',
                  'ALTER TABLE pilot_lead ADD COLUMN kind VARCHAR(20)',
-                 'ALTER TABLE "user" ADD COLUMN avatar TEXT'):
+                 'ALTER TABLE "user" ADD COLUMN avatar TEXT',
+                 'ALTER TABLE wearable_device ADD COLUMN sync_token VARCHAR(64)'):
         try:
             db.session.execute(_sql_text(_ddl))
             db.session.commit()
@@ -1485,6 +1487,64 @@ def _real_wearable(user_id, today):
         return None
     return _score_wearable(m.resting_hr, m.sleep_min, m.steps, m.hrv,
                            m.spo2, m.active_min, real=True)
+
+
+@app.route("/api/wearable/link", methods=["POST"])
+@login_required
+def wearable_link():
+    """Called by the CareMate Android app from inside the logged-in WebView.
+    Issues (or rotates) the bearer token the app uses for background sync."""
+    dev = WearableDevice.query.filter_by(user_id=current_user.id).first()
+    if not dev:
+        dev = WearableDevice(user_id=current_user.id)
+        db.session.add(dev)
+    dev.provider = "Health Connect"
+    dev.sync_token = secrets.token_hex(24)
+    dev.connected_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({"token": dev.sync_token})
+
+
+@app.route("/api/wearable/sync", methods=["POST"])
+def wearable_sync():
+    """Receives daily aggregates from the Android app (Health Connect).
+    Auth: Bearer sync_token. Upserts one WearableMetric row per day."""
+    auth = request.headers.get("Authorization", "")
+    token = auth[7:] if auth.startswith("Bearer ") else ""
+    dev = WearableDevice.query.filter_by(sync_token=token).first() if len(token) >= 32 else None
+    if not dev:
+        return jsonify({"error": "invalid token"}), 401
+    days = (request.get_json(silent=True) or {}).get("days", [])
+    if not isinstance(days, list):
+        return jsonify({"error": "bad payload"}), 400
+    def _num(v, lo, hi):
+        try:
+            v = int(v)
+            return v if lo <= v <= hi else None
+        except (TypeError, ValueError):
+            return None
+    saved = 0
+    for d in days[:31]:
+        try:
+            day = datetime.strptime(str(d.get("day", "")), "%Y-%m-%d").date()
+        except ValueError:
+            continue
+        if day > date.today() or day < date.today() - timedelta(days=31):
+            continue
+        row = WearableMetric.query.filter_by(user_id=dev.user_id, day=day).first()
+        if not row:
+            row = WearableMetric(user_id=dev.user_id, day=day)
+            db.session.add(row)
+        for field, lo, hi in (("steps", 0, 200000), ("sleep_min", 0, 1440),
+                              ("resting_hr", 25, 250), ("hrv", 1, 300),
+                              ("spo2", 50, 100), ("active_min", 0, 1440)):
+            v = _num(d.get(field), lo, hi)
+            if v is not None:
+                setattr(row, field, v)
+        row.source = "health_connect"
+        saved += 1
+    db.session.commit()
+    return jsonify({"ok": True, "saved": saved})
 
 
 @app.route("/api/wearable/connect", methods=["POST"])

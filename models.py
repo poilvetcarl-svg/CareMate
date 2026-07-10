@@ -169,7 +169,8 @@ class LinkClick(db.Model):
 class WearableDevice(db.Model):
     id           = db.Column(db.Integer, primary_key=True)
     user_id      = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True, nullable=False)
-    provider     = db.Column(db.String(60))            # e.g. "Apple Watch", "Fitbit Sense"
+    provider     = db.Column(db.String(60))            # e.g. "Health Connect", "Fitbit Sense"
+    sync_token   = db.Column(db.String(64), index=True)  # bearer token for the Android app's sync calls
     connected_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref=db.backref('wearable', uselist=False, cascade='all, delete-orphan'))

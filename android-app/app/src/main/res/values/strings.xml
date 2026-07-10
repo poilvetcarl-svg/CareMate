@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CareMate</string>
+    <string name="sync_watch">Sync my watch</string>
+</resources>
