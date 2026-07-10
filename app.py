@@ -123,7 +123,7 @@ def _gen_code(n=8):
 with app.app_context():
     from sqlalchemy import text as _sql_text
     try:
-        db.session.execute(_sql_text("SELECT kind FROM pilot_lead LIMIT 1"))
+        db.session.execute(_sql_text('SELECT avatar FROM "user" LIMIT 1'))
         db.session.commit()
         _schema_current = True
     except Exception:
@@ -144,7 +144,8 @@ if not _schema_current:
                  'ALTER TABLE "user" ADD COLUMN tomo_skin VARCHAR(20)',
                  'ALTER TABLE "user" ADD COLUMN referred_by INTEGER',
                  'ALTER TABLE clinic ADD COLUMN featured BOOLEAN DEFAULT FALSE',
-                 'ALTER TABLE pilot_lead ADD COLUMN kind VARCHAR(20)'):
+                 'ALTER TABLE pilot_lead ADD COLUMN kind VARCHAR(20)',
+                 'ALTER TABLE "user" ADD COLUMN avatar TEXT'):
         try:
             db.session.execute(_sql_text(_ddl))
             db.session.commit()
@@ -2614,6 +2615,24 @@ def log_event(name, user_id=None, meta=None):
     except Exception as e:
         db.session.rollback()
         print(f"[log_event] {e}")
+
+
+@app.route("/api/profile/photo", methods=["POST"])
+@login_required
+def profile_photo():
+    """Store a small client-resized profile photo as a data URI (no file storage on serverless)."""
+    data = (request.get_json(silent=True) or {}).get("data_url", "")
+    if data == "remove":
+        current_user.avatar = None
+        db.session.commit()
+        return jsonify({"ok": True})
+    if not (data.startswith("data:image/jpeg;base64,") or data.startswith("data:image/png;base64,")):
+        return jsonify({"error": "invalid image"}), 400
+    if len(data) > 80_000:   # ~60KB binary, plenty for a 128px avatar
+        return jsonify({"error": "image too large"}), 400
+    current_user.avatar = data
+    db.session.commit()
+    return jsonify({"ok": True})
 
 
 @app.route("/api/weight", methods=["POST"])

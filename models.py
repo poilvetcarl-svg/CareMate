@@ -23,6 +23,7 @@ class User(UserMixin, db.Model):
     plan          = db.Column(db.String(20), default='free')   # free | plus
     plan_expires  = db.Column(db.DateTime)                     # None = no expiry set
     tomo_name     = db.Column(db.String(24))                  # CareMate+ custom companion name
+    avatar        = db.Column(db.Text)                         # small data-URI profile photo (client-resized)
     tomo_skin     = db.Column(db.String(20))                   # CareMate+ skin: classic|gold|mint|ocean
     referred_by   = db.Column(db.Integer)                     # user id of the friend who invited them
     role          = db.Column(db.String(20), default='user')   # user | corporate_admin

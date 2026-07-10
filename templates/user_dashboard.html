@@ -29,7 +29,7 @@
   </nav>
   <div class="dash-sidebar-footer">
     <div class="dash-user-pill">
-      <div class="dash-avatar">{{ current_user.name[0].upper() if current_user.name else 'U' }}</div>
+      <div class="dash-avatar" style="{{ 'background-image:url(' + current_user.avatar + ');background-size:cover;background-position:center;color:transparent' if current_user.avatar else '' }}">{{ current_user.name[0].upper() if current_user.name else 'U' }}</div>
       <div>
         <div style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ current_user.name or 'User' }}</div>
         <div style="font-size:11px;color:var(--text-muted)">{{ current_user.email }}</div>
@@ -44,9 +44,24 @@
 
   <!-- Header -->
   <div class="dash-header">
-    <div>
-      <h1 class="dash-title">Hello, {{ current_user.name.split()[0] if current_user.name else 'there' }} <i class="ti ti-hand-stop" style="color:var(--coral)"></i></h1>
-      <p class="dash-sub">{{ t('dash.sub') }}</p>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div id="profilePhoto" onclick="document.getElementById('avatarInput').click()"
+           title="{{ 'Ubah foto profil' if LANG == 'id' else 'Change profile photo' }}"
+           style="width:58px;height:58px;border-radius:50%;flex-shrink:0;cursor:pointer;position:relative;
+                  display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;
+                  border:2.5px solid #fff;box-shadow:0 6px 18px rgba(193,58,29,.25);
+                  background:{{ 'url(' + current_user.avatar + ') center/cover' if current_user.avatar else 'linear-gradient(135deg,#FF6B6B,#FF8E53)' }}">
+        {{ '' if current_user.avatar else (current_user.name[0].upper() if current_user.name else 'U') }}
+        <span style="position:absolute;bottom:-3px;right:-3px;width:20px;height:20px;border-radius:50%;background:#fff;
+                     display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.18)">
+          <i class="ti ti-camera" style="font-size:12px;color:var(--coral)"></i>
+        </span>
+      </div>
+      <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(this)" />
+      <div>
+        <h1 class="dash-title">Hello, {{ current_user.name.split()[0] if current_user.name else 'there' }} <i class="ti ti-hand-stop" style="color:var(--coral)"></i></h1>
+        <p class="dash-sub">{{ t('dash.sub') }}</p>
+      </div>
     </div>
   </div>
 
@@ -115,6 +130,7 @@
            data-wear="{{ wearable.wellness if wearable else '' }}"
            data-wear-sleep="{{ wearable.sleep_label if wearable else '' }}"
            data-wear-steps="{{ wearable.steps_label if wearable else '' }}"
+           data-wear-real="{{ '1' if wearable and wearable.real else '0' }}"
            data-stage="{{ pet.stage }}"
            data-assessments="{{ assessments|length }}">
         <div class="mate-row">
@@ -211,13 +227,17 @@
             <span style="font-size:12px;color:var(--text-muted);font-weight:600">({{ badges|selectattr('earned')|list|length }}/{{ badges|length }})</span></div>
           <a href="/member" style="font-size:12px;color:var(--coral);font-weight:700;text-decoration:none">{{ 'Kartu anggota' if LANG == 'id' else 'Member card' }} →</a>
         </div>
+        <div style="font-size:12px;color:var(--text-muted);margin:-6px 0 12px">
+          {{ 'Lencana diperoleh dari aksi nyata di catatan kesehatan Anda, bukan dari klik.' if LANG == 'id' else 'Badges are earned from real actions in your health records, not from taps.' }}
+        </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           {% for b in badges %}
           <div title="{{ (b.id_t[1] if LANG == 'id' else b.en[1]) }}"
-               style="width:76px;text-align:center;padding:10px 4px;border-radius:13px;border:1px solid var(--border);
-                      {{ 'background:#FFF6F0' if b.earned else 'background:var(--bg-secondary);opacity:.45;filter:grayscale(1)' }}">
-            <i class="ti {{ b.icon }}" style="font-size:20px;color:{{ '#B8860B' if b.get('gold') else 'var(--coral)' }}"></i>
+               style="width:96px;text-align:center;padding:10px 6px;border-radius:13px;border:1px solid var(--border);
+                      {{ 'background:#FFF6F0' if b.earned else 'background:var(--bg-secondary);opacity:.55' }}">
+            <i class="ti {{ b.icon }}" style="font-size:20px;color:{{ '#B8860B' if b.get('gold') else 'var(--coral)' }};{{ '' if b.earned else 'filter:grayscale(1);opacity:.6' }}"></i>
             <div style="font-size:9.5px;font-weight:800;color:var(--text-primary);margin-top:5px;line-height:1.25">{{ b.id_t[0] if LANG == 'id' else b.en[0] }}</div>
+            <div style="font-size:8.5px;color:var(--text-muted);margin-top:3px;line-height:1.3">{{ '✓ ' if b.earned else '' }}{{ b.id_t[1] if LANG == 'id' else b.en[1] }}</div>
           </div>
           {% endfor %}
         </div>
@@ -1155,7 +1175,8 @@ async function disconnectWatch(){
       // No check-in yet, reflect the smartwatch recovery signal
       setFace(petSmall, wear);
       const sleep = card.dataset.wearSleep, steps = card.dataset.wearSteps;
-      stateEl.textContent = "From your watch: " + sleep + " sleep, " + steps + " steps. Tap to tell me how you feel too.";
+      const src = card.dataset.wearReal === '1' ? "From your watch: " : "Demo watch data: ";
+      stateEl.textContent = src + sleep + " sleep, " + steps + " steps. Tap to tell me how you feel too.";
     } else {
       setFace(petSmall, 4);
       stateEl.textContent = "Tap to check in. I grow happier each day you do.";
@@ -1255,6 +1276,33 @@ async function disconnectWatch(){
   refreshCard();
   applyStageAll(stage);
 })();
+
+// ── Profile photo: resize client-side to 128px, store as tiny data URI ──
+async function uploadAvatar(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = async () => {
+    const size = 128, c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const x = c.getContext('2d');
+    const s = Math.min(img.width, img.height);
+    x.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+    const dataUrl = c.toDataURL('image/jpeg', 0.82);
+    const r = await fetch('/api/profile/photo', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({data_url: dataUrl})
+    });
+    if (r.ok) {
+      const el = document.getElementById('profilePhoto');
+      el.style.background = `url(${dataUrl}) center/cover`;
+      el.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = ''; });
+    }
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(file);
+  input.value = '';
+}
 </script>
 </body>
 </html>
