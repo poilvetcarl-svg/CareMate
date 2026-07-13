@@ -43,3 +43,4 @@ design_proposals/
 
 # Sales materials (keep out of the public repo)
 sales/
+android-app/.gradle/

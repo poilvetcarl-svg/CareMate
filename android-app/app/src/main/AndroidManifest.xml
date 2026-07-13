@@ -16,10 +16,9 @@
         <package android:name="com.google.android.apps.healthdata" />
     </queries>
 
-    <!-- Launcher icon: generate via Android Studio > New > Image Asset from static/img/favicon-512.png,
-         then add android:icon="@mipmap/ic_launcher" here. Omitted so the project builds out of the box. -->
     <application
         android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
         android:theme="@style/Theme.CareMate"
         android:usesCleartextTraffic="false">
 
